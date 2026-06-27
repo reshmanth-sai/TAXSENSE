@@ -105,8 +105,11 @@ export default function App() {
   };
 
   // Handle manually inputting salary/interest/TDS
-  const handleNumericChange = (key: 'grossSalary' | 'otherIncome' | 'tdsDeducted', value: number) => {
-    setIncomeProfile({ [key]: Math.max(0, value) });
+  const handleNumericChange = (key: 'grossSalary' | 'otherIncome' | 'tdsDeducted', value: string | number) => {
+    const valStr = typeof value === 'number' ? value.toString() : value;
+    const cleaned = valStr.replace(/[^0-9]/g, '');
+    const valNum = parseInt(cleaned) || 0;
+    setIncomeProfile({ [key]: Math.max(0, valNum) });
   };
 
   // Triggers when raw Form 16 text is parsed
@@ -298,11 +301,11 @@ Ask me anything about these numbers or how we can file your ITR-1 Sahaj based on
                         <span className="absolute left-3 top-2 text-slate-400 text-xs font-semibold">₹</span>
                         <input
                           id="input-gross-salary"
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           value={taxData.grossSalary || ''}
-                          onChange={(e) => handleNumericChange('grossSalary', parseInt(e.target.value) || 0)}
+                          onChange={(e) => handleNumericChange('grossSalary', e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl py-1.5 pl-7 pr-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-                          step={10000}
                         />
                       </div>
                       <input
@@ -311,7 +314,7 @@ Ask me anything about these numbers or how we can file your ITR-1 Sahaj based on
                         max="3000000"
                         step="25000"
                         value={taxData.grossSalary}
-                        onChange={(e) => handleNumericChange('grossSalary', parseInt(e.target.value) || 0)}
+                        onChange={(e) => handleNumericChange('grossSalary', e.target.value)}
                         className="w-full accent-blue-600 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer mt-2"
                       />
                     </div>
@@ -326,9 +329,10 @@ Ask me anything about these numbers or how we can file your ITR-1 Sahaj based on
                         <span className="absolute left-3 top-2 text-slate-400 text-xs font-semibold">₹</span>
                         <input
                           id="input-other-income"
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           value={taxData.otherIncome || ''}
-                          onChange={(e) => handleNumericChange('otherIncome', parseInt(e.target.value) || 0)}
+                          onChange={(e) => handleNumericChange('otherIncome', e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl py-1.5 pl-7 pr-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
                         />
                       </div>
@@ -345,9 +349,10 @@ Ask me anything about these numbers or how we can file your ITR-1 Sahaj based on
                         <span className="absolute left-3 top-2 text-slate-400 text-xs font-semibold">₹</span>
                         <input
                           id="input-tds-deducted"
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           value={taxData.tdsDeducted || ''}
-                          onChange={(e) => handleNumericChange('tdsDeducted', parseInt(e.target.value) || 0)}
+                          onChange={(e) => handleNumericChange('tdsDeducted', e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl py-1.5 pl-7 pr-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
                         />
                       </div>

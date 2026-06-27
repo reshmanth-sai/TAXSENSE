@@ -167,7 +167,7 @@ export const useTaxStore = create<TaxStoreState>()(
 
       addChatMessage: (message) =>
         set((state) => ({
-          chatHistory: [...state.chatHistory, message],
+          chatHistory: [...(state.chatHistory || []), message],
         })),
 
       setStep: (step) =>

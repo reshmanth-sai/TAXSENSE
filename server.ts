@@ -250,16 +250,44 @@ async function startServer() {
   // API: Conversational Agent Turns
   app.post('/api/chat', async (req, res) => {
     try {
-      const { messages, taxData } = req.body;
-      if (!messages || !Array.isArray(messages)) {
+      const { messages, taxData, chatHistory, incomeProfile, confirmedDeductions } = req.body;
+      
+      const resolvedMessages = messages || chatHistory;
+      if (!resolvedMessages || !Array.isArray(resolvedMessages)) {
         res.status(400).json({ error: 'Conversation messages array is required.' });
         return;
       }
 
+      // Build a unified taxData object regardless of structure passed
+      const resolvedTaxData = taxData || {
+        ...incomeProfile,
+        hraExemption: confirmedDeductions?.['HRA exemption'] ?? confirmedDeductions?.hraExemption ?? 0,
+        deduction80C: confirmedDeductions?.['80C'] ?? 0,
+        deduction80CCD1B: confirmedDeductions?.['80CCD(1B)'] ?? 0,
+        deduction80CCD2: confirmedDeductions?.['80CCD(2)'] ?? 0,
+        deduction80D: confirmedDeductions?.['80D'] ?? 0,
+        deduction80DD: confirmedDeductions?.['80DD'] ?? 0,
+        deduction80U: confirmedDeductions?.['80U'] ?? 0,
+        deduction80DDB: confirmedDeductions?.['80DDB'] ?? 0,
+        deduction80E: confirmedDeductions?.['80E'] ?? 0,
+        deduction80EEA: confirmedDeductions?.['80EEA'] ?? 0,
+        deduction80G: confirmedDeductions?.['80G'] ?? 0,
+        deduction80GG: confirmedDeductions?.['80GG'] ?? 0,
+        deduction80TTA: confirmedDeductions?.['80TTA'] ?? 0,
+        deduction80TTB: confirmedDeductions?.['80TTB'] ?? 0,
+        section24b: confirmedDeductions?.section24b ?? 0,
+        stcg: incomeProfile?.stcg ?? 0,
+        ltcg: incomeProfile?.ltcg ?? 0,
+        grossSalary: incomeProfile?.grossSalary ?? 0,
+        otherIncome: incomeProfile?.otherIncome ?? 0,
+        tdsDeducted: incomeProfile?.tdsDeducted ?? 0,
+        formType: req.body.formType || incomeProfile?.formType || 'ITR-1'
+      };
+
       // We append a custom instructions system prompt that incorporates user's actual figures!
-      const stcg = Number(taxData?.stcg) || 0;
-      const ltcg = Number(taxData?.ltcg) || 0;
-      const calculatedFormType = (stcg > 0 || ltcg > 0) ? 'ITR-2' : (taxData?.formType || 'ITR-1');
+      const stcg = Number(resolvedTaxData?.stcg) || 0;
+      const ltcg = Number(resolvedTaxData?.ltcg) || 0;
+      const calculatedFormType = (stcg > 0 || ltcg > 0) ? 'ITR-2' : (resolvedTaxData?.formType || 'ITR-1');
 
       const systemInstruction = `You are TaxSense Copilot, an elite AI financial advisor specialized in Indian Income Tax filing for individuals for AY 2026-27.
       Your core mission is to help taxpayers understand old vs new tax regimes, optimize their deductions under Chapter VI-A, and route them correctly through ITR workflows:
@@ -282,26 +310,26 @@ async function startServer() {
       Here are the user's active, real-time tax figures for AY 2026-27:
       - Assessment Year: AY 2026-27 (Financial Year 2025-26)
       - Form Type: ${calculatedFormType}
-      - Gross Salary: ₹${taxData?.grossSalary?.toLocaleString('en-IN') || '0'}
-      - HRA Exemption: ₹${taxData?.hraExemption?.toLocaleString('en-IN') || '0'}
+      - Gross Salary: ₹${resolvedTaxData?.grossSalary?.toLocaleString('en-IN') || '0'}
+      - HRA Exemption: ₹${resolvedTaxData?.hraExemption?.toLocaleString('en-IN') || '0'}
       - Standard Deduction (Old): ₹50,000 (fixed)
       - Standard Deduction (New): ₹75,000 (fixed for FY 2025-26 / Budget 2025 update)
-      - Other Income (FD/Interest): ₹${taxData?.otherIncome?.toLocaleString('en-IN') || '0'}
+      - Other Income (FD/Interest): ₹${resolvedTaxData?.otherIncome?.toLocaleString('en-IN') || '0'}
       
       Claimed Chapter VI-A Deductions:
-      - Section 80C/80CCC/80CCD(1) (EPF, PPF, ELSS, Life Insurance, principal home loan): ₹${taxData?.deduction80C?.toLocaleString('en-IN') || '0'} (Combined limit: ₹1.5 Lakhs)
-      - Section 80CCD(1B) (Standalone Employee NPS): ₹${taxData?.deduction80CCD1B?.toLocaleString('en-IN') || '0'} (Max ₹50,000)
-      - Section 80CCD(2) (Employer NPS Contribution): ₹${taxData?.deduction80CCD2?.toLocaleString('en-IN') || '0'} (Deductible under both Old & New regime up to 10% of salary)
-      - Section 80D (Health Insurance Premium): ₹${taxData?.deduction80D?.toLocaleString('en-IN') || '0'} (Max ₹25,000 self / ₹50,000 senior citizen)
-      - Section 80DD/80U (Disability support/Self disability): ₹${((taxData?.deduction80DD || 0) + (taxData?.deduction80U || 0))?.toLocaleString('en-IN') || '0'} (Max ₹75,000 standard / ₹1,25,000 severe)
-      - Section 80DDB (Specified diseases like cancer): ₹${taxData?.deduction80DDB?.toLocaleString('en-IN') || '0'} (Max ₹40,000 standard / ₹1,00,000 senior)
-      - Section 80E (Education Loan Interest): ₹${taxData?.deduction80E?.toLocaleString('en-IN') || '0'} (Fully deductible, no upper limit, up to 8 years)
-      - Section 80EE/80EEA (Additional first-time home buyer interest): ₹${taxData?.deduction80EEA?.toLocaleString('en-IN') || '0'} (Max ₹1.5 Lakhs)
-      - Section 80G (Charitable Donations): ₹${taxData?.deduction80G?.toLocaleString('en-IN') || '0'} (50% or 100% eligibility rules)
-      - Section 80GG (Rent paid without HRA): ₹${taxData?.deduction80GG?.toLocaleString('en-IN') || '0'} (Capped at ₹5,000/month = ₹60,000/year)
-      - Section 80TTA/80TTB (Savings interest exemption): ₹${(taxData?.deduction80TTB || taxData?.deduction80TTA || 0)?.toLocaleString('en-IN') || '0'} (TTA standard ₹10k max / TTB senior ₹50k max)
-      - Section 24b Home Loan Interest: ₹${taxData?.section24b?.toLocaleString('en-IN') || '0'} (Max ₹2 Lakhs)
-      - Tax Deducted at Source (TDS): ₹${taxData?.tdsDeducted?.toLocaleString('en-IN') || '0'}
+      - Section 80C/80CCC/80CCD(1) (EPF, PPF, ELSS, Life Insurance, principal home loan): ₹${resolvedTaxData?.deduction80C?.toLocaleString('en-IN') || '0'} (Combined limit: ₹1.5 Lakhs)
+      - Section 80CCD(1B) (Standalone Employee NPS): ₹${resolvedTaxData?.deduction80CCD1B?.toLocaleString('en-IN') || '0'} (Max ₹50,000)
+      - Section 80CCD(2) (Employer NPS Contribution): ₹${resolvedTaxData?.deduction80CCD2?.toLocaleString('en-IN') || '0'} (Deductible under both Old & New regime up to 10% of salary)
+      - Section 80D (Health Insurance Premium): ₹${resolvedTaxData?.deduction80D?.toLocaleString('en-IN') || '0'} (Max ₹25,000 self / ₹50,000 senior citizen)
+      - Section 80DD/80U (Disability support/Self disability): ₹${((resolvedTaxData?.deduction80DD || 0) + (resolvedTaxData?.deduction80U || 0))?.toLocaleString('en-IN') || '0'} (Max ₹75,000 standard / ₹1,25,000 severe)
+      - Section 80DDB (Specified diseases like cancer): ₹${resolvedTaxData?.deduction80DDB?.toLocaleString('en-IN') || '0'} (Max ₹40,000 standard / ₹1,00,000 senior)
+      - Section 80E (Education Loan Interest): ₹${resolvedTaxData?.deduction80E?.toLocaleString('en-IN') || '0'} (Fully deductible, no upper limit, up to 8 years)
+      - Section 80EE/80EEA (Additional first-time home buyer interest): ₹${resolvedTaxData?.deduction80EEA?.toLocaleString('en-IN') || '0'} (Max ₹1.5 Lakhs)
+      - Section 80G (Charitable Donations): ₹${resolvedTaxData?.deduction80G?.toLocaleString('en-IN') || '0'} (50% or 100% eligibility rules)
+      - Section 80GG (Rent paid without HRA): ₹${resolvedTaxData?.deduction80GG?.toLocaleString('en-IN') || '0'} (Capped at ₹5,000/month = ₹60,000/year)
+      - Section 80TTA/80TTB (Savings interest exemption): ₹${(resolvedTaxData?.deduction80TTB || resolvedTaxData?.deduction80TTA || 0)?.toLocaleString('en-IN') || '0'} (TTA standard ₹10k max / TTB senior ₹50k max)
+      - Section 24b Home Loan Interest: ₹${resolvedTaxData?.section24b?.toLocaleString('en-IN') || '0'} (Max ₹2 Lakhs)
+      - Tax Deducted at Source (TDS): ₹${resolvedTaxData?.tdsDeducted?.toLocaleString('en-IN') || '0'}
 
       Portfolio & Capital Gains (ITR-2):
       - Short-Term Capital Gains (STCG, Section 111A): ₹${stcg.toLocaleString('en-IN')} (Taxed at flat 20% on listed equity under Union Budget 2024)
@@ -314,7 +342,7 @@ async function startServer() {
       - Keep responses friendly but professional. Maintain a high-trust, financial-grade tone. Do not use sales hype.`;
 
       // Map messages array to Gemini contents parameter
-      const contents = messages.map((msg: any) => ({
+      const contents = resolvedMessages.map((msg: any) => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }],
       }));

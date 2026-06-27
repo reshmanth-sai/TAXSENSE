@@ -474,7 +474,8 @@ export default function DeductionCard() {
                             <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
                             <input
                               type="text"
-                              value={val80C ? val80C.toLocaleString('en-IN') : ''}
+                              inputMode="numeric"
+                              value={val80C || ''}
                               onChange={(e) => handleTextInputChange('80C', LIMIT_80C, e.target.value)}
                               placeholder="0"
                               className="w-full pl-5 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-right text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
@@ -594,7 +595,8 @@ export default function DeductionCard() {
                           <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
                           <input
                             type="text"
-                            value={val80D ? val80D.toLocaleString('en-IN') : ''}
+                            inputMode="numeric"
+                            value={val80D || ''}
                             onChange={(e) => handleTextInputChange('80D', LIMIT_80D, e.target.value)}
                             placeholder="0"
                             className="w-full pl-5 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-right text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
@@ -709,7 +711,8 @@ export default function DeductionCard() {
                           <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
                           <input
                             type="text"
-                            value={valHRA ? valHRA.toLocaleString('en-IN') : ''}
+                            inputMode="numeric"
+                            value={valHRA || ''}
                             onChange={(e) => handleTextInputChange('HRA exemption', LIMIT_HRA, e.target.value)}
                             placeholder="0"
                             className="w-full pl-5 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-right text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
@@ -824,7 +827,8 @@ export default function DeductionCard() {
                           <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
                           <input
                             type="text"
-                            value={valNPS ? valNPS.toLocaleString('en-IN') : ''}
+                            inputMode="numeric"
+                            value={valNPS || ''}
                             onChange={(e) => handleTextInputChange('80CCD(1B)', LIMIT_NPS, e.target.value)}
                             placeholder="0"
                             className="w-full pl-5 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-right text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
@@ -941,7 +945,8 @@ export default function DeductionCard() {
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                             <input 
                               type="text"
-                              value={val80CCD2 ? val80CCD2.toLocaleString('en-IN') : ''}
+                              inputMode="numeric"
+                              value={val80CCD2 || ''}
                               onChange={(e) => handleTextInputChange('80CCD(2)', LIMIT_80CCD2 || 150000, e.target.value)}
                               placeholder="0"
                               className="w-full pl-4 pr-1 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono font-bold text-right text-slate-800"
@@ -975,7 +980,8 @@ export default function DeductionCard() {
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                             <input 
                               type="text"
-                              value={val80GG ? val80GG.toLocaleString('en-IN') : ''}
+                              inputMode="numeric"
+                              value={val80GG || ''}
                               onChange={(e) => handleTextInputChange('80GG', LIMIT_80GG, e.target.value)}
                               placeholder="0"
                               className="w-full pl-4 pr-1 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono font-bold text-right text-slate-800"
@@ -1005,7 +1011,8 @@ export default function DeductionCard() {
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                             <input 
                               type="text"
-                              value={val80E ? val80E.toLocaleString('en-IN') : ''}
+                              inputMode="numeric"
+                              value={val80E || ''}
                               onChange={(e) => handleTextInputChange('80E', LIMIT_80E, e.target.value)}
                               placeholder="0"
                               className="w-full pl-4 pr-1 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono font-bold text-right text-slate-800"
@@ -1035,7 +1042,8 @@ export default function DeductionCard() {
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                             <input 
                               type="text"
-                              value={val80EEA ? val80EEA.toLocaleString('en-IN') : ''}
+                              inputMode="numeric"
+                              value={val80EEA || ''}
                               onChange={(e) => handleTextInputChange('80EEA', LIMIT_80EEA, e.target.value)}
                               placeholder="0"
                               className="w-full pl-4 pr-1 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono font-bold text-right text-slate-800"
@@ -1065,7 +1073,8 @@ export default function DeductionCard() {
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                             <input 
                               type="text"
-                              value={val80TTA ? val80TTA.toLocaleString('en-IN') : ''}
+                              inputMode="numeric"
+                              value={val80TTA || ''}
                               onChange={(e) => handleTextInputChange('80TTA', LIMIT_80TTA, e.target.value)}
                               placeholder="0"
                               className="w-full pl-4 pr-1 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono font-bold text-right text-slate-800"
@@ -1094,7 +1103,8 @@ export default function DeductionCard() {
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                             <input 
                               type="text"
-                              value={val80TTB ? val80TTB.toLocaleString('en-IN') : ''}
+                              inputMode="numeric"
+                              value={val80TTB || ''}
                               onChange={(e) => handleTextInputChange('80TTB', LIMIT_80TTB, e.target.value)}
                               placeholder="0"
                               className="w-full pl-4 pr-1 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono font-bold text-right text-slate-800"
@@ -1274,7 +1284,8 @@ export default function DeductionCard() {
                         <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                         <input
                           type="text"
-                          value={val80CCD2 ? val80CCD2.toLocaleString('en-IN') : ''}
+                          inputMode="numeric"
+                          value={val80CCD2 || ''}
                           onChange={(e) => handleTextInputChange('80CCD(2)', maxPotentialNPS || 150000, e.target.value)}
                           placeholder="0"
                           className="w-full pl-4 pr-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono font-bold text-right text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -1332,7 +1343,8 @@ export default function DeductionCard() {
                         <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                         <input
                           type="text"
-                          value={val80CCH ? val80CCH.toLocaleString('en-IN') : ''}
+                          inputMode="numeric"
+                          value={val80CCH || ''}
                           onChange={(e) => handleTextInputChange('80CCH', LIMIT_80CCH, e.target.value)}
                           placeholder="0"
                           className="w-full pl-4 pr-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono font-bold text-right text-slate-800 focus:outline-none focus:ring-1 focus:ring-violet-500"
@@ -1390,7 +1402,8 @@ export default function DeductionCard() {
                         <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
                         <input
                           type="text"
-                          value={valSection24bLetOut ? valSection24bLetOut.toLocaleString('en-IN') : ''}
+                          inputMode="numeric"
+                          value={valSection24bLetOut || ''}
                           onChange={(e) => handleTextInputChange('section24bLetOut', LIMIT_24B_LETOUT, e.target.value)}
                           placeholder="0"
                           className="w-full pl-4 pr-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono font-bold text-right text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -1441,14 +1454,6 @@ export default function DeductionCard() {
       {/* Exemption Optimizer Footer */}
       <div className="border-t border-slate-100 pt-3 mt-4 flex items-center justify-between text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
         <span>Filing Year: FY 2025-26</span>
-        <a 
-          href="https://www.incometax.gov.in/iec/foportal/help/individual/income-tax-slabs" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="flex items-center gap-0.5 text-blue-600 hover:underline cursor-pointer lowercase normal-case tracking-normal"
-        >
-          Official slab guidelines <ArrowUpRight className="h-3 w-3" />
-        </a>
       </div>
     </div>
   );

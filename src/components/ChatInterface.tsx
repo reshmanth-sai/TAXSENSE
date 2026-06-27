@@ -21,7 +21,7 @@ export default function ChatInterface({ onFileUpload }: ChatInterfaceProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   // Central state from Zustand store
-  const chatHistory = useTaxStore((state) => state.chatHistory);
+  const chatHistory = useTaxStore((state) => state.chatHistory) || [];
   const addChatMessage = useTaxStore((state) => state.addChatMessage);
   const incomeProfile = useTaxStore((state) => state.incomeProfile);
   const confirmedDeductions = useTaxStore((state) => state.confirmedDeductions);
@@ -55,6 +55,30 @@ export default function ChatInterface({ onFileUpload }: ChatInterfaceProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          messages: [...chatHistory, userMsg],
+          taxData: {
+            stcg: incomeProfile.stcg || 0,
+            ltcg: incomeProfile.ltcg || 0,
+            formType: formType,
+            grossSalary: incomeProfile.grossSalary || 0,
+            hraExemption: confirmedDeductions['HRA exemption'] || confirmedDeductions.hraExemption || 0,
+            otherIncome: incomeProfile.otherIncome || 0,
+            deduction80C: confirmedDeductions['80C'] || 0,
+            deduction80CCD1B: confirmedDeductions['80CCD(1B)'] || 0,
+            deduction80CCD2: confirmedDeductions['80CCD(2)'] || 0,
+            deduction80D: confirmedDeductions['80D'] || 0,
+            deduction80DD: confirmedDeductions['80DD'] || 0,
+            deduction80U: confirmedDeductions['80U'] || 0,
+            deduction80DDB: confirmedDeductions['80DDB'] || 0,
+            deduction80E: confirmedDeductions['80E'] || 0,
+            deduction80EEA: confirmedDeductions['80EEA'] || 0,
+            deduction80G: confirmedDeductions['80G'] || 0,
+            deduction80GG: confirmedDeductions['80GG'] || 0,
+            deduction80TTA: confirmedDeductions['80TTA'] || 0,
+            deduction80TTB: confirmedDeductions['80TTB'] || 0,
+            section24b: confirmedDeductions.section24b || 0,
+            tdsDeducted: incomeProfile.tdsDeducted || 0,
+          },
           chatHistory: [...chatHistory, userMsg],
           incomeProfile: {
             grossSalary: incomeProfile.grossSalary || 0,
@@ -123,6 +147,19 @@ export default function ChatInterface({ onFileUpload }: ChatInterfaceProps) {
   const handlePromptClick = (text: string) => {
     if (isGenerating) return;
     handleSendMessage(text);
+  };
+
+  const handleWhatsAppChatExport = () => {
+    const last30Messages = chatHistory.slice(-30);
+    const formattedMessages = last30Messages.map((msg) => {
+      const label = msg.role === 'user' ? 'You' : 'TaxSense';
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `[${label} - ${timeStr}]: ${msg.content}`;
+    });
+
+    const fullText = `*TaxSense Chat Export (AY 2026-27)* 💬\n\n${formattedMessages.join('\n\n')}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(fullText)}`;
+    window.open(url, '_blank');
   };
 
   // Mock Form 16 Templates for Quick Testing in AI Studio Preview!
@@ -228,35 +265,48 @@ export default function ChatInterface({ onFileUpload }: ChatInterfaceProps) {
           </div>
         </div>
         
-        {/* Sample Documents Injector */}
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-slate-400">Sample Form 16:</span>
-          <div className="flex gap-1">
-            <button
-              id="btn-mock-standard"
-              onClick={() => handleSelectMockTemplate('standard')}
-              className="text-[10px] px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold border border-slate-200 rounded-md transition-colors"
-              title="TechSolutions Form 16 (₹8.5L Gross)"
-            >
-              ₹8.5L
-            </button>
-            <button
-              id="btn-mock-high"
-              onClick={() => handleSelectMockTemplate('high')}
-              className="text-[10px] px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold border border-slate-200 rounded-md transition-colors"
-              title="Alpha Global Corp Form 16 (₹14.8L Gross)"
-            >
-              ₹14.8L
-            </button>
-            <button
-              id="btn-mock-minimal"
-              onClick={() => handleSelectMockTemplate('minimal')}
-              className="text-[10px] px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold border border-slate-200 rounded-md transition-colors"
-              title="Basic Form 16 (₹5.2L Gross)"
-            >
-              ₹5.2L
-            </button>
-          </div>
+        {chatHistory.length > 0 && (
+          <button
+            onClick={handleWhatsAppChatExport}
+            className="text-[10px] px-2.5 py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold rounded-md transition-all flex items-center gap-1 cursor-pointer shrink-0 shadow-sm hover:shadow"
+            title="Export chat history to WhatsApp"
+          >
+            <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-11.336c-.137-.228-.508-.376-1.066-.656-.558-.28-2.617-1.291-3.024-1.439-.406-.148-.7-.223-.997.223-.296.445-1.15 1.45-1.408 1.748-.258.297-.516.335-1.074.055-.558-.28-2.355-.867-4.486-2.768-1.658-1.479-2.778-3.306-3.105-3.866-.327-.559-.035-.861.245-1.139.251-.251.558-.65.837-.975.279-.327.373-.559.558-.93.186-.373.093-.7-.046-.976-.14-.28-1.22-2.94-1.671-4.021-.439-1.055-.885-.913-1.22-.929-.317-.016-.68-.019-1.044-.019-.364 0-.957.137-1.457.683-.5 1.055-1.91 1.865-1.91 4.544 0 2.68 1.956 5.268 2.228 5.632.273.364 3.85 5.876 9.324 8.235 1.3.561 2.316.897 3.105 1.148 1.305.414 2.493.356 3.432.215.957-.14 2.617-1.07 2.99-2.102.373-1.031.373-1.91.26-2.102-.113-.19-.414-.303-.973-.583z" />
+            </svg>
+            <span>Export Chat</span>
+          </button>
+        )}
+      </div>
+
+      {/* Sub-header: Quick Try Prompts */}
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100 shrink-0">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sample Form 16 Templates</span>
+        <div className="flex gap-1.5">
+          <button
+            id="btn-mock-standard"
+            onClick={() => handleSelectMockTemplate('standard')}
+            className="text-[10px] px-2.5 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 text-slate-600 font-bold border border-slate-200/80 rounded-md transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] cursor-pointer"
+            title="TechSolutions Form 16 (₹8.5L Gross)"
+          >
+            ₹8.5L
+          </button>
+          <button
+            id="btn-mock-high"
+            onClick={() => handleSelectMockTemplate('high')}
+            className="text-[10px] px-2.5 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 text-slate-600 font-bold border border-slate-200/80 rounded-md transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] cursor-pointer"
+            title="Alpha Global Corp Form 16 (₹14.8L Gross)"
+          >
+            ₹14.8L
+          </button>
+          <button
+            id="btn-mock-minimal"
+            onClick={() => handleSelectMockTemplate('minimal')}
+            className="text-[10px] px-2.5 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 text-slate-600 font-bold border border-slate-200/80 rounded-md transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] cursor-pointer"
+            title="Basic Form 16 (₹5.2L Gross)"
+          >
+            ₹5.2L
+          </button>
         </div>
       </div>
 

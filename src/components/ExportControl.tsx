@@ -217,7 +217,7 @@ export default function ExportControl() {
       y += 6;
 
       const deductions = [
-        ['Section 80C (PPF, EPF, ELSS, principal loan)', formatVal(filingPayload.deductionsChapterVIA.section80C || 0)],
+        ['Section 80C (PPF, EPF, LIC, ELSS, principal loan)', formatVal(filingPayload.deductionsChapterVIA.section80C || 0)],
         ['Section 80D (Health Insurance Premium)', formatVal(filingPayload.deductionsChapterVIA.section80D || 0)],
         ['Section 10(13A) HRA Exemption', formatVal(filingPayload.deductionsChapterVIA.sectionHRA || 0)],
         ['Section 80CCD(1B) Standalone Employee NPS', formatVal(filingPayload.deductionsChapterVIA.section80CCD1B || 0)],
@@ -306,6 +306,33 @@ export default function ExportControl() {
     }
   };
 
+  // pure client-side WhatsApp summary share link
+  const handleWhatsAppShare = () => {
+    const formattedIncome = recommendedRegime === 'NEW' ? newRegime.taxableIncome : oldRegime.taxableIncome;
+    const formattedTax = recommendedRegime === 'NEW' ? newRegime.totalTaxPayable : oldRegime.totalTaxPayable;
+    const balanceVal = recommendedRegime === 'NEW' ? newRegime.refundOrOwed : oldRegime.refundOrOwed;
+    
+    let statusText = '';
+    if (balanceVal <= 0) {
+      statusText = `Estimated Refund: ₹${Math.abs(balanceVal).toLocaleString('en-IN')}`;
+    } else {
+      statusText = `Tax Owed: ₹${balanceVal.toLocaleString('en-IN')}`;
+    }
+
+    const text = `*TaxSense ITR Summary (AY 2026-27)* 🇮🇳
+----------------------------------
+• *Recommended Regime:* ${recommendedRegime === 'NEW' ? 'New Tax Regime' : 'Old Tax Regime'}
+• *Taxable Income:* ₹${formattedIncome.toLocaleString('en-IN')}
+• *Total Tax Payable:* ₹${formattedTax.toLocaleString('en-IN')}
+• *${statusText}*
+• *Estimated Savings:* ₹${savings.toLocaleString('en-IN')}
+
+_Generated via TaxSense ITR Copilot_`;
+
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
 
 
   return (
@@ -353,7 +380,7 @@ export default function ExportControl() {
             <span>ITR Exports</span>
           </div>
           
-          <div className="flex">
+          <div className="flex flex-col gap-1.5">
             {/* Download Text Summary */}
             <button
               id="btn-download-summary"
@@ -375,6 +402,18 @@ export default function ExportControl() {
                   <span>Download</span>
                 </>
               )}
+            </button>
+
+            {/* WhatsApp Share Button */}
+            <button
+              id="btn-whatsapp-share"
+              onClick={handleWhatsAppShare}
+              className="w-full h-8 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer select-none active:scale-95 border border-transparent shadow-xs"
+            >
+              <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-11.336c-.137-.228-.508-.376-1.066-.656-.558-.28-2.617-1.291-3.024-1.439-.406-.148-.7-.223-.997.223-.296.445-1.15 1.45-1.408 1.748-.258.297-.516.335-1.074.055-.558-.28-2.355-.867-4.486-2.768-1.658-1.479-2.778-3.306-3.105-3.866-.327-.559-.035-.861.245-1.139.251-.251.558-.65.837-.975.279-.327.373-.559.558-.93.186-.373.093-.7-.046-.976-.14-.28-1.22-2.94-1.671-4.021-.439-1.055-.885-.913-1.22-.929-.317-.016-.68-.019-1.044-.019-.364 0-.957.137-1.457.683-.5 1.055-1.91 1.865-1.91 4.544 0 2.68 1.956 5.268 2.228 5.632.273.364 3.85 5.876 9.324 8.235 1.3.561 2.316.897 3.105 1.148 1.305.414 2.493.356 3.432.215.957-.14 2.617-1.07 2.99-2.102.373-1.031.373-1.91.26-2.102-.113-.19-.414-.303-.973-.583z" />
+              </svg>
+              <span>Share on WhatsApp</span>
             </button>
           </div>
         </div>

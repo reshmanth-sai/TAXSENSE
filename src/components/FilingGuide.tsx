@@ -589,9 +589,19 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
                 <AlertCircle className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                 <span>Always verify details against official communication received on your registered email & phone number.</span>
               </div>
-              <div className="flex items-center gap-1 font-semibold text-slate-600 shrink-0">
-                <span>AY 2026-27 Rules</span>
-                <ChevronRight className="h-3 w-3 text-slate-400" />
+              <div className="flex items-center gap-3 font-semibold text-slate-600 shrink-0 flex-wrap">
+                <a 
+                  href="https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="bg-white hover:bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded-md border border-slate-200 inline-flex items-center gap-1 transition-colors cursor-pointer text-[9px]"
+                >
+                  <span>Official Guidelines</span> <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+                <div className="flex items-center gap-1">
+                  <span>AY 2026-27 Rules</span>
+                  <ChevronRight className="h-3 w-3 text-slate-400" />
+                </div>
               </div>
             </div>
           </motion.div>

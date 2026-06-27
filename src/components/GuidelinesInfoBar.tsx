@@ -11,7 +11,8 @@ import {
   FileText,
   AlertTriangle,
   ArrowUpRight,
-  BookOpen
+  BookOpen,
+  ExternalLink
 } from 'lucide-react';
 import { useTaxStore } from '../store/useTaxStore';
 import { formatINR } from '../utils/taxCalculator';
@@ -54,9 +55,19 @@ export default function GuidelinesInfoBar() {
             <BookOpen className="w-4.5 h-4.5" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex flex-wrap items-center gap-1.5">
               TaxSense Guidelines & Interactive Info Hub
               <span className="text-[9px] bg-blue-600 text-white font-extrabold px-1.5 py-0.5 rounded-full lowercase normal-case tracking-normal">FY 2025-26 guidelines</span>
+              <a 
+                href="https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={(e) => e.stopPropagation()}
+                className="text-[9px] bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 transition-colors normal-case tracking-normal cursor-pointer"
+              >
+                <span>Official Guidelines</span>
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
             </h3>
             <p className="text-[10px] text-slate-500 font-medium">Click to expand or collapse standard slab guides, document checklists, and eligibility logs</p>
           </div>
@@ -333,6 +344,21 @@ export default function GuidelinesInfoBar() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* General Disclaimer and Official Link Bar */}
+              <div className="bg-slate-50/60 border-t border-slate-100 p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-slate-400 font-medium mt-4">
+                <span className="leading-normal">
+                  ⚠️ <strong>Disclaimer:</strong> This Copilot guides you through current Income Tax Department procedures based on assessment year AY 2026-27 rules. Double-check all values with official filings.
+                </span>
+                <a 
+                  href="https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-2.5 py-1 rounded-md border border-slate-200 inline-flex items-center gap-1 transition-colors shrink-0 cursor-pointer text-[9.5px]"
+                >
+                  <span>Official Guidelines</span> <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           </motion.div>
         )}

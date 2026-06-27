@@ -278,7 +278,8 @@ export default function ExtractionConfirm({
               <span className="absolute left-3.5 top-2.5 text-slate-400 text-xs font-semibold">₹</span>
               <input
                 type="text"
-                value={grossSalary ? grossSalary.toLocaleString('en-IN') : ''}
+                inputMode="numeric"
+                value={grossSalary || ''}
                 onChange={(e) => handleNumericStateChange(setGrossSalary, e.target.value)}
                 className={`w-full bg-slate-50 border rounded-xl py-2 pl-8 pr-3.5 text-sm text-slate-800 font-mono focus:outline-none focus:bg-white transition-all ${
                   isGrossSalaryEmpty ? 'border-amber-500/50 ring-1 ring-amber-500/10 bg-amber-50/10' : 'border-slate-200 focus:border-blue-500'
@@ -320,7 +321,8 @@ export default function ExtractionConfirm({
               <span className="absolute left-3.5 top-2.5 text-slate-400 text-xs font-semibold">₹</span>
               <input
                 type="text"
-                value={tdsDeducted ? tdsDeducted.toLocaleString('en-IN') : ''}
+                inputMode="numeric"
+                value={tdsDeducted || ''}
                 onChange={(e) => handleNumericStateChange(setTdsDeducted, e.target.value)}
                 className={`w-full bg-slate-50 border rounded-xl py-2 pl-8 pr-3.5 text-sm text-slate-800 font-mono focus:outline-none focus:bg-white transition-all ${
                   isTdsDeductedEmpty ? 'border-amber-500/50 ring-1 ring-amber-500/10 bg-amber-50/10' : 'border-slate-200 focus:border-blue-500'
@@ -362,7 +364,8 @@ export default function ExtractionConfirm({
               <span className="absolute left-3.5 top-2.5 text-slate-400 text-xs font-semibold">₹</span>
               <input
                 type="text"
-                value={pfContribution ? pfContribution.toLocaleString('en-IN') : ''}
+                inputMode="numeric"
+                value={pfContribution || ''}
                 onChange={(e) => handleNumericStateChange(setPfContribution, e.target.value)}
                 className={`w-full bg-slate-50 border rounded-xl py-2 pl-8 pr-3.5 text-sm text-slate-800 font-mono focus:outline-none focus:bg-white transition-all ${
                   isPfContributionEmpty ? 'border-slate-200 focus:border-blue-500' : 'border-slate-200 focus:border-blue-500'
@@ -404,7 +407,8 @@ export default function ExtractionConfirm({
               <span className="absolute left-3.5 top-2.5 text-slate-400 text-xs font-semibold">₹</span>
               <input
                 type="text"
-                value={hraReceived ? hraReceived.toLocaleString('en-IN') : ''}
+                inputMode="numeric"
+                value={hraReceived || ''}
                 onChange={(e) => handleNumericStateChange(setHraReceived, e.target.value)}
                 className={`w-full bg-slate-50 border rounded-xl py-2 pl-8 pr-3.5 text-sm text-slate-800 font-mono focus:outline-none focus:bg-white transition-all ${
                   isHraReceivedEmpty ? 'border-slate-200 focus:border-blue-500' : 'border-slate-200 focus:border-blue-500'
@@ -430,7 +434,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={otherIncome ? otherIncome.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={otherIncome || ''}
                   onChange={(e) => handleNumericStateChange(setOtherIncome, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -443,7 +448,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={deduction80C ? deduction80C.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={deduction80C || ''}
                   onChange={(e) => handleNumericStateChange(setDeduction80C, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -456,7 +462,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={deduction80D ? deduction80D.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={deduction80D || ''}
                   onChange={(e) => handleNumericStateChange(setDeduction80D, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -469,7 +476,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={basicSalary ? basicSalary.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={basicSalary || ''}
                   onChange={(e) => handleNumericStateChange(setBasicSalary, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -482,7 +490,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={deduction80CCD1B ? deduction80CCD1B.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={deduction80CCD1B || ''}
                   onChange={(e) => handleNumericStateChange(setDeduction80CCD1B, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -495,7 +504,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={deduction80E ? deduction80E.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={deduction80E || ''}
                   onChange={(e) => handleNumericStateChange(setDeduction80E, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -508,7 +518,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={deduction80G ? deduction80G.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={deduction80G || ''}
                   onChange={(e) => handleNumericStateChange(setDeduction80G, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -521,7 +532,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={deduction80TTA ? deduction80TTA.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={deduction80TTA || ''}
                   onChange={(e) => handleNumericStateChange(setDeduction80TTA, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
@@ -534,7 +546,8 @@ export default function ExtractionConfirm({
                 <span className="absolute left-3 top-2 text-slate-400 text-[11px] font-semibold">₹</span>
                 <input
                   type="text"
-                  value={section24b ? section24b.toLocaleString('en-IN') : ''}
+                  inputMode="numeric"
+                  value={section24b || ''}
                   onChange={(e) => handleNumericStateChange(setSection24b, e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500"
                   placeholder="0"
