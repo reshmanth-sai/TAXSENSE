@@ -55,6 +55,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
 export default function RegimeComparison() {
   const incomeProfile = useTaxStore((state) => state.incomeProfile);
   const confirmedDeductions = useTaxStore((state) => state.confirmedDeductions);
+  const theme = useTaxStore((state) => state.theme) || 'light';
 
   // Map Zustand store profile directly to the TaxData structure expected by calculateTax helper
   const taxData: TaxData = {
@@ -130,25 +131,25 @@ export default function RegimeComparison() {
   ];
 
   return (
-    <div id="regime-comparison-card" className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm text-slate-800 flex flex-col justify-between">
+    <div id="regime-comparison-card" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm text-slate-800 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
       <div>
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-4 mb-5 transition-colors duration-200">
           <div>
-            <h3 className="text-base font-bold text-slate-800">Tax Regime Comparison</h3>
-            <p className="text-xs text-slate-400 font-medium">AY 2026-27 Side-by-Side Analysis</p>
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">Tax Regime Comparison</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">AY 2026-27 Side-by-Side Analysis</p>
           </div>
           {savings > 0 ? (
             <motion.div 
               key={savings}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-full"
+              className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full transition-colors duration-200"
             >
-              <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+              <Sparkles className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-450" />
               <span>Save {formatINR(savings)}</span>
             </motion.div>
           ) : (
-            <div className="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-semibold rounded-full">
+            <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-505 dark:text-slate-400 text-xs font-semibold rounded-full transition-colors duration-200">
               Equal Tax
             </div>
           )}
@@ -159,10 +160,10 @@ export default function RegimeComparison() {
           {/* Old Regime bar */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 Old Tax Regime
                 {recommendedRegime === 'OLD' && (
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-100 flex items-center gap-0.5 font-bold">
+                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-455 rounded border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-0.5 font-bold transition-colors duration-200">
                     <Check className="h-2.5 w-2.5" /> Best Choice
                   </span>
                 )}
@@ -171,15 +172,15 @@ export default function RegimeComparison() {
                 key={oldRegime.totalTaxPayable}
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
-                className={`font-mono font-bold ${recommendedRegime === 'OLD' ? 'text-emerald-600' : 'text-slate-500'}`}
+                className={`font-mono font-bold ${recommendedRegime === 'OLD' ? 'text-emerald-600 dark:text-emerald-405' : 'text-slate-500 dark:text-slate-450'}`}
               >
                 {formatINR(oldRegime.totalTaxPayable)}
               </motion.span>
             </div>
-            <div className="h-3.5 bg-slate-100 rounded-lg overflow-hidden border border-slate-200/60 p-0.5">
+            <div className="h-3.5 bg-slate-100 dark:bg-slate-950 rounded-lg overflow-hidden border border-slate-200/60 dark:border-slate-805 p-0.5 transition-colors duration-200">
               <motion.div
                 className={`h-full rounded-md ${
-                  recommendedRegime === 'OLD' ? 'bg-emerald-500' : 'bg-slate-300'
+                  recommendedRegime === 'OLD' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
                 }`}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(6, oldPct)}%` }}
@@ -191,10 +192,10 @@ export default function RegimeComparison() {
           {/* New Regime bar */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 New Tax Regime (Simplified)
                 {recommendedRegime === 'NEW' && (
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-100 flex items-center gap-0.5 font-bold">
+                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-455 rounded border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-0.5 font-bold transition-colors duration-200">
                     <Check className="h-2.5 w-2.5" /> Best Choice
                   </span>
                 )}
@@ -203,15 +204,15 @@ export default function RegimeComparison() {
                 key={newRegime.totalTaxPayable}
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
-                className={`font-mono font-bold ${recommendedRegime === 'NEW' ? 'text-emerald-600' : 'text-slate-500'}`}
+                className={`font-mono font-bold ${recommendedRegime === 'NEW' ? 'text-emerald-600 dark:text-emerald-405' : 'text-slate-500 dark:text-slate-455'}`}
               >
                 {formatINR(newRegime.totalTaxPayable)}
               </motion.span>
             </div>
-            <div className="h-3.5 bg-slate-100 rounded-lg overflow-hidden border border-slate-200/60 p-0.5">
+            <div className="h-3.5 bg-slate-100 dark:bg-slate-950 rounded-lg overflow-hidden border border-slate-200/60 dark:border-slate-805 p-0.5 transition-colors duration-200">
               <motion.div
                 className={`h-full rounded-md ${
-                  recommendedRegime === 'NEW' ? 'bg-emerald-500' : 'bg-slate-300'
+                  recommendedRegime === 'NEW' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
                 }`}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(6, newPct)}%` }}
@@ -222,8 +223,8 @@ export default function RegimeComparison() {
         </div>
 
         {/* Recharts Graphical Side-by-Side Tax Breakdown */}
-        <div className="bg-slate-50/50 border border-slate-150 rounded-2xl p-4.5 mb-6 shadow-2xs">
-          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+        <div className="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-150 dark:border-slate-850 rounded-2xl p-4.5 mb-6 shadow-2xs transition-colors duration-200">
+          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-305 uppercase tracking-wider mb-4 flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 bg-indigo-500 rounded-full"></span>
             Liability Component Breakdown (₹)
           </h4>
@@ -233,26 +234,26 @@ export default function RegimeComparison() {
                 data={chartData}
                 margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} vertical={false} />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fill: '#475569', fontWeight: 600, fontSize: '11px' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
+                  tick={{ fill: theme === 'dark' ? '#94a3b8' : '#475569', fontWeight: 600, fontSize: '11px' }}
+                  axisLine={{ stroke: theme === 'dark' ? '#334155' : '#cbd5e1' }}
                   tickLine={false}
                 />
                 <YAxis 
                   tickFormatter={(val) => val >= 100000 ? `₹${(val/100000).toFixed(1)}L` : val >= 1000 ? `₹${val/1000}k` : `₹${val}`}
-                  tick={{ fill: '#64748b', fontFamily: 'monospace', fontWeight: 500 }}
+                  tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontFamily: 'monospace', fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9', opacity: 0.4 }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: theme === 'dark' ? '#1e293b' : '#f1f5f9', opacity: 0.4 }} />
                 <Legend 
                   verticalAlign="top" 
                   height={32}
                   iconType="circle"
                   iconSize={8}
-                  wrapperStyle={{ fontSize: '10px', fontWeight: 600, color: '#475569' }}
+                  wrapperStyle={{ fontSize: '10px', fontWeight: 600, color: theme === 'dark' ? '#cbd5e1' : '#475569' }}
                 />
                 <Bar dataKey="Slab Tax" stackId="tax" fill="#3b82f6" radius={[0, 0, 0, 0]} barSize={42} />
                 {totalCGTax > 0 && (
@@ -265,27 +266,27 @@ export default function RegimeComparison() {
         </div>
 
         {/* Detailed side-by-side comparison table */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden mb-5 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-5 shadow-sm transition-colors duration-200">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400">
                 <th className="p-3 font-semibold">Tax Parameter</th>
                 <th className="p-3 text-right font-semibold">Old Regime</th>
                 <th className="p-3 text-right font-semibold">New Regime</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+            <tbody className="divide-y divide-slate-105 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
               <tr>
-                <td className="p-3 text-slate-500">Gross Total Salary + Interest</td>
+                <td className="p-3 text-slate-500 dark:text-slate-400">Gross Total Salary + Interest</td>
                 <td className="p-3 text-right font-mono">{formatINR(oldRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
                 <td className="p-3 text-right font-mono">{formatINR(newRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
               </tr>
               
               {/* Optional Capital Gains section */}
               {((incomeProfile.stcg || 0) > 0 || (incomeProfile.ltcg || 0) > 0) && (
-                <tr className="bg-amber-50/20 text-slate-800">
-                  <td className="p-3 text-slate-600 font-semibold flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-amber-650" />
+                <tr className="bg-amber-50/20 dark:bg-amber-950/10 text-slate-800 dark:text-slate-200">
+                  <td className="p-3 text-slate-600 dark:text-slate-400 font-semibold flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
                     <span>Capital Gains Total (STCG + LTCG)</span>
                   </td>
                   <td className="p-3 text-right font-mono">{formatINR((incomeProfile.stcg || 0) + (incomeProfile.ltcg || 0))}</td>
@@ -294,59 +295,59 @@ export default function RegimeComparison() {
               )}
 
               <tr>
-                <td className="p-3 text-slate-500 font-semibold text-rose-500">Standard Deduction</td>
-                <td className="p-3 text-right font-mono text-rose-500">-{formatINR(50000)}</td>
-                <td className="p-3 text-right font-mono text-rose-500">-{formatINR(75000)}</td>
+                <td className="p-3 text-slate-500 dark:text-slate-450 font-semibold text-rose-500 dark:text-rose-400">Standard Deduction</td>
+                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-400">-{formatINR(50000)}</td>
+                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-400">-{formatINR(75000)}</td>
               </tr>
               
               <tr>
-                <td className="p-3 text-slate-500">Claimed Deductions (80C, 80D, HRA etc.)</td>
-                <td className="p-3 text-right font-mono text-slate-500">-{formatINR(totalDeductionsClaimed)}</td>
-                <td className="p-3 text-right font-mono text-slate-400">
+                <td className="p-3 text-slate-500 dark:text-slate-400">Claimed Deductions (80C, 80D, HRA etc.)</td>
+                <td className="p-3 text-right font-mono text-slate-500 dark:text-slate-450">-{formatINR(totalDeductionsClaimed)}</td>
+                <td className="p-3 text-right font-mono text-slate-400 dark:text-slate-500">
                   {confirmedDeductions['80CCD(2)'] ? `-${formatINR(confirmedDeductions['80CCD(2)'])}` : 'Not Allowed'}
                 </td>
               </tr>
 
-              <tr className="bg-slate-50/50">
-                <td className="p-3 font-semibold text-slate-800">Net Taxable Income</td>
-                <td className="p-3 text-right font-mono font-bold text-slate-800">{formatINR(oldRegime.taxableIncome)}</td>
-                <td className="p-3 text-right font-mono font-bold text-slate-800">{formatINR(newRegime.taxableIncome)}</td>
+              <tr className="bg-slate-50/50 dark:bg-slate-950/20">
+                <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">Net Taxable Income</td>
+                <td className="p-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{formatINR(oldRegime.taxableIncome)}</td>
+                <td className="p-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{formatINR(newRegime.taxableIncome)}</td>
               </tr>
 
               <tr>
-                <td className="p-3 text-slate-500">Base Slab Tax (Normal slabs)</td>
+                <td className="p-3 text-slate-500 dark:text-slate-400">Base Slab Tax (Normal slabs)</td>
                 <td className="p-3 text-right font-mono">{formatINR(oldRegime.baseTax)}</td>
                 <td className="p-3 text-right font-mono">{formatINR(newRegime.baseTax)}</td>
               </tr>
 
               {totalCGTax > 0 && (
-                <tr className="bg-amber-50/10">
-                  <td className="p-3 text-amber-800 font-semibold text-[11px] pl-5">
+                <tr className="bg-amber-50/10 dark:bg-amber-950/10">
+                  <td className="p-3 text-amber-800 dark:text-amber-400 font-semibold text-[11px] pl-5">
                     → Capital Gains Tax (Flat 20% & 12.5%)
                   </td>
-                  <td className="p-3 text-right font-mono text-amber-700">+{formatINR(totalCGTax)}</td>
-                  <td className="p-3 text-right font-mono text-amber-700">+{formatINR(totalCGTax)}</td>
+                  <td className="p-3 text-right font-mono text-amber-700 dark:text-amber-405">+{formatINR(totalCGTax)}</td>
+                  <td className="p-3 text-right font-mono text-amber-700 dark:text-amber-405">+{formatINR(totalCGTax)}</td>
                 </tr>
               )}
 
               <tr>
-                <td className="p-3 text-slate-500">Section 87A Rebate</td>
-                <td className="p-3 text-right font-mono text-rose-500">-{formatINR(oldRegime.rebate87A)}</td>
-                <td className="p-3 text-right font-mono text-rose-500">-{formatINR(newRegime.rebate87A)}</td>
+                <td className="p-3 text-slate-500 dark:text-slate-400">Section 87A Rebate</td>
+                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-455">-{formatINR(oldRegime.rebate87A)}</td>
+                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-455">-{formatINR(newRegime.rebate87A)}</td>
               </tr>
 
               <tr>
-                <td className="p-3 text-slate-500 font-medium">Health & Education Cess (4%)</td>
+                <td className="p-3 text-slate-500 dark:text-slate-400 font-medium">Health & Education Cess (4%)</td>
                 <td className="p-3 text-right font-mono">{formatINR(oldRegime.cess)}</td>
                 <td className="p-3 text-right font-mono">{formatINR(newRegime.cess)}</td>
               </tr>
 
-              <tr className="bg-slate-50 font-bold border-t border-slate-200">
-                <td className="p-3 font-bold text-slate-800">Total Tax Payable</td>
-                <td className={`p-3 text-right font-mono font-bold text-sm ${recommendedRegime === 'OLD' ? 'text-emerald-600' : 'text-slate-755'}`}>
+              <tr className="bg-slate-50 dark:bg-slate-950 font-bold border-t border-slate-200 dark:border-slate-800">
+                <td className="p-3 font-bold text-slate-800 dark:text-slate-200">Total Tax Payable</td>
+                <td className={`p-3 text-right font-mono font-bold text-sm ${recommendedRegime === 'OLD' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-755 dark:text-slate-400'}`}>
                   {formatINR(oldRegime.totalTaxPayable)}
                 </td>
-                <td className={`p-3 text-right font-mono font-bold text-sm ${recommendedRegime === 'NEW' ? 'text-emerald-600' : 'text-slate-755'}`}>
+                <td className={`p-3 text-right font-mono font-bold text-sm ${recommendedRegime === 'NEW' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-755 dark:text-slate-400'}`}>
                   {formatINR(newRegime.totalTaxPayable)}
                 </td>
               </tr>
@@ -356,12 +357,12 @@ export default function RegimeComparison() {
       </div>
 
       {/* Recommendation Banner */}
-      <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+      <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors duration-200 ${
         recommendedRegime === 'NEW' 
-          ? 'bg-neutral-900 border-neutral-800 text-neutral-100' 
-          : 'bg-blue-50 border-blue-100 text-blue-800'
+          ? 'bg-neutral-900 dark:bg-slate-950 border-neutral-800 dark:border-slate-800 text-neutral-100 dark:text-slate-200' 
+          : 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/50 text-blue-800 dark:text-blue-300'
       }`}>
-        <ShieldCheck className={`h-5 w-5 shrink-0 mt-0.5 ${recommendedRegime === 'NEW' ? 'text-white' : 'text-blue-600'}`} />
+        <ShieldCheck className={`h-5 w-5 shrink-0 mt-0.5 ${recommendedRegime === 'NEW' ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} />
         <div className="space-y-1">
           <h4 className="text-xs font-bold uppercase tracking-wider font-mono">
             RECOMMENDED ROUTE: {recommendedRegime === 'NEW' ? 'NEW TAX REGIME' : 'OLD TAX REGIME'}

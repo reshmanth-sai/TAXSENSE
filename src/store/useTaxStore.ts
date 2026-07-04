@@ -50,6 +50,16 @@ export interface ChatMessageItem {
   content: string;
 }
 
+export interface FilingHistoryItem {
+  id: string;
+  date: string;
+  grossSalary: number;
+  totalDeductions: number;
+  netTaxPaid: number;
+  recommendedRegime: 'NEW' | 'OLD';
+  formType: 'ITR-1' | 'ITR-2';
+}
+
 export type CurrentStep = 'HOME' | 'LANDING' | 'CONFIRM_EXTRACTION' | 'CHAT_QA' | 'FINAL_EXPORT';
 
 export interface TaxStoreState {
@@ -62,6 +72,8 @@ export interface TaxStoreState {
   formType: 'ITR-1' | 'ITR-2';
   multiHouse: boolean;
   foreignAssets: boolean;
+  theme?: 'light' | 'dark';
+  filingHistory: FilingHistoryItem[];
   
   setIncomeProfile: (profile: Partial<IncomeProfile>) => void;
   updateDeduction: (key: keyof ConfirmedDeductions, value: number) => void;
@@ -72,6 +84,9 @@ export interface TaxStoreState {
   setFormType: (type: 'ITR-1' | 'ITR-2') => void;
   setMultiHouse: (val: boolean) => void;
   setForeignAssets: (val: boolean) => void;
+  setTheme: (theme: 'light' | 'dark') => void;
+  addFilingHistory: (item: FilingHistoryItem) => void;
+  clearFilingHistory: () => void;
   clearSession: () => void;
 }
 
@@ -140,6 +155,8 @@ export const useTaxStore = create<TaxStoreState>()(
       formType: 'ITR-1',
       multiHouse: false,
       foreignAssets: false,
+      theme: 'light',
+      filingHistory: [],
 
       setIncomeProfile: (profile) =>
         set((state) => {
@@ -204,11 +221,22 @@ export const useTaxStore = create<TaxStoreState>()(
           };
         }),
 
+      setTheme: (theme) =>
+        set({ theme }),
+
+      addFilingHistory: (item) =>
+        set((state) => ({
+          filingHistory: [...(state.filingHistory || []), item],
+        })),
+
+      clearFilingHistory: () =>
+        set({ filingHistory: [] }),
+
       clearSession: () => {
         // Clear from localStorage explicitly
         localStorage.removeItem('taxsense_session_cache');
-        // Reset state
-        set({
+        // Reset state (preserves history)
+        set((state) => ({
           incomeProfile: defaultIncomeProfile,
           confirmedDeductions: defaultConfirmedDeductions,
           chatHistory: defaultChatHistory,
@@ -218,7 +246,8 @@ export const useTaxStore = create<TaxStoreState>()(
           formType: 'ITR-1',
           multiHouse: false,
           foreignAssets: false,
-        });
+          theme: 'light',
+        }));
       },
     }),
     {
@@ -234,6 +263,8 @@ export const useTaxStore = create<TaxStoreState>()(
         formType: state.formType,
         multiHouse: state.multiHouse,
         foreignAssets: state.foreignAssets,
+        theme: state.theme,
+        filingHistory: state.filingHistory,
       }),
     }
   )

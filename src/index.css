@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;650;700&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
@@ -11,6 +13,12 @@ body {
   font-family: var(--font-sans);
   background-color: #F8FAFC; /* Slate 50 */
   color: #0F172A; /* Slate 900 */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dark body {
+  background-color: #0F172A; /* Slate 900 */
+  color: #F8FAFC; /* Slate 50 */
 }
 
 /* Custom Scrollbars */
@@ -21,12 +29,21 @@ body {
 ::-webkit-scrollbar-track {
   background: #F8FAFC;
 }
+.dark ::-webkit-scrollbar-track {
+  background: #0F172A;
+}
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;
   border-radius: 9999px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* Shifting Shimmer Keyframes and Utilities */
@@ -49,5 +66,458 @@ body {
   background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite linear;
+}
+
+/* Dark Mode Overrides for Deductions, Export, Portfolios, Extractions and Checklists */
+.dark #deductions-card,
+.dark #deductions-card-skeleton,
+.dark #export-hub-container,
+.dark #extraction-loading-state,
+.dark #extraction-confirm-card,
+.dark #filing-guide-modal,
+.dark #portfolio-sync-widget {
+  background-color: #1e293b !important; /* bg-slate-800 */
+  border-color: #334155 !important; /* border-slate-700 */
+  color: #cbd5e1 !important; /* text-slate-300 */
+}
+
+/* Background overrides for subregions */
+.dark #deductions-card .bg-slate-50,
+.dark #deductions-card .bg-slate-50\/10,
+.dark #deductions-card .bg-slate-50\/50,
+.dark #deductions-card .bg-slate-100,
+.dark #deductions-card .bg-slate-100\/50,
+.dark #deductions-card-skeleton .bg-slate-50,
+.dark #deductions-card-skeleton .bg-slate-100,
+.dark #export-hub-container .bg-slate-50,
+.dark #export-hub-container .bg-slate-100,
+.dark #export-hub-container .bg-white,
+.dark #extraction-confirm-card .bg-slate-50,
+.dark #extraction-confirm-card .bg-slate-100,
+.dark #filing-guide-modal .bg-slate-50,
+.dark #filing-guide-modal .bg-slate-100,
+.dark #filing-guide-modal .bg-slate-100\/50,
+.dark #filing-guide-modal .bg-white,
+.dark #portfolio-sync-widget .bg-slate-50,
+.dark #portfolio-sync-widget .bg-neutral-950,
+.dark #portfolio-sync-widget .bg-neutral-900 {
+  background-color: #0f172a !important; /* bg-slate-900 */
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Title and typography colors */
+.dark #deductions-card h3,
+.dark #deductions-card h2,
+.dark #deductions-card h4,
+.dark #deductions-card-skeleton h3,
+.dark #export-hub-container h3,
+.dark #export-hub-container h4,
+.dark #extraction-confirm-card h3,
+.dark #extraction-confirm-card h4,
+.dark #filing-guide-modal h2,
+.dark #filing-guide-modal h3,
+.dark #portfolio-sync-widget h3,
+.dark #portfolio-sync-widget h4 {
+  color: #ffffff !important;
+}
+
+/* Body / label text adjustments */
+.dark #deductions-card p,
+.dark #deductions-card label,
+.dark #export-hub-container p,
+.dark #export-hub-container label,
+.dark #extraction-confirm-card p,
+.dark #extraction-confirm-card label,
+.dark #filing-guide-modal p,
+.dark #filing-guide-modal label,
+.dark #portfolio-sync-widget p,
+.dark #portfolio-sync-widget label {
+  color: #94a3b8 !important;
+}
+
+/* Text inputs styling */
+.dark #deductions-card input[type="text"],
+.dark #deductions-card input[type="number"],
+.dark #extraction-confirm-card input[type="text"],
+.dark #extraction-confirm-card input[type="number"],
+.dark #portfolio-sync-widget input[type="text"] {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+.dark #deductions-card input[type="text"]:focus,
+.dark #extraction-confirm-card input[type="text"]:focus,
+.dark #portfolio-sync-widget input[type="text"]:focus {
+  border-color: #3b82f6 !important;
+  outline: none !important;
+}
+
+/* Range input accent adjustments */
+.dark #deductions-card input[type="range"] {
+  background-color: #334155 !important;
+}
+
+/* Button variants styling */
+.dark #deductions-card button.bg-white,
+.dark #export-hub-container button.bg-white,
+.dark #filing-guide-modal button.bg-white,
+.dark #portfolio-sync-widget button.bg-white {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+.dark #deductions-card button.bg-white:hover,
+.dark #export-hub-container button.bg-white:hover,
+.dark #filing-guide-modal button.bg-white:hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+.dark #deductions-card button.bg-neutral-900,
+.dark #export-hub-container button.bg-neutral-900,
+.dark #filing-guide-modal button.bg-neutral-900,
+.dark #portfolio-sync-widget button.bg-neutral-900 {
+  background-color: #3b82f6 !important; /* Accent blue */
+  color: #ffffff !important;
+}
+
+.dark #deductions-card button.bg-neutral-900:hover,
+.dark #export-hub-container button.bg-neutral-900:hover,
+.dark #filing-guide-modal button.bg-neutral-900:hover {
+  background-color: #2563eb !important;
+}
+
+/* Skeletons */
+.dark #deductions-card-skeleton .bg-slate-200,
+.dark #deductions-card-skeleton .bg-slate-300 {
+  background-color: #334155 !important;
+}
+
+/* Borders overrides */
+.dark #deductions-card .border-slate-100,
+.dark #deductions-card .border-slate-150,
+.dark #deductions-card .border-slate-200,
+.dark #export-hub-container .border-slate-100,
+.dark #export-hub-container .border-slate-150,
+.dark #export-hub-container .border-slate-200,
+.dark #extraction-confirm-card .border-slate-100,
+.dark #extraction-confirm-card .border-slate-200,
+.dark #filing-guide-modal .border-slate-100,
+.dark #filing-guide-modal .border-slate-150,
+.dark #filing-guide-modal .border-slate-200,
+.dark #portfolio-sync-widget .border-neutral-800,
+.dark #portfolio-sync-widget .border-neutral-700 {
+  border-color: #334155 !important;
+}
+
+/* Specific details */
+.dark #export-hub-container #preview-json-payload {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #38bdf8 !important; /* Sky blue text for JSON payload */
+}
+
+.dark #extraction-confirm-card table thead tr {
+  background-color: #0f172a !important;
+  color: #94a3b8 !important;
+}
+
+.dark #extraction-confirm-card table tbody tr {
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+.dark #extraction-confirm-card table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.2) !important;
+}
+
+/* Dark Mode Utility Class Tweaks to match premium dark style */
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 {
+  color: #f1f5f9 !important; /* light text */
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500 {
+  color: #94a3b8 !important; /* muted text */
+}
+
+.dark .text-slate-405,
+.dark .text-slate-400 {
+  color: #64748b !important; /* secondary muted */
+}
+
+/* Specific pastel background transformations for dark mode */
+.dark .bg-blue-50,
+.dark .bg-blue-50\/50,
+.dark .bg-blue-50\/60,
+.dark .bg-blue-50\/80,
+.dark .bg-blue-50\/20,
+.dark .bg-blue-100,
+.dark .bg-indigo-50,
+.dark .bg-indigo-100 {
+  background-color: rgba(59, 130, 246, 0.08) !important; /* glassmorphic dark blue */
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/20,
+.dark .bg-emerald-50\/50,
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.08) !important; /* glassmorphic dark emerald */
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-50\/20,
+.dark .bg-amber-50\/50,
+.dark .bg-amber-50\/60,
+.dark .bg-amber-100,
+.dark .bg-amber-950\/30 {
+  background-color: rgba(245, 158, 11, 0.08) !important; /* glassmorphic dark amber */
+  border-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+.dark .bg-rose-50,
+.dark .bg-rose-50\/20,
+.dark .bg-rose-50\/40,
+.dark .bg-rose-100,
+.dark .bg-red-55,
+.dark .bg-red-950\/20 {
+  background-color: rgba(239, 68, 68, 0.08) !important; /* glassmorphic dark red */
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Specific text color transformations for dark mode */
+.dark .text-blue-800,
+.dark .text-blue-700,
+.dark .text-blue-600,
+.dark .text-blue-500 {
+  color: #60a5fa !important; /* light blue */
+}
+
+.dark .text-emerald-800,
+.dark .text-emerald-700,
+.dark .text-emerald-600 {
+  color: #34d399 !important; /* light emerald */
+}
+
+.dark .text-amber-850,
+.dark .text-amber-800,
+.dark .text-amber-700,
+.dark .text-amber-600 {
+  color: #fbbd23 !important; /* light amber */
+}
+
+.dark .text-rose-800,
+.dark .text-rose-700,
+.dark .text-rose-600,
+.dark .text-red-700,
+.dark .text-red-600 {
+  color: #f87171 !important; /* light red */
+}
+
+/* Specific border transformations for dark mode */
+.dark .border-blue-100,
+.dark .border-blue-150,
+.dark .border-blue-200,
+.dark .border-emerald-100,
+.dark .border-emerald-150,
+.dark .border-emerald-200,
+.dark .border-amber-100,
+.dark .border-amber-150,
+.dark .border-amber-200,
+.dark .border-rose-100,
+.dark .border-rose-150,
+.dark .border-rose-200,
+.dark .border-red-200,
+.dark .border-red-900\/50 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Switcher button hover borders in dark mode */
+.dark button.border-slate-200:hover,
+.dark label.border-slate-200:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Input range thumb colors for premium dark mode aesthetics */
+.dark input[type="range"]::-webkit-slider-runnable-track {
+  background: #1e293b !important;
+}
+
+.dark input[type="range"]::-webkit-slider-thumb {
+  background: #3b82f6 !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* Custom keyframes for premium landing page */
+@keyframes aurora-drift-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(50px, -70px) scale(1.15) rotate(120deg);
+  }
+  66% {
+    transform: translate(-40px, 40px) scale(0.9) rotate(240deg);
+  }
+}
+
+@keyframes aurora-drift-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(-60px, 50px) scale(1.2) rotate(-180deg);
+  }
+}
+
+@keyframes card-breathing-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg); }
+  50% { transform: translate3d(0, -4px, 0) rotate(1deg); }
+}
+@keyframes card-breathing-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(1.5deg); }
+  50% { transform: translate3d(0, -6px, 0) rotate(-1.5deg); }
+}
+@keyframes card-breathing-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-1.5deg); }
+  50% { transform: translate3d(0, -5px, 0) rotate(1deg); }
+}
+@keyframes card-breathing-4 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(1deg); }
+  50% { transform: translate3d(0, -7px, 0) rotate(-1deg); }
+}
+
+@keyframes particle-twinkle {
+  0%, 100% { opacity: 0.1; transform: translate3d(0, 0, 0); }
+  50% { opacity: 0.6; transform: translate3d(0, -10px, 0); }
+}
+
+@keyframes shift-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes cta-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  }
+  50% {
+    box-shadow: 0 4px 22px rgba(16, 185, 129, 0.35);
+  }
+}
+
+/* Helper Animation classes with hardware acceleration promotions */
+.animate-aurora-1 {
+  animation: aurora-drift-1 45s infinite ease-in-out;
+  will-change: transform;
+}
+.animate-aurora-2 {
+  animation: aurora-drift-2 55s infinite ease-in-out;
+  will-change: transform;
+}
+
+.animate-float-card-1 {
+  animation: card-breathing-1 13s infinite ease-in-out;
+  will-change: transform;
+}
+.animate-float-card-2 {
+  animation: card-breathing-2 15s infinite ease-in-out;
+  will-change: transform;
+}
+.animate-float-card-3 {
+  animation: card-breathing-3 14s infinite ease-in-out;
+  will-change: transform;
+}
+.animate-float-card-4 {
+  animation: card-breathing-4 17s infinite ease-in-out;
+  will-change: transform;
+}
+
+.animate-particle-twinkle {
+  animation: particle-twinkle infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+.animate-bg-gradient {
+  background-size: 200% 200%;
+  animation: shift-gradient 32s infinite ease-in-out;
+}
+
+.animate-cta-pulse {
+  animation: cta-glow-pulse 5.5s infinite ease-in-out;
+}
+
+/* Glassmorphism card premium styling */
+.glass-card-premium {
+  background: rgba(255, 255, 255, 0.015) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.05) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.04),
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 35px rgba(16, 185, 129, 0.01);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, border-color, box-shadow;
+  border-radius: 18px !important;
+}
+
+.glass-card-premium:hover {
+  background: rgba(255, 255, 255, 0.025) !important;
+  border-color: rgba(16, 185, 129, 0.28) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    0 15px 45px rgba(0, 0, 0, 0.6),
+    0 0 50px rgba(16, 185, 129, 0.15);
+}
+
+/* Faint cinematic noise overlay - Pinned fixed to screen for seamless scroll texture */
+.cinematic-noise {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.015;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Spotlight breathing animation */
+@keyframes spotlight-pulse {
+  0%, 100% {
+    opacity: 0.22;
+    transform: translate3d(-50%, -50%, 0) scale(0.96);
+  }
+  50% {
+    opacity: 0.26;
+    transform: translate3d(-50%, -50%, 0) scale(1.04);
+  }
+}
+
+.animate-spotlight-pulse {
+  animation: spotlight-pulse 10s infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+/* Slide in from right animation for AI Companion */
+@keyframes slide-in-right {
+  from {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 

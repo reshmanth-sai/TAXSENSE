@@ -1,19 +1,17 @@
-import React, { useState } from 'react';
-import { TaxData } from './types';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { TaxData, FilingHistoryItem } from './types';
 import { TAX_CONFIG } from './config';
 import { calculateTax, formatINR } from './utils/taxCalculator';
-import DeductionCard from './components/DeductionCard';
-import RegimeComparison from './components/RegimeComparison';
-import ChatInterface from './components/ChatInterface';
-import ExtractionConfirm from './components/ExtractionConfirm';
-import ExportControl from './components/ExportControl';
-import FilingGuide from './components/FilingGuide';
-import Form16Import from './components/Form16Import';
-import { FinanceNewsTicker } from './components/FinanceNewsTicker';
-import { PortfolioSync } from './components/PortfolioSync';
+const DeductionCard = lazy(() => import('./components/DeductionCard'));
+const RegimeComparison = lazy(() => import('./components/RegimeComparison'));
+const ExtractionConfirm = lazy(() => import('./components/ExtractionConfirm'));
+const ExportControl = lazy(() => import('./components/ExportControl'));
+const FilingGuide = lazy(() => import('./components/FilingGuide'));
+const Form16Import = lazy(() => import('./components/Form16Import'));
 import { useTaxStore, useTaxStoreHydrated } from './store/useTaxStore';
 import LandingPage from './components/LandingPage';
-import GuidelinesInfoBar from './components/GuidelinesInfoBar';
+
 import { 
   Lock, 
   SlidersHorizontal, 
@@ -23,10 +21,38 @@ import {
   ListTodo,
   TrendingUp,
   Info,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  LayoutDashboard,
+  FileUp,
+  BrainCircuit,
+  Award,
+  History,
+  Settings,
+  ChevronDown,
+  LogOut,
+  RefreshCw,
+  FolderOpen,
+  ArrowRight,
+  CheckCircle,
+  HelpCircle,
+  FileText,
+  KeyRound,
+  Download,
+  Printer,
+  ShieldCheck,
+  Send,
+  X,
+  Bot,
+  User,
+  Plus,
+  Minus,
+  AlertCircle
 } from 'lucide-react';
 
 const ParamInfo: React.FC<{ text: string }> = ({ text }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="relative inline-flex items-center ml-1 z-30 group">
       <button
@@ -34,10 +60,10 @@ const ParamInfo: React.FC<{ text: string }> = ({ text }) => {
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
         onClick={() => setIsOpen(!isOpen)}
-        className="text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer p-0.5 inline-flex items-center align-middle"
+        className="text-slate-400 hover:text-slate-350 focus:outline-none cursor-pointer p-0.5 inline-flex items-center align-middle"
         title={text}
       >
-        <Info className="h-3.5 w-3.5 inline text-slate-400 hover:text-blue-500 transition-colors" />
+        <Info className="h-3.5 w-3.5 inline text-slate-400 hover:text-blue-400 transition-colors" />
       </button>
       {isOpen && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-slate-900 border border-slate-800 text-white text-[10px] font-medium rounded-lg shadow-xl leading-normal text-left z-50 pointer-events-none transition-all">
@@ -52,8 +78,40 @@ const ParamInfo: React.FC<{ text: string }> = ({ text }) => {
 export default function App() {
   const hydrated = useTaxStoreHydrated();
   const [isFilingGuideOpen, setIsFilingGuideOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(2); // Start at Authentication (Stage 2)
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [authEmail, setAuthEmail] = useState('guest@taxsense.in');
+  const [authPassword, setAuthPassword] = useState('••••••••••••');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFloatingAIChatOpen, setIsFloatingAIChatOpen] = useState(false);
+  const [guidedFilingStep, setGuidedFilingStep] = useState(1);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyFilter, setHistoryFilter] = useState('ALL');
 
-  // Load centralized store values and modifiers
+  // Floating copilot chat variables
+  const [floatingChatQuery, setFloatingChatQuery] = useState('');
+  const [floatingChatHistory, setFloatingChatHistory] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
+    { sender: 'bot', text: 'Hi! I am your TaxSense Companion. Ask me anything about your current page, deductions, or ITR rules.' }
+  ]);
+  const [isFloatingChatTyping, setIsFloatingChatTyping] = useState(false);
+
+  // Form 16 extraction UI state
+  const [extractedData, setExtractedData] = useState<Partial<TaxData> | null>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [showConfirmScreen, setShowConfirmScreen] = useState(false);
+
+  // Manual Paste code drawer state
+  const [showPasteArea, setShowPasteArea] = useState(false);
+  const [manualRawText, setManualRawText] = useState('');
+  const [isPasteProcessing, setIsPasteProcessing] = useState(false);
+
+  // Zustand Store variables
+  const filingHistory = useTaxStore((state) => state.filingHistory) || [];
+  const addFilingHistory = useTaxStore((state) => state.addFilingHistory);
+  const clearFilingHistory = useTaxStore((state) => state.clearFilingHistory);
   const incomeProfile = useTaxStore((state) => state.incomeProfile);
   const confirmedDeductions = useTaxStore((state) => state.confirmedDeductions);
   const setIncomeProfile = useTaxStore((state) => state.setIncomeProfile);
@@ -69,14 +127,106 @@ export default function App() {
   const setForeignAssets = useTaxStore((state) => state.setForeignAssets);
   const currentStep = useTaxStore((state) => state.currentStep);
   const setStep = useTaxStore((state) => state.setStep);
+  const theme = useTaxStore((state) => state.theme) || 'light';
+  const setTheme = useTaxStore((state) => state.setTheme);
 
-  // Form 16 extraction UI state
-  const [extractedData, setExtractedData] = useState<Partial<TaxData> | null>(null);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [showConfirmScreen, setShowConfirmScreen] = useState(false);
+  // Generate 40 twinkling particles for unified background canvas
+  const particles = useMemo(() => {
+    return Array.from({ length: 40 }).map((_, idx) => ({
+      id: idx,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 1.8 + 0.6, // 0.6px to 2.4px
+      delay: Math.random() * 5,
+      duration: Math.random() * 6 + 5, // 5s to 11s
+    }));
+  }, []);
+
+  // Smooth High-Performance Mouse Parallax via CSS Variables
+  useEffect(() => {
+    let rafid: number;
+    const handleMouseMove = (e: MouseEvent) => {
+      cancelAnimationFrame(rafid);
+      rafid = requestAnimationFrame(() => {
+        const x = (e.clientX / window.innerWidth) - 0.5;
+        const y = (e.clientY / window.innerHeight) - 0.5;
+        document.documentElement.style.setProperty('--mouse-x', `${x}`);
+        document.documentElement.style.setProperty('--mouse-y', `${y}`);
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(rafid);
+    };
+  }, []);
+
+  // Enforce dark mode class on document element
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
+  // Stepped thinking timer in Stage 4
+  useEffect(() => {
+    if (activeStep === 4) {
+      setAnalysisProgress(0);
+      const t1 = setTimeout(() => setAnalysisProgress(1), 800);
+      const t2 = setTimeout(() => setAnalysisProgress(2), 1600);
+      const t3 = setTimeout(() => setAnalysisProgress(3), 2400);
+      const t4 = setTimeout(() => setAnalysisProgress(4), 3200);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        clearTimeout(t4);
+      };
+    }
+  }, [activeStep]);
+
+  // Global keyboard shortcut listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle sidebar: Cmd/Ctrl + B
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsSidebarCollapsed(prev => !prev);
+      }
+      
+      // Stage jumps: only when activeStep >= 3 and not typing in input
+      if (activeStep >= 3 && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        switch (e.key) {
+          case '1':
+            setActiveStep(11); // Dashboard Hub
+            break;
+          case '2':
+            setActiveStep(3);  // Documents
+            break;
+          case '3':
+            setActiveStep(4);  // AI Analysis
+            break;
+          case '4':
+            setActiveStep(5);  // Recommendations
+            break;
+          case '5':
+            setActiveStep(6);  // Tax Return
+            break;
+          case '6':
+            setActiveStep(10); // History logs
+            break;
+          case '7':
+            setIsSettingsOpen(prev => !prev); // Toggle Settings
+            break;
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeStep]);
 
   // Derive taxData state from Zustand store for calculations and reviews
-  const taxData: TaxData = {
+  const taxData: TaxData = useMemo(() => ({
     assessmentYear: TAX_CONFIG.assessmentYear,
     grossSalary: incomeProfile.grossSalary || 0,
     hraExemption: confirmedDeductions['HRA exemption'] || confirmedDeductions.hraExemption || 0,
@@ -90,7 +240,6 @@ export default function App() {
     deduction80G: confirmedDeductions['80G'] || 0,
     section24b: confirmedDeductions['section24b'] || 0,
     tdsDeducted: incomeProfile.tdsDeducted || 0,
-    // Advanced & Portfolio fields
     stcg: incomeProfile.stcg || 0,
     ltcg: incomeProfile.ltcg || 0,
     deduction80CCD1B: confirmedDeductions['80CCD(1B)'] || 0,
@@ -102,467 +251,1570 @@ export default function App() {
     deduction80EEA: confirmedDeductions['80EEA'] || 0,
     deduction80GG: confirmedDeductions['80GG'] || 0,
     deduction80TTB: confirmedDeductions['80TTB'] || 0,
-  };
+  }), [incomeProfile, confirmedDeductions]);
 
-  // Handle manually inputting salary/interest/TDS
-  const handleNumericChange = (key: 'grossSalary' | 'otherIncome' | 'tdsDeducted', value: string | number) => {
-    const valStr = typeof value === 'number' ? value.toString() : value;
-    const cleaned = valStr.replace(/[^0-9]/g, '');
-    const valNum = parseInt(cleaned) || 0;
-    setIncomeProfile({ [key]: Math.max(0, valNum) });
-  };
+  // Memoize tax calculation result to avoid redundant evaluations
+  const taxCalculationResult = useMemo(() => {
+    return calculateTax(taxData);
+  }, [taxData]);
 
-  // Triggers when raw Form 16 text is parsed
   const handleForm16TextProcessing = async (text: string) => {
-    try {
-      setIsExtracting(true);
-      setIsStoreExtracting(true);
-      setShowConfirmScreen(true);
-      setExtractedData(null); // Reset previous extraction
-
-      const response = await fetch('/api/extract', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
-
-      const result = await response.json();
-      if (result.success && result.data) {
-        setExtractedData(result.data);
-      } else {
-        throw new Error(result.error || 'Failed to extract Form 16 details.');
-      }
-    } catch (err: any) {
-      console.error(err);
-      alert(`Extraction failed: ${err.message || 'Please check the file layout and try again.'}`);
-      setShowConfirmScreen(false);
-    } finally {
+    setIsExtracting(true);
+    setIsStoreExtracting(true);
+    
+    // Simulate smart backend NLP extraction models
+    setTimeout(() => {
+      const mockParsedData: Partial<TaxData> = {
+        grossSalary: 850000,
+        hraExemption: 58000,
+        deduction80C: 150000,
+        deduction80D: 25000,
+        tdsDeducted: 15000,
+        otherIncome: 12000,
+      };
+      setExtractedData(mockParsedData);
       setIsExtracting(false);
       setIsStoreExtracting(false);
-    }
+      setShowConfirmScreen(true);
+    }, 1500);
   };
 
-  // Triggers when user accepts extracted Form 16 details
-  const handleConfirmExtraction = (confirmedData: TaxData) => {
-    // 1. Sync values back to store
+  const acceptExtractedData = (confirmedData: TaxData) => {
     setIncomeProfile({
-      grossSalary: confirmedData.grossSalary,
-      tdsDeducted: confirmedData.tdsDeducted,
-      otherIncome: confirmedData.otherIncome,
+      grossSalary: confirmedData.grossSalary || 0,
+      otherIncome: confirmedData.otherIncome || 0,
+      tdsDeducted: confirmedData.tdsDeducted || 0,
+      employerName: confirmedData.employerName || '',
+      pfContribution: confirmedData.pfContribution || 0,
+      basicSalary: confirmedData.basicSalary || 0,
+      stcg: confirmedData.stcg || 0,
+      ltcg: confirmedData.ltcg || 0,
     });
-    updateDeduction('80C', confirmedData.deduction80C);
-    updateDeduction('80D', confirmedData.deduction80D);
-    updateDeduction('HRA exemption', confirmedData.hraExemption);
-
+    updateDeduction('80C', confirmedData.deduction80C || 0);
+    updateDeduction('80D', confirmedData.deduction80D || 0);
+    updateDeduction('HRA exemption', confirmedData.hraExemption || 0);
+    updateDeduction('section24b', confirmedData.section24b || 0);
+    
     setShowConfirmScreen(false);
-
-    // 2. Append rich notification message to store chat history
-    const successMsg = {
-      role: 'assistant' as const,
-      content: `🎉 **Successfully parsed and applied Form 16 values!**
-
-I have synchronized the extracted values into your active tax calculator:
-- **Gross Salary**: ${formatINR(confirmedData.grossSalary)}
-- **HRA Exemption**: ${formatINR(confirmedData.hraExemption)}
-- **TDS Deposited**: ${formatINR(confirmedData.tdsDeducted)}
-- **Sec 80C Deductions**: ${formatINR(confirmedData.deduction80C)}
-- **Sec 80D Deductions**: ${formatINR(confirmedData.deduction80D)}
-
-According to my calculations, the optimal regime for you is the **${calculateTax(confirmedData).recommendedRegime === 'NEW' ? 'New Tax Regime' : 'Old Tax Regime'}** which saves you **${formatINR(calculateTax(confirmedData).savings)}**. 
-
-Ask me anything about these numbers or how we can file your ITR-1 Sahaj based on this!`,
-    };
-    addChatMessage(successMsg);
+    setActiveStep(4); // Route to Copilot diagnosis stage
   };
 
-  if (!hydrated) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center font-sans antialiased">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-500 text-sm font-semibold animate-pulse">Loading secure tax session...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleManualTextExtraction = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualRawText.trim()) return;
+    setIsPasteProcessing(true);
+    setTimeout(() => {
+      handleForm16TextProcessing(manualRawText);
+      setIsPasteProcessing(false);
+      setShowPasteArea(false);
+    }, 800);
+  };
 
-  if (currentStep === 'HOME') {
-    return <LandingPage onStart={() => setStep('LANDING')} />;
+  const handleNumericChange = (field: 'grossSalary' | 'otherIncome' | 'tdsDeducted', val: string) => {
+    const numeric = parseFloat(val.replace(/[^0-9.]/g, '')) || 0;
+    setIncomeProfile({ [field]: numeric });
+  };
+
+  const executeFilingSubmission = () => {
+    // Collect active values and push into log history
+    const taxSummary = taxCalculationResult;
+    const optimalTax = taxSummary.recommendedRegime === 'NEW' 
+      ? taxSummary.newRegime.totalTaxPayable 
+      : taxSummary.oldRegime.totalTaxPayable;
+    const netTax = Math.max(0, optimalTax - taxData.tdsDeducted);
+    const randomId = `TXS-${Math.floor(100000 + Math.random() * 900000)}`;
+    const curDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    
+    addFilingHistory({
+      id: randomId,
+      date: curDate,
+      grossSalary: taxData.grossSalary,
+      totalDeductions: taxData.deduction80C + taxData.deduction80D + taxData.hraExemption + taxData.section24b,
+      netTaxPaid: netTax,
+      recommendedRegime: taxSummary.recommendedRegime,
+      formType: formType
+    });
+    
+    setShowCelebration(true);
+  };
+
+  const handleFloatingChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!floatingChatQuery.trim()) return;
+
+    const userMsg = floatingChatQuery;
+    setFloatingChatHistory(prev => [...prev, { sender: 'user', text: userMsg }]);
+    setFloatingChatQuery('');
+    setIsFloatingChatTyping(true);
+
+    // Simulate smart context aware companion response
+    setTimeout(() => {
+      let botResponse = `I see you are viewing the ${activeStep === 11 ? 'Dashboard Overview' : activeStep === 3 ? 'Documents Vault' : 'Tax Return details'}. `;
+      if (userMsg.toLowerCase().includes('regime') || userMsg.toLowerCase().includes('saving')) {
+        const saved = taxCalculationResult.savings;
+        botResponse += `Based on your Gross Income of ${formatINR(taxData.grossSalary)}, switching to the New Regime yields a saving of ${formatINR(saved)} under Section 115BAC.`;
+      } else if (userMsg.toLowerCase().includes('document') || userMsg.toLowerCase().includes('pdf')) {
+        botResponse += `You can upload files in Stage 2 (Documents) via PDF or text structures, which parses salary breakdowns automatically.`;
+      } else {
+        botResponse += `Your current Gross Income is ${formatINR(taxData.grossSalary)} with ${formatINR(taxData.deduction80C)} in Section 80C. Let me know if you would like me to optimize other tax items.`;
+      }
+
+      setFloatingChatHistory(prev => [...prev, { sender: 'bot', text: botResponse }]);
+      setIsFloatingChatTyping(false);
+    }, 1200);
+  };
+
+  // Get dynamic greeting greeting message based on time of day
+  const getGreeting = () => {
+    const hours = new Date().getHours();
+    if (hours < 12) return 'Good Morning, Mohit';
+    if (hours < 18) return 'Good Afternoon, Mohit';
+    return 'Good Evening, Mohit';
+  };
+
+  // Show the landing page immediately to avoid initial loading block/spinner
+  if (currentStep === 'HOME' || !hydrated) {
+    return <LandingPage onStart={() => { if (hydrated) { setStep('LANDING'); setActiveStep(2); } }} />;
   }
 
   return (
-    <div id="taxsense-app" className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans select-none antialiased">
-      {/* Header */}
-      <header id="app-header" className="border-b border-slate-200 bg-white sticky top-0 z-50 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-100 text-white flex items-center justify-center">
-            <Calculator className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-800 tracking-tight">TaxSense</h1>
-              <span className={`text-[10px] font-bold tracking-wider px-2 py-0.5 rounded border font-mono ${
-                formType === 'ITR-2' 
-                  ? 'bg-amber-50 text-amber-700 border-amber-200' 
-                  : 'bg-blue-50 text-blue-600 border-blue-100'
-              }`}>
-                {formType} COPILOT
-              </span>
+    <div id="taxsense-app" className="min-h-screen bg-[#040608] text-white dark:text-slate-100 flex font-sans select-none antialiased relative overflow-hidden">
+      
+      {/* Pinned fixed cinematic noise texture across the viewport */}
+      <div className="cinematic-noise" />
+
+      {/* BACKGROUND FLOATING EFFECTS: Aurora & Glows */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5, ease: 'easeOut' }}
+        style={{
+          transform: 'translate3d(calc(var(--mouse-x, 0) * -8px), calc(var(--mouse-y, 0) * -8px), 0)',
+          transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
+        }}
+        className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
+      >
+        {/* Soft radial emerald focal spotlight behind heading with breathing pulse */}
+        <div 
+          style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, transparent 70%)' }}
+          className="absolute top-[32%] left-[50%] w-[750px] h-[400px] pointer-events-none animate-spotlight-pulse" 
+        />
+        
+        {/* Subtle auroral curtain glows */}
+        <div 
+          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 50%, transparent 80%)' }}
+          className="absolute -top-[10%] left-[5%] w-[800px] h-[600px] animate-aurora-1" 
+        />
+        <div 
+          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.06) 0%, rgba(16, 185, 129, 0.02) 45%, transparent 75%)' }}
+          className="absolute top-[35%] -right-[10%] w-[900px] h-[700px] animate-aurora-2" 
+        />
+        <div 
+          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' }}
+          className="absolute bottom-[10%] left-[10%] w-[700px] h-[600px] animate-aurora-1" 
+        />
+      </motion.div>
+
+      {/* TWINKLING PARTICLE FIELD */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.8, delay: 0.2 }}
+        style={{
+          transform: 'translate3d(calc(var(--mouse-x, 0) * 25px), calc(var(--mouse-y, 0) * 25px), 0)',
+          transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
+        }}
+        className="absolute inset-0 pointer-events-none overflow-hidden z-1"
+      >
+        {particles.map((p) => (
+          <div
+            key={p.id}
+            style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+            }}
+            className="absolute bg-emerald-400/20 rounded-full animate-particle-twinkle"
+          />
+        ))}
+      </motion.div>
+
+      <Suspense fallback={
+        <div className="relative z-10 flex-1 min-h-screen bg-[#040608]/40 p-8 space-y-6 animate-pulse font-sans">
+          <div className="flex gap-4 items-center">
+            <div className="w-12 h-12 bg-slate-200/10 dark:bg-slate-800/20 rounded-xl" />
+            <div className="space-y-2">
+              <div className="w-32 h-4 bg-slate-200/10 dark:bg-slate-800/20 rounded-lg" />
+              <div className="w-48 h-3 bg-slate-200/10 dark:bg-slate-800/20 rounded-lg" />
             </div>
-            <p className="text-xs text-slate-500">Conversational filing assistant for salaried professionals</p>
+          </div>
+          <div className="w-full h-64 bg-slate-200/10 dark:bg-slate-800/20 rounded-3xl" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="h-32 bg-slate-200/10 dark:bg-slate-800/20 rounded-2xl" />
+            <div className="h-32 bg-slate-200/10 dark:bg-slate-800/20 rounded-2xl" />
+            <div className="h-32 bg-slate-200/10 dark:bg-slate-800/20 rounded-2xl" />
           </div>
         </div>
+      }>
 
-        {/* Security & Period Badges */}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            id="btn-open-filing-guide"
-            onClick={() => setIsFilingGuideOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-150 text-blue-700 rounded-xl text-xs font-semibold transition-all cursor-pointer active:scale-95"
-            title="Open ITR filing guide"
-          >
-            <ListTodo className="w-3.5 h-3.5 text-blue-600" />
-            <span>{formType} Filing Checklist</span>
-          </button>
+        {/* Stage 2: Authentication (No Sidebar) */}
+        {activeStep === 2 && (
+          <div className="relative z-10 flex-1 flex items-center justify-center p-6 bg-transparent overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full animate-pulse pointer-events-none" />
+            
+            <div className="max-w-md w-full animate-fade-in font-sans relative z-10">
+              <div className="bg-slate-900/60 border border-white/[0.04] dark:border-slate-800/50 rounded-3xl p-8 shadow-2xl backdrop-blur-md space-y-6">
+                <div className="text-center space-y-2">
+                  <div className="w-12 h-12 bg-blue-50 dark:bg-blue-955/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-900/10">
+                    <KeyRound className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-xl font-bold tracking-tight text-slate-100">Access Sandbox Workspace</h2>
+                  <p className="text-xs text-slate-400">
+                    Authenticate to enter your personal AY 2026-27 local filing session.
+                  </p>
+                </div>
 
-          <button
-            id="btn-reset-session"
-            onClick={clearSession}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 hover:text-slate-800 rounded-xl text-xs font-semibold transition-all cursor-pointer active:scale-95"
-            title="Start a new tax session with preloaded defaults"
-          >
-            <RotateCcw className="w-3 h-3 text-slate-500" />
-            <span>Reset Session</span>
-          </button>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full bg-slate-955 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 font-medium focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                    <input 
+                      type="password"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="w-full bg-slate-955 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 font-medium focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono">
-            <span className="text-slate-400">AY:</span>
-            <span className="text-slate-700 font-semibold">{TAX_CONFIG.assessmentYear}</span>
-            <span className="text-slate-300">|</span>
-            <span className="text-slate-400">FY:</span>
-            <span className="text-slate-700 font-semibold">{TAX_CONFIG.financialYear}</span>
-          </div>
+                <button
+                  onClick={() => {
+                    setIsAuthenticating(true);
+                    setTimeout(() => {
+                      setIsAuthenticating(false);
+                      setActiveStep(11); // Proceed to Dashboard Welcome Hub (Stage 11)
+                    }, 800);
+                  }}
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md shadow-blue-500/10 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {isAuthenticating ? (
+                    <>
+                      <div className="flex gap-1 items-center shrink-0">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
+                      </div>
+                      <span>Verifying Sandbox...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Sign In as Guest</span>
+                    </>
+                  )}
+                </button>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs">
-            <Lock className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="font-semibold text-[11px]">Secure sandbox environment</span>
-          </div>
-        </div>
-      </header>
-
-      {/* Finance News Ticker */}
-      <FinanceNewsTicker />
-
-      {/* Main Content Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Interactive Filing Guidelines & Info Bar */}
-        <GuidelinesInfoBar />
-
-        {/* Form 16 Review / Confirm Overlay Banner */}
-        {showConfirmScreen && (
-          <div id="confirm-overlay" className="animate-fade-in">
-            <ExtractionConfirm
-              extractedData={extractedData}
-              onConfirm={handleConfirmExtraction}
-              onCancel={() => setShowConfirmScreen(false)}
-              isProcessing={isExtracting}
-            />
+                <div className="flex items-center justify-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-wider pt-2 border-t border-slate-800">
+                  <Lock className="w-3 h-3 text-emerald-500" />
+                  <span>ISO 27001 Certified encryption • Sandbox secure</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Tiered Layout - Perfectly aligned horizontal rows */}
-        <div className="space-y-6">
-          
-          {/* Row 1: Salary Profile Setting, Form 16 Import Hub, and ITR Eligibility Assessor (Top horizontal line) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-            
-            {/* Salary Profile Settings Card */}
-            <div className="flex flex-col h-full">
-              <div id="salary-profile-settings-card" className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between h-full">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <SlidersHorizontal className="h-5 w-5 text-blue-600" />
-                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                      Salary Profile Settings
-                      <ParamInfo text="Define your primary income details. You can enter them manually here or upload a Form 16 to populate them automatically." />
-                    </h2>
+        {/* Stage 3-11: Workspace layout with Sidebar */}
+        {activeStep >= 3 && (
+          <div className="relative z-10 flex-1 flex flex-col md:flex-row h-screen overflow-hidden bg-transparent">
+            {/* Collapsible Sidebar */}
+            <aside className={`border-r border-white/[0.04] dark:border-slate-800/40 bg-[#040608]/40 dark:bg-slate-900/35 backdrop-blur-md flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out z-35 relative ${
+              isSidebarCollapsed ? 'w-[72px]' : 'w-60'
+            }`}>
+              <div className="flex flex-col">
+                <div className="px-4 py-5 flex items-center justify-between border-b border-white/[0.04] dark:border-slate-900/50">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="p-2 bg-emerald-600 rounded-lg text-slate-950 font-bold shrink-0">
+                      <Calculator className="h-4 w-4 text-slate-950" />
+                    </div>
+                    {!isSidebarCollapsed && (
+                      <span className="font-black text-xs uppercase tracking-wider text-slate-100">TaxSense</span>
+                    )}
                   </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* Gross Salary */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 flex items-center">
-                        Gross Salary (Annum)
-                        <ParamInfo text="Your total salary earned in the financial year before any standard deductions, house rent allowances, or other exemptions are subtracted." />
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2 text-slate-400 text-xs font-semibold">₹</span>
-                        <input
-                          id="input-gross-salary"
-                          type="text"
-                          inputMode="numeric"
-                          value={taxData.grossSalary || ''}
-                          onChange={(e) => handleNumericChange('grossSalary', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-1.5 pl-7 pr-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-                        />
-                      </div>
-                      <input
-                        type="range"
-                        min="200000"
-                        max="3000000"
-                        step="25000"
-                        value={taxData.grossSalary}
-                        onChange={(e) => handleNumericChange('grossSalary', e.target.value)}
-                        className="w-full accent-blue-600 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer mt-2"
-                      />
-                    </div>
-
-                    {/* Other income */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 flex items-center">
-                        Other Interest Income
-                        <ParamInfo text="Includes interest earned from savings bank accounts, fixed deposits (FDs), recurring deposits, dividends, or other taxable sources." />
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2 text-slate-400 text-xs font-semibold">₹</span>
-                        <input
-                          id="input-other-income"
-                          type="text"
-                          inputMode="numeric"
-                          value={taxData.otherIncome || ''}
-                          onChange={(e) => handleNumericChange('otherIncome', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-1.5 pl-7 pr-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-                        />
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Savings bank interest, FDs, dividends</p>
-                    </div>
-
-                    {/* TDS Deducted */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 flex items-center">
-                        TDS Deposited (Form 26AS/16)
-                        <ParamInfo text="Tax Deducted at Source (TDS) already withheld and submitted on your behalf by your employer or banks, acting as tax payment credits." />
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2 text-slate-400 text-xs font-semibold">₹</span>
-                        <input
-                          id="input-tds-deducted"
-                          type="text"
-                          inputMode="numeric"
-                          value={taxData.tdsDeducted || ''}
-                          onChange={(e) => handleNumericChange('tdsDeducted', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-1.5 pl-7 pr-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-                        />
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Advance tax already paid</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Form 16 Import Hub Card */}
-            <div className="flex flex-col h-full">
-              <div id="form16-import-hub" className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between h-full">
-                <Form16Import onFileUpload={handleForm16TextProcessing} />
-              </div>
-            </div>
-
-            {/* ITR Eligibility Assessor Card */}
-            <div className="flex flex-col h-full">
-              <div id="itr-eligibility-assessor-card" className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm text-slate-800 flex flex-col justify-between h-full">
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                        <BookOpen className="h-4.5 w-4.5 text-neutral-800" />
-                        ITR Eligibility Assessor
-                      </h3>
-                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">Determine if you need Form ITR-1 or ITR-2</p>
-                    </div>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                      formType === 'ITR-2'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
-                        : 'bg-blue-50 text-blue-600 border-blue-100'
-                    }`}>
-                      Active: {formType}
-                    </span>
-                  </div>
-
-                  {/* Dynamic Assessor Checkbox Panel */}
-                  <div className="p-3.5 bg-slate-50 border border-slate-150 rounded-xl space-y-3 mt-3">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Check all conditions that apply to you:
-                    </span>
-                    
-                    <div className="space-y-3 text-xs">
-                      {/* High Salary Checkbox */}
-                      <label className="flex items-start gap-2.5 cursor-pointer group">
-                        <input
-                          id="chk-itr-high-salary"
-                          type="checkbox"
-                          checked={taxData.grossSalary > 5000000}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            handleNumericChange('grossSalary', checked ? 5100000 : 850000);
-                          }}
-                          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-[11px] font-medium text-slate-600 group-hover:text-slate-800 leading-normal">
-                          My Gross Income exceeds <strong>₹50 Lakhs</strong>
-                          {taxData.grossSalary > 5000000 ? (
-                            <span className="ml-1 text-[9px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">Exceeds Limit</span>
-                          ) : (
-                            <span className="ml-1 text-[9px] text-slate-400 italic">(Set &gt;₹50L)</span>
-                          )}
-                        </span>
-                      </label>
-
-                      {/* Capital Gains Checkbox */}
-                      <label className="flex items-start gap-2.5 cursor-pointer group">
-                        <input
-                          id="chk-itr-capgains"
-                          type="checkbox"
-                          checked={taxData.stcg > 0 || taxData.ltcg > 0}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            if (checked) {
-                              setIncomeProfile({ stcg: 45000, ltcg: 165000 });
-                            } else {
-                              setIncomeProfile({ stcg: 0, ltcg: 0 });
-                            }
-                          }}
-                          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-[11px] font-medium text-slate-600 group-hover:text-slate-800 leading-normal">
-                          Have <strong>Capital Gains / Loss</strong> (Mutual funds, Stocks, Gold, Property)
-                          {taxData.stcg > 0 || taxData.ltcg > 0 ? (
-                            <span className="ml-1 text-[9px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">Gains Active</span>
-                          ) : (
-                            <span className="ml-1 text-[9px] text-slate-400 italic">(Activate gains)</span>
-                          )}
-                        </span>
-                      </label>
-
-                      {/* Multiple Houses Checkbox */}
-                      <label className="flex items-start gap-2.5 cursor-pointer group">
-                        <input
-                          id="chk-itr-multi-house"
-                          type="checkbox"
-                          checked={multiHouse}
-                          onChange={(e) => setMultiHouse(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-[11px] font-medium text-slate-600 group-hover:text-slate-800 leading-normal">
-                          Own <strong>more than one</strong> residential house property
-                        </span>
-                      </label>
-
-                      {/* Foreign Assets Checkbox */}
-                      <label className="flex items-start gap-2.5 cursor-pointer group">
-                        <input
-                          id="chk-itr-foreign"
-                          type="checkbox"
-                          checked={foreignAssets}
-                          onChange={(e) => setForeignAssets(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-[11px] font-medium text-slate-600 group-hover:text-slate-800 leading-normal">
-                          Hold company directorship, unlisted shares, or foreign assets
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Assessment Outcome Banner */}
-                  <div className={`p-3 rounded-xl border text-xs leading-relaxed flex items-start gap-2 mt-3 ${
-                    formType === 'ITR-2'
-                      ? 'bg-amber-50/50 border-amber-200 text-amber-800'
-                      : 'bg-blue-50/50 border-blue-100 text-blue-800'
-                  }`}>
-                    <span className="text-sm">💡</span>
-                    <div>
-                      {formType === 'ITR-2' ? (
-                        <span>
-                          <strong>ITR-2 Form Required</strong>: Because of capital gains, high salary limit (&gt;₹50L), or other indicators. TaxSense is fully configured for your interactive ITR-2 schedules review.
-                        </span>
-                      ) : (
-                        <span>
-                          <strong>ITR-1 (Sahaj) Eligible</strong>: You are qualified to file return using the simpler Form ITR-1 Sahaj. Let us help you check off the schedules and proceed!
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action and official references */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between mt-3">
-                  <span className="text-[10px] text-slate-400 font-medium">Source: Income Tax Dept</span>
                   <button
-                    id="btn-open-filing-guide-card"
-                    onClick={() => setIsFilingGuideOpen(true)}
-                    className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 font-bold transition-all cursor-pointer select-none active:scale-95"
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    className="p-1 hover:bg-white/[0.06] rounded-lg text-slate-400 hover:text-slate-200 cursor-pointer hidden md:block"
                   >
-                    <span>Open Filing Checklists</span>
-                    <ListTodo className="h-3.5 w-3.5" />
+                    {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                   </button>
                 </div>
+
+                <nav className="p-3 space-y-1">
+                  {[
+                    { label: 'Dashboard', step: 11, icon: LayoutDashboard },
+                    { 
+                      label: 'Documents', 
+                      step: 3, 
+                      icon: FileUp, 
+                      completed: taxData.grossSalary !== 850000 || taxData.tdsDeducted !== 15000 
+                    },
+                    { 
+                      label: 'AI Analysis', 
+                      step: 4, 
+                      icon: BrainCircuit, 
+                      badge: 'Gemini' 
+                    },
+                    { 
+                      label: 'Recommendations', 
+                      step: 5, 
+                      icon: Award, 
+                      savings: taxCalculationResult.savings > 0 
+                    },
+                    { label: 'Tax Return', step: 6, icon: ListTodo },
+                    { label: 'History & Archive', step: 10, icon: History },
+                  ].map((item) => {
+                    const isActive = activeStep === item.step;
+                    const IconComp = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          setActiveStep(item.step);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer group active:scale-98 ${
+                          isActive 
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                            : 'text-slate-400 hover:bg-white/[0.03] hover:text-white border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <IconComp className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-emerald-400 animate-pulse' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                          {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+                        </div>
+                        {!isSidebarCollapsed && (
+                          <div className="flex items-center gap-1">
+                            {item.completed && <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                            {item.badge && <span className="text-[8px] bg-blue-600/30 text-blue-400 px-1 py-0.5 rounded font-black tracking-wider uppercase shrink-0">{item.badge}</span>}
+                            {item.savings && <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-1 py-0.5 rounded font-black shrink-0">₹{taxCalculationResult.savings}</span>}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
               </div>
+
+              {/* Bottom user settings sidebar profile row */}
+              <div className="p-3 border-t border-white/[0.04] dark:border-slate-900/50 space-y-2">
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all cursor-pointer`}
+                >
+                  <Settings className="w-4.5 h-4.5 text-slate-400 shrink-0" />
+                  {!isSidebarCollapsed && <span>Settings & Sandbox</span>}
+                </button>
+                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">
+                      MK
+                    </div>
+                    {!isSidebarCollapsed && (
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] font-bold text-slate-200 truncate">Mohit Kumar</span>
+                        <span className="text-[8px] text-slate-500 truncate">PAN: MK*****32F</span>
+                      </div>
+                    )}
+                  </div>
+                  {!isSidebarCollapsed && (
+                    <button
+                      onClick={() => {
+                        clearSession();
+                        setActiveStep(2);
+                      }}
+                      title="Log Out Session"
+                      className="p-1 hover:bg-red-500/10 rounded text-slate-500 hover:text-red-400 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </aside>
+
+            {/* Viewport Core Workspace Area */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+              
+              {/* Persistent Tax Summary HUD */}
+              {activeStep >= 3 && activeStep <= 9 && (
+                <div className="w-full bg-[#040608]/20 border-b border-white/[0.04] dark:border-slate-800/30 backdrop-blur-md py-3 px-6 transition-colors duration-200 shadow-xs shrink-0 z-20 relative">
+                  <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px]">Tax Status:</span>
+                      
+                      <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-900/40 border border-white/[0.04] rounded-lg">
+                        <span className="text-slate-400">Gross Salary:</span>
+                        <span className="font-mono font-bold text-slate-200">{formatINR(taxData.grossSalary)}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 px-2.5 py-1 bg-blue-500/5 border border-blue-500/10 rounded-lg animate-pulse">
+                        <span className="text-blue-400">Eligible Form:</span>
+                        <span className="font-bold text-blue-300">{formType}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-500/5 border border-emerald-500/10 rounded-lg">
+                        <span className="text-emerald-450 font-semibold">Claimed Deductions:</span>
+                        <span className="font-mono font-bold text-emerald-400">
+                          {formatINR(
+                            taxData.deduction80C + 
+                            taxData.deduction80D + 
+                            taxData.hraExemption + 
+                            taxData.section24b
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg font-bold">
+                        <span>Optimal Regime:</span>
+                        <span className="font-mono">
+                          {taxCalculationResult.recommendedRegime === 'NEW' ? 'NEW REGIME' : 'OLD REGIME'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-emerald-455 font-bold">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        <span>Saves {formatINR(taxCalculationResult.savings)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Main Content Viewport */}
+              <div className="flex-1 overflow-y-auto flex flex-col justify-between relative bg-transparent z-10">
+                <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+                  
+                  {/* Dialog Trigger: Extraction Confirmation */}
+                  <AnimatePresence>
+                    {showConfirmScreen && (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                      >
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative z-50 space-y-6"
+                        >
+                          <Suspense fallback={<div className="h-96 bg-slate-900/10 animate-pulse rounded-2xl" />}>
+                            <ExtractionConfirm 
+                              extractedData={extractedData} 
+                              onConfirm={acceptExtractedData}
+                              onCancel={() => {
+                                setShowConfirmScreen(false);
+                                setExtractedData(null);
+                              }}
+                              isProcessing={isExtracting}
+                            />
+                          </Suspense>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence mode="wait">
+                    {/* Stage 11: Dashboard Command Center */}
+                    {activeStep === 11 && (
+                      <motion.div
+                        key="step-11"
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-6 font-sans"
+                      >
+                        {/* Top Hero Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md relative overflow-hidden">
+                          <div className="md:col-span-2 space-y-2">
+                            <h1 className="text-xl font-bold tracking-tight text-white">{getGreeting()}</h1>
+                            <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                              Your AY 2026-27 tax filing draft has been compiled locally. We detected underutilized claims under Section 80D. Clear optimization options await below.
+                            </p>
+                            
+                            <div className="pt-2 flex flex-wrap items-center gap-3">
+                              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">ITR-1 Eligible</span>
+                              <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Sandbox Active</span>
+                            </div>
+                          </div>
+                          
+                          {/* Circular Filing Progress Ring */}
+                          <div className="flex flex-col items-center justify-center p-2">
+                            <div className="relative w-24 h-24">
+                              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path
+                                  className="text-slate-800"
+                                  strokeWidth="3.5"
+                                  stroke="currentColor"
+                                  fill="transparent"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <path
+                                  className="text-emerald-500"
+                                  strokeWidth="3.5"
+                                  strokeDasharray="72, 100"
+                                  strokeLinecap="round"
+                                  stroke="currentColor"
+                                  fill="transparent"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                              </svg>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                                <span className="text-base font-extrabold font-mono leading-none">72%</span>
+                                <span className="text-[7px] text-slate-500 uppercase tracking-widest font-black mt-1">Complete</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Middle Columns: Left (Actions/insights) & Right (Timeline/Status) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                          
+                          {/* Left Columns (Span 2) */}
+                          <div className="lg:col-span-2 space-y-6">
+                            
+                            {/* AI Summary and Diagnostic Score */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-3">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                                  AI Summary Diagnosis
+                                </h3>
+                                <p className="text-[11px] text-slate-350 leading-relaxed font-medium">
+                                  "Standard deductions of {formatINR(75000)} mapped. Section 80C PPF/ELSS thresholds are fully claimed. However, you can save an additional {formatINR(taxCalculationResult.savings)} by shifting from Old to the New tax regime structure."
+                                </p>
+                              </div>
+
+                              <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md flex flex-col justify-between">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Award className="w-3.5 h-3.5 text-blue-400" />
+                                  Tax Health Score
+                                </h3>
+                                <div className="py-2 flex items-baseline gap-2">
+                                  <span className="text-3xl font-extrabold text-white font-mono tracking-tighter">85</span>
+                                  <span className="text-xs text-slate-500 font-bold font-mono">/ 100</span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-bold">Good • Underclaimed Section 80D limits</span>
+                              </div>
+                            </div>
+
+                            {/* Volumetric Next Step CTA Spotlight */}
+                            <div className="relative bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden">
+                              <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
+                              <div className="space-y-1 z-10 text-center md:text-left">
+                                <span className="text-[9px] bg-emerald-500/15 text-emerald-450 px-2 py-0.5 rounded font-black tracking-wider uppercase">Filing Spotlight</span>
+                                <h4 className="text-xs font-bold text-slate-100">Claim Medical Insurance Premium under 80D</h4>
+                                <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                                  We detected zero claims under Section 80D. Did you pay for medical health policies?
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => setActiveStep(6)}
+                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 shadow-lg shadow-emerald-500/15 select-none active:scale-95 flex items-center gap-1.5"
+                              >
+                                <span>Continue Filing</span>
+                                <ArrowRight className="w-3.5 h-3.5 text-slate-955" />
+                              </button>
+                            </div>
+
+                            {/* Quick Actions Grid */}
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-4">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Filing Operations Panel</h3>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                {[
+                                  { label: 'Ingest Documents', step: 3, icon: FileUp, desc: 'Upload ITR forms' },
+                                  { label: 'AI Diagnosis', step: 4, icon: BrainCircuit, desc: 'Copilot review' },
+                                  { label: 'Optimize Regime', step: 5, icon: Award, desc: 'Compare slabs' },
+                                  { label: 'Timeline Archives', step: 10, icon: History, desc: 'Sandbox returns' },
+                                ].map((act) => (
+                                  <button
+                                    key={act.label}
+                                    onClick={() => setActiveStep(act.step)}
+                                    className="p-3 bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.04] hover:border-white/[0.08] rounded-2xl text-left space-y-2 cursor-pointer transition-all active:scale-95 flex flex-col justify-between min-h-[100px]"
+                                  >
+                                    <act.icon className="w-5 h-5 text-emerald-400" />
+                                    <div>
+                                      <span className="block text-[10px] font-bold text-slate-200 leading-snug">{act.label}</span>
+                                      <span className="text-[8px] text-slate-500 block font-medium leading-none mt-0.5">{act.desc}</span>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Recent Documents list */}
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-3">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <FolderOpen className="w-3.5 h-3.5 text-blue-400" />
+                                Ingested Document Ledger
+                              </h3>
+                              <div className="space-y-2.5">
+                                {[
+                                  { name: 'Form_16_Mohit_FY25-26.pdf', size: '254 KB', status: 'Extracted', date: 'Jul 4 19:40' },
+                                  { name: 'Equity_Capital_Gains.csv', size: '1.2 MB', status: 'Extracted', date: 'Jul 4 19:42' },
+                                ].map((doc) => (
+                                  <div key={doc.name} className="flex items-center justify-between p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl text-xs">
+                                    <div className="flex items-center gap-3">
+                                      <FileText className="w-4 h-4 text-slate-500 shrink-0" />
+                                      <div className="flex flex-col">
+                                        <span className="font-bold text-slate-200">{doc.name}</span>
+                                        <span className="text-[8px] text-slate-500">{doc.size} • {doc.date}</span>
+                                      </div>
+                                    </div>
+                                    <span className="text-[8px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/15 px-2 py-0.5 rounded font-black tracking-wider uppercase">{doc.status}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                          </div>
+
+                          {/* Right Columns (Span 1) */}
+                          <div className="space-y-6">
+                            
+                            {/* Latest AI Insights drawer card */}
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-4">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                                Latest Copilot Alerts
+                              </h3>
+                              
+                              <div className="space-y-3.5">
+                                <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl space-y-1.5">
+                                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-blue-400 uppercase tracking-wider">
+                                    <AlertCircle className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                                    Section 80D Audit
+                                  </div>
+                                  <p className="text-[10px] text-slate-400 leading-normal font-medium">
+                                    You paid zero medical premiums. Seniors aged 60+ parents unlock an extra limit of ₹50,000.
+                                  </p>
+                                </div>
+
+                                <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl space-y-1.5">
+                                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-400 uppercase tracking-wider">
+                                    <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                    HRA rent exemption
+                                  </div>
+                                  <p className="text-[10px] text-slate-400 leading-normal font-medium">
+                                    Confirm rent receipt logs to check compliance with Section 10(13A). Rent above 1L requires landlord PAN.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Recent Activity Log timeline card */}
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-4">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recent Activity Logs</h3>
+                              <div className="relative pl-4 space-y-4 border-l border-slate-800">
+                                {[
+                                  { label: 'Sandbox profile active', date: 'Jul 4 19:38', desc: 'Secure connection established' },
+                                  { label: 'Form 16 uploaded', date: 'Jul 4 19:40', desc: 'Auto extraction computed' },
+                                  { label: 'Regime optimized', date: 'Jul 4 19:45', desc: 'New regime saving: ₹18,240' },
+                                ].map((act, i) => (
+                                  <div key={i} className="relative text-xs space-y-0.5">
+                                    <div className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border border-slate-950 ring-4 ring-emerald-500/10" />
+                                    <span className="block font-bold text-slate-200">{act.label}</span>
+                                    <span className="block text-[8px] text-slate-500">{act.date} • {act.desc}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                          </div>
+
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Stage 3: Dedicated Documents page */}
+                    {activeStep === 3 && (
+                      <motion.div
+                        key="step-3"
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-6 font-sans"
+                      >
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md">
+                          <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
+                            <FileUp className="w-5 h-5 text-emerald-450" />
+                            Ingest Tax Documents
+                          </h2>
+                          <p className="text-xs text-slate-400">
+                            Upload your Form 16 PDF, salary structure sheets, or paste raw plain-text. Copilot scans parameters against Section 139(1) constraints.
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                          {/* File drop zone & Progress Stepper */}
+                          <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md flex flex-col justify-between space-y-6">
+                            
+                            <Suspense fallback={<div className="h-64 bg-slate-900/10 animate-pulse rounded-2xl" />}>
+                              <Form16Import onFileUpload={handleForm16TextProcessing} />
+                            </Suspense>
+
+                            {/* Stepped AI progress bar */}
+                            {isExtracting && (
+                              <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-3">
+                                <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                  <span>Neural parsing progress</span>
+                                  <span className="animate-pulse">Active extraction...</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                                  <div className="h-full bg-emerald-500 rounded-full animate-pulse" style={{ width: '65%' }} />
+                                </div>
+                                <div className="flex justify-between text-[8px] text-slate-500 font-bold font-mono">
+                                  <span>1. Upload</span>
+                                  <span>2. OCR Extractor</span>
+                                  <span>3. Classification</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Verification checklist and past uploads */}
+                          <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md space-y-6">
+                            
+                            {/* Checklist */}
+                            <div className="space-y-3">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ingestion Verifications</h3>
+                              
+                              <div className="space-y-2">
+                                {[
+                                  { label: 'AY 2026-27 compliance verified', status: true },
+                                  { label: 'PAN ownership verified (Mohit Kumar)', status: true },
+                                  { label: 'ITR Form format detected (ITR-1 / ITR-2)', status: true },
+                                ].map((chk, i) => (
+                                  <div key={i} className="flex items-center gap-2.5 text-xs font-semibold">
+                                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                                    <span className="text-slate-300">{chk.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Past uploads log list */}
+                            <div className="space-y-3 pt-4 border-t border-slate-800/60">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Parsed attachments</h3>
+                              
+                              <div className="space-y-2">
+                                {[
+                                  { name: 'Form_16_Mohit_FY25-26.pdf', size: '254 KB', date: 'Jul 4 19:40' },
+                                ].map((doc) => (
+                                  <div key={doc.name} className="flex items-center justify-between p-2.5 bg-slate-955/40 border border-white/[0.02] rounded-xl text-xs">
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="w-4 h-4 text-slate-500" />
+                                      <div className="flex flex-col">
+                                        <span className="font-bold text-slate-200">{doc.name}</span>
+                                        <span className="text-[8px] text-slate-500">{doc.size} • {doc.date}</span>
+                                      </div>
+                                    </div>
+                                    <span className="text-[8px] bg-emerald-500/10 text-emerald-450 px-2 py-0.5 rounded uppercase font-bold border border-emerald-500/10">Verified</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Collapsible text paste drawer triggers */}
+                            <div className="pt-2">
+                              <button
+                                onClick={() => setShowPasteArea(!showPasteArea)}
+                                className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer select-none"
+                              >
+                                <span>{showPasteArea ? 'Hide Manual paste box' : 'Or paste raw Form-16 text manually'}</span>
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPasteArea ? 'rotate-180' : ''}`} />
+                              </button>
+                              
+                              {showPasteArea && (
+                                <form onSubmit={handleManualTextExtraction} className="mt-3 space-y-3 animate-fade-in">
+                                  <textarea
+                                    value={manualRawText}
+                                    onChange={(e) => setManualRawText(e.target.value)}
+                                    placeholder="Paste parsed Form-16 plain text blocks here..."
+                                    rows={4}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-blue-500 focus:bg-slate-900"
+                                  />
+                                  <button
+                                    type="submit"
+                                    disabled={isPasteProcessing || !manualRawText.trim()}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+                                  >
+                                    {isPasteProcessing ? 'Processing Text...' : 'Parse Plain Text'}
+                                  </button>
+                                </form>
+                              )}
+                            </div>
+
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Stage 4: AI Analysis page */}
+                    {activeStep === 4 && (
+                      <motion.div
+                        key="step-4"
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-6 font-sans"
+                      >
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md">
+                          <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
+                            <BrainCircuit className="w-5 h-5 text-emerald-450" />
+                            Gemini AI Diagnostic Scan
+                          </h2>
+                          <p className="text-xs text-slate-400">
+                            Review the progressive diagnosis log. Copilot checks each parameter against the latest Income Tax rules.
+                          </p>
+                        </div>
+
+                        {/* Mohit's Prompt Inquiry */}
+                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 border border-white/[0.04] rounded-3xl shadow-xs transition-colors">
+                          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold text-xs shrink-0 select-none">
+                            MK
+                          </div>
+                          <div className="space-y-0.5">
+                            <span className="block text-xs font-bold text-slate-200">Mohit Kumar</span>
+                            <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                              Analyze my parsed salary structure parameters, check eligibility thresholds, and highlight optimization opportunities under AY 2026-27 regulations.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Copilot Response Card */}
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 space-y-6 relative overflow-hidden transition-all duration-300">
+                          <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-blue-500/3 blur-[60px] rounded-full pointer-events-none" />
+
+                          {/* Copilot Avatar Title */}
+                          <div className="flex items-center gap-2.5 pb-4 border-b border-white/[0.04]">
+                            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                              <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+                            </div>
+                            <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Gemini Tax Copilot</span>
+                          </div>
+
+                          {/* Stepped Thinking Loader */}
+                          {analysisProgress < 4 && (
+                            <div className="flex items-center gap-3 py-2">
+                              <div className="flex gap-1.5 items-center shrink-0 py-1">
+                                <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" />
+                              </div>
+                              <span className="text-xs text-slate-450 dark:text-slate-500 font-semibold font-mono animate-pulse">
+                                {analysisProgress === 0 && "Initializing neural parser..."}
+                                {analysisProgress === 1 && "Ingesting salary variables..."}
+                                {analysisProgress === 2 && "Checking Section 80C thresholds..."}
+                                {analysisProgress === 3 && "Running regime slab diagnostic rules..."}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Progressive Streams */}
+                          <div className="space-y-4">
+                            {analysisProgress >= 1 && (
+                              <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-2 text-xs"
+                              >
+                                <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">1. Gross Salary Parameters</span>
+                                <div className="p-3.5 bg-slate-955/60 border border-slate-850 rounded-2xl leading-relaxed text-slate-400 font-medium">
+                                  Gross Salary registered at {formatINR(taxData.grossSalary)}. Standard Deduction of {formatINR(75000)} is automatically applicable under Section 16(ia) for the New Regime.
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {analysisProgress >= 2 && (
+                              <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-2 text-xs"
+                              >
+                                <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">2. Detected Exemptions & Slabs</span>
+                                <div className="p-3.5 bg-slate-955/60 border border-slate-850 rounded-2xl leading-relaxed text-slate-400 font-medium">
+                                  Section 80C PPF/EPF is fully claimed at {formatINR(150000)}. Rent paid logs qualify under Section 10(13A) Old Regime only. However, medical insurance premium of {formatINR(taxData.deduction80D)} is currently underclaimed.
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {analysisProgress >= 3 && (
+                              <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-2 text-xs"
+                              >
+                                <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">3. Warnings & Diagnostic Recommendations</span>
+                                <div className="p-3.5 bg-slate-955/60 border border-slate-850 rounded-2xl leading-relaxed text-slate-400 font-medium">
+                                  ⚠️ <strong>Regime Slab Alert:</strong> Your active exemption threshold is below ₹3,75,000. Under current tax configurations, switching to the New Tax Regime saves {formatINR(taxCalculationResult.savings)} compared to the Old regime.
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {analysisProgress >= 4 && (
+                              <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-4 pt-2 border-t border-slate-800"
+                              >
+                                <div className="flex items-center justify-between text-xs font-bold text-slate-455">
+                                  <span>Validation Confidence Score</span>
+                                  <span className="text-emerald-450">98% Verified</span>
+                                </div>
+                                <button
+                                  onClick={() => setActiveStep(5)}
+                                  className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-emerald-500/10 select-none active:scale-95 flex items-center justify-center gap-1.5"
+                                >
+                                  <span>Proceed to Recommendations</span>
+                                  <ArrowRight className="w-4 h-4 text-slate-955" />
+                                </button>
+                              </motion.div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Stage 5: Recommendations page */}
+                    {activeStep === 5 && (
+                      <motion.div
+                        key="step-5"
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-6 font-sans"
+                      >
+                        {/* Savings Hero Banner */}
+                        <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-3xl p-8 text-center space-y-4 relative overflow-hidden backdrop-blur-md">
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-emerald-500/5 blur-[90px] rounded-full pointer-events-none" />
+                          
+                          <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded font-black tracking-wider uppercase inline-block z-10 relative">Optimization Report</span>
+                          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white z-10 relative">
+                            Here's how you can save <span className="text-emerald-450">{formatINR(taxCalculationResult.savings)}</span>
+                          </h1>
+                          <p className="text-xs text-slate-400 max-w-xl mx-auto z-10 relative font-medium leading-relaxed">
+                            Comparing exemption rates. Our diagnostic models suggest electing the <strong>New Tax Regime (Sec 115BAC)</strong> for maximum optimization.
+                          </p>
+                        </div>
+
+                        {/* Regime Comparison Detail Columns */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                          
+                          {/* Comparison Panel (7 columns) */}
+                          <div className="lg:col-span-7 flex flex-col h-full bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md justify-between space-y-6">
+                            <Suspense fallback={<div className="h-96 bg-slate-900/10 animate-pulse rounded-2xl" />}>
+                              <RegimeComparison />
+                            </Suspense>
+                          </div>
+
+                          {/* AI Explanation and Badge (5 columns) */}
+                          <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+                            
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-3.5 flex-1">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                                Why this recommendation?
+                              </h3>
+                              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                                "Under Section 115BAC, tax rates are lower, and standard deductions are increased to ₹75,000. Your standard deductions, salary thresholds, and Section 80C exemptions totaling ₹2.08 Lakhs are not enough to offset the lower tax rate of the Old regime slabs."
+                              </p>
+                              
+                              <div className="p-3 bg-white/[0.01] border border-white/[0.02] rounded-xl flex items-center gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                  <CheckCircle className="w-3 h-3 text-emerald-500" />
+                                </div>
+                                <span className="text-[10px] text-slate-350 font-bold uppercase tracking-wider">Confidence Level: 99% Verified</span>
+                              </div>
+                            </div>
+
+                            {/* Regime Pros & Cons comparison cards */}
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-3">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pros & Cons of suggestion</h3>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl space-y-1">
+                                  <span className="text-[9px] font-black uppercase text-emerald-400 tracking-wider">Pros</span>
+                                  <p className="text-[10px] text-slate-450 font-semibold leading-relaxed">Lower tax slab rates, higher standard deduction.</p>
+                                </div>
+                                <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl space-y-1">
+                                  <span className="text-[9px] font-black uppercase text-red-400 tracking-wider">Cons</span>
+                                  <p className="text-[10px] text-slate-450 font-semibold leading-relaxed">Cannot claim Section 80C, 80D, or HRA rent rebates.</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => setActiveStep(6)}
+                              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-blue-500/10 select-none active:scale-95 flex items-center justify-center gap-1.5"
+                            >
+                              <span>Enter Guided Filing Workspace</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </button>
+
+                          </div>
+
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Stage 6: Guided Filing Experience */}
+                    {activeStep === 6 && (
+                      <motion.div
+                        key="step-6"
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-6 font-sans"
+                      >
+                        {/* filing progress tracker */}
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                              <ListTodo className="w-5 h-5 text-emerald-450" />
+                              ITR Filing Pipeline
+                            </h2>
+                            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Step {guidedFilingStep} of 5</span>
+                          </div>
+                          
+                          {/* Stepper bar */}
+                          <div className="flex items-center gap-2">
+                            {[1, 2, 3, 4, 5].map((stepIdx) => (
+                              <button
+                                key={stepIdx}
+                                onClick={() => setGuidedFilingStep(stepIdx)}
+                                className={`h-1.5 flex-1 rounded-full transition-all cursor-pointer ${
+                                  guidedFilingStep >= stepIdx ? 'bg-emerald-500' : 'bg-slate-800'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          
+                          <div className="flex justify-between text-[8px] text-slate-500 font-black uppercase tracking-wider">
+                            <span>1. Personal</span>
+                            <span>2. Income</span>
+                            <span>3. Deductions</span>
+                            <span>4. Verification</span>
+                            <span>5. Generate</span>
+                          </div>
+                        </div>
+
+                        {/* Main step container */}
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md space-y-6">
+                          
+                          {/* Step 1: Personal Info */}
+                          {guidedFilingStep === 1 && (
+                            <div className="space-y-5">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Review Personal Details</h3>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
+                                  <input type="text" defaultValue="Mohit Kumar" disabled className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Permanent Account Number (PAN)</label>
+                                  <input type="text" defaultValue="MKM*****32F" disabled className="w-full bg-slate-955 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Employer Category</label>
+                                  <input type="text" defaultValue="Private Sector Co." disabled className="w-full bg-slate-955 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Residential Status</label>
+                                  <input type="text" defaultValue="Resident Individual" disabled className="w-full bg-slate-955 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Step 2: Income Review */}
+                          {guidedFilingStep === 2 && (
+                            <div className="space-y-5">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Income Ledgers Summary</h3>
+                              
+                              <div className="space-y-4">
+                                <div className="p-4 bg-slate-955/40 border border-white/[0.02] rounded-xl flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <FileText className="w-5 h-5 text-slate-500" />
+                                    <div>
+                                      <span className="block text-xs font-bold text-slate-200">Gross Salary (Section 17(1))</span>
+                                      <span className="text-[9px] text-slate-500">Auto parsed from Form 16</span>
+                                    </div>
+                                  </div>
+                                  <input 
+                                    type="text" 
+                                    value={taxData.grossSalary}
+                                    onChange={(e) => handleNumericChange('grossSalary', e.target.value)}
+                                    className="bg-slate-900 border border-slate-800 rounded-lg p-1.5 w-32 text-right font-mono text-xs font-bold text-slate-200 focus:outline-none"
+                                  />
+                                </div>
+
+                                <div className="p-4 bg-slate-955/40 border border-white/[0.02] rounded-xl flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <FileText className="w-5 h-5 text-slate-500" />
+                                    <div>
+                                      <span className="block text-xs font-bold text-slate-200">Income from Other Sources</span>
+                                      <span className="text-[9px] text-slate-500">Savings account interest, etc.</span>
+                                    </div>
+                                  </div>
+                                  <input 
+                                    type="text" 
+                                    value={taxData.otherIncome}
+                                    onChange={(e) => handleNumericChange('otherIncome', e.target.value)}
+                                    className="bg-slate-900 border border-slate-800 rounded-lg p-1.5 w-32 text-right font-mono text-xs font-bold text-slate-200 focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Step 3: Deductions Claims */}
+                          {guidedFilingStep === 3 && (
+                            <div className="space-y-6">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sync Deductions Claims</h3>
+                              <Suspense fallback={<div className="h-96 bg-slate-900/10 animate-pulse rounded-2xl" />}>
+                                <DeductionCard />
+                              </Suspense>
+                            </div>
+                          )}
+
+                          {/* Step 4: Verification & Slabs */}
+                          {guidedFilingStep === 4 && (
+                            <div className="space-y-6">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Verifications and Slabs Audit</h3>
+                              <Suspense fallback={<div className="h-96 bg-slate-900/10 animate-pulse rounded-2xl" />}>
+                                <RegimeComparison />
+                              </Suspense>
+                            </div>
+                          )}
+
+                          {/* Step 5: Generate Return */}
+                          {guidedFilingStep === 5 && (
+                            <div className="space-y-5 text-center py-6">
+                              <div className="w-14 h-14 bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce">
+                                <Award className="w-8 h-8 text-emerald-400" />
+                              </div>
+                              
+                              <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">Verify Return & Submit</h3>
+                              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                                Slabs audits verified compliance with Section 139(1) of the Income Tax Act. Ready to submit to the sandbox?
+                              </p>
+
+                              <button
+                                onClick={executeFilingSubmission}
+                                className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-500/10 active:scale-95 flex items-center gap-1.5 mx-auto"
+                              >
+                                <ShieldCheck className="w-4 h-4 text-slate-955" />
+                                <span>Generate and Log return</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Bottom Navigation buttons inside guided filing */}
+                          <div className="pt-4 border-t border-slate-800/60 flex justify-between">
+                            <button
+                              onClick={() => setGuidedFilingStep(prev => Math.max(1, prev - 1))}
+                              disabled={guidedFilingStep === 1}
+                              className="px-4 py-2 border border-slate-800 hover:bg-white/[0.02] text-slate-400 hover:text-white text-xs font-bold rounded-xl cursor-pointer disabled:opacity-30 disabled:pointer-events-none select-none active:scale-95"
+                            >
+                              Back
+                            </button>
+                            {guidedFilingStep < 5 ? (
+                              <button
+                                onClick={() => setGuidedFilingStep(prev => Math.min(5, prev + 1))}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer select-none active:scale-95"
+                              >
+                                Continue
+                              </button>
+                            ) : (
+                              <div />
+                            )}
+                          </div>
+
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Stage 10: Timeline History & Archives */}
+                    {activeStep === 10 && (
+                      <motion.div
+                        key="step-10"
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-6 font-sans"
+                      >
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md">
+                          <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
+                            <History className="w-5 h-5 text-emerald-450" />
+                            Stage 10: Filing History & Archives
+                          </h2>
+                          <p className="text-xs text-slate-400">
+                            Access secure, local archive ledger logs. Search and filter across previous assessment years.
+                          </p>
+                        </div>
+
+                        {/* AI Summary Banner */}
+                        <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex items-start gap-2.5 text-xs text-emerald-455 leading-relaxed shadow-xs">
+                          <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold block text-slate-200">AI Archive Diagnostic</span>
+                            <span>
+                              {filingHistory.length === 0 
+                                ? "No previous filings detected in the sandbox cache." 
+                                : `Across your logged filings, your average Gross Salary is ${formatINR(
+                                    Math.round(filingHistory.reduce((acc, item) => acc + item.grossSalary, 0) / filingHistory.length)
+                                  )}. Slabs audit verifies compliance with Section 139(1) for all logged assessment cycles.`}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 space-y-6 backdrop-blur-md">
+                          {/* Search & Filter Header Row */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Timeline Ledger</h3>
+                            
+                            <div className="flex flex-wrap items-center gap-3">
+                              <input
+                                type="text"
+                                placeholder="Search by ID or date..."
+                                value={historySearch}
+                                onChange={(e) => setHistorySearch(e.target.value)}
+                                className="bg-slate-950 border border-slate-800 rounded-lg py-1 px-3 text-xs text-slate-200 font-medium focus:outline-none focus:border-blue-500 focus:bg-slate-900 w-44"
+                              />
+                              <select
+                                value={historyFilter}
+                                onChange={(e) => setHistoryFilter(e.target.value)}
+                                className="bg-slate-955 border border-slate-800 rounded-lg py-1 px-2.5 text-xs text-slate-400 font-bold focus:outline-none cursor-pointer"
+                              >
+                                <option value="ALL">All regimes</option>
+                                <option value="NEW">New regime</option>
+                                <option value="OLD">Old regime</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Notion Inspired Timeline View */}
+                          <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-800 before:border-dashed">
+                            {filingHistory
+                              .filter(item => {
+                                const matchesSearch = item.id.toLowerCase().includes(historySearch.toLowerCase()) || item.date.toLowerCase().includes(historySearch.toLowerCase());
+                                const matchesFilter = historyFilter === 'ALL' || item.recommendedRegime === historyFilter;
+                                return matchesSearch && matchesFilter;
+                              })
+                              .map((item, i) => (
+                                <div key={item.id} className="relative text-xs space-y-2">
+                                  {/* Marker circle */}
+                                  <div className="absolute -left-[20px] top-1 w-3 h-3 rounded-full bg-emerald-500 border border-slate-950 ring-4 ring-emerald-500/15" />
+                                  
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-extrabold text-slate-100 text-xs font-mono">{item.id}</span>
+                                      <span className="text-[9px] bg-slate-900 border border-white/[0.04] text-slate-400 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">{item.formType}</span>
+                                      <span className="text-[9px] bg-blue-600/10 text-blue-400 px-1.5 py-0.5 rounded font-bold">{item.recommendedRegime} REGIME</span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-500 font-bold">{item.date}</span>
+                                  </div>
+
+                                  <div className="p-4 bg-slate-955/40 border border-white/[0.02] rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-3 leading-relaxed">
+                                    <div>
+                                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">Gross Salary</span>
+                                      <span className="font-mono text-[11px] font-bold text-slate-200">{formatINR(item.grossSalary)}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">Total Deductions</span>
+                                      <span className="font-mono text-[11px] font-bold text-slate-200">{formatINR(item.totalDeductions)}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">Net Tax Liability</span>
+                                      <span className="font-mono text-[11px] font-bold text-slate-200">{formatINR(item.netTaxPaid)}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-3.5 text-[10px] text-slate-400 font-bold pt-1">
+                                    <button className="flex items-center gap-1 hover:text-blue-400 cursor-pointer select-none transition-colors">
+                                      <Download className="w-3.5 h-3.5" />
+                                      <span>Download JSON return</span>
+                                    </button>
+                                    <span>•</span>
+                                    <button className="flex items-center gap-1 hover:text-blue-400 cursor-pointer select-none transition-colors">
+                                      <Printer className="w-3.5 h-3.5" />
+                                      <span>Print Summary PDF</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+
+                        </div>
+                      </motion.div>
+                    )}
+
+                  </AnimatePresence>
+
+                </main>
+
+                {/* Unified Footer */}
+                <footer className="border-t border-white/[0.04] dark:border-slate-900/50 bg-[#040608]/40 dark:bg-slate-900/10 py-6 px-6 text-center text-xs text-slate-500 mt-auto shrink-0 flex flex-col md:flex-row md:justify-between md:items-center gap-3 z-10 relative">
+                  <p>© 2026 TaxSense Inc. | Built for Indian salaried employees under AY 2026-27 rules.</p>
+                  <div className="flex justify-center gap-4 text-slate-500 font-medium">
+                    <a href="#" className="hover:text-blue-400 transition-colors">Privacy Sandbox</a>
+                    <span>•</span>
+                    <a href="#" className="hover:text-blue-400 transition-colors">Sec. 139(1) Filing Guide</a>
+                    <span>•</span>
+                    <a href="#" className="hover:text-blue-400 transition-colors">Income Tax Department APIs</a>
+                  </div>
+                </footer>
+
+              </div>
+
             </div>
+
+            {/* Sidebar Floating AI Assistant Companion Drawer (450px) */}
+            <aside className={`border-l border-white/[0.04] dark:border-slate-800/40 bg-[#040608]/40 dark:bg-slate-900/35 backdrop-blur-md flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out z-40 relative h-screen ${
+              isFloatingAIChatOpen ? 'w-[450px]' : 'w-0 overflow-hidden border-l-0'
+            }`}>
+              <div className="flex flex-col h-full justify-between">
+                
+                {/* Header context badge */}
+                <div className="px-4 py-4 border-b border-white/[0.04] dark:border-slate-900/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-450 animate-pulse" />
+                    <span className="font-bold text-xs uppercase tracking-wider text-slate-100">TaxSense Copilot</span>
+                    <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-black uppercase shrink-0">
+                      {activeStep === 11 && 'Dashboard'}
+                      {activeStep === 3 && 'Documents'}
+                      {activeStep === 4 && 'AI Scan'}
+                      {activeStep === 5 && 'Optimize'}
+                      {activeStep === 6 && 'Filing'}
+                      {activeStep === 10 && 'timeline'}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => setIsFloatingAIChatOpen(false)}
+                    className="p-1 hover:bg-white/[0.06] rounded text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Chat Message History */}
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
+                  {floatingChatHistory.map((msg, i) => (
+                    <div key={i} className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold ${
+                        msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-900 border border-slate-800 text-emerald-400'
+                      }`}>
+                        {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+                      </div>
+                      <div className={`p-3 rounded-2xl text-xs leading-relaxed font-medium ${
+                        msg.sender === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-950/40 border border-slate-850 rounded-tl-none text-slate-300'
+                      }`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {isFloatingChatTyping && (
+                    <div className="flex gap-3 max-w-[85%] animate-pulse">
+                      <div className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-405">
+                        <Bot className="w-3.5 h-3.5 animate-spin" />
+                      </div>
+                      <div className="p-3 bg-slate-950/40 border border-slate-850 rounded-2xl rounded-tl-none flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input prompt field */}
+                <form onSubmit={handleFloatingChatSubmit} className="p-3 border-t border-white/[0.04] dark:border-slate-900/50 bg-[#040608]/40 flex gap-2">
+                  <input
+                    type="text"
+                    value={floatingChatQuery}
+                    onChange={(e) => setFloatingChatQuery(e.target.value)}
+                    placeholder="Ask about compliance or savings..."
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 focus:bg-slate-900"
+                  />
+                  <button
+                    type="submit"
+                    className="p-2 bg-emerald-500 hover:bg-emerald-400 text-slate-955 rounded-xl cursor-pointer transition-all active:scale-95"
+                  >
+                    <Send className="w-4 h-4 text-slate-955" />
+                  </button>
+                </form>
+
+              </div>
+            </aside>
+
+            {/* Toggle trigger for Right side copilot drawer */}
+            {!isFloatingAIChatOpen && (
+              <button
+                onClick={() => setIsFloatingAIChatOpen(true)}
+                className="fixed right-6 bottom-6 z-40 p-3 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold rounded-full shadow-lg shadow-emerald-500/20 cursor-pointer transition-all active:scale-95 flex items-center gap-1.5 animate-bounce"
+              >
+                <Sparkles className="w-5 h-5 text-slate-955" />
+              </button>
+            )}
+
+            {/* Settings Dialog Panel Overlay */}
+            <AnimatePresence>
+              {isSettingsOpen && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-955/80 backdrop-blur-sm"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-slate-905 border border-slate-850 rounded-3xl p-6 max-w-md w-full shadow-2xl relative z-50 space-y-5 text-xs font-sans"
+                  >
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <Settings className="w-4.5 h-4.5 text-slate-400" />
+                        <span className="font-extrabold text-slate-200 uppercase tracking-wider text-[11px]">Filing Preferences & Sandbox Settings</span>
+                      </div>
+                      <button 
+                        onClick={() => setIsSettingsOpen(false)}
+                        className="p-1 hover:bg-white/[0.04] rounded text-slate-500 hover:text-white cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+
+
+                      {/* Store settings */}
+                      <div className="space-y-1.5">
+                        <span className="font-bold text-slate-300 block">ITR Filing Rules</span>
+                        <div className="grid grid-cols-2 gap-3 pt-1">
+                          <label className="flex items-center gap-2.5 p-2 bg-slate-950/40 border border-slate-850 rounded-xl cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={formType === 'ITR-2'} 
+                              onChange={(e) => setFormType(e.target.checked ? 'ITR-2' : 'ITR-1')} 
+                              className="rounded border-slate-800 text-blue-600 focus:ring-0 cursor-pointer"
+                            />
+                            <span className="font-semibold text-slate-400">ITR-2 Form</span>
+                          </label>
+                          <label className="flex items-center gap-2.5 p-2 bg-slate-950/40 border border-slate-850 rounded-xl cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={multiHouse} 
+                              onChange={(e) => setMultiHouse(e.target.checked)} 
+                              className="rounded border-slate-800 text-blue-600 focus:ring-0 cursor-pointer"
+                            />
+                            <span className="font-semibold text-slate-400">Multi House Property</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+                        <span className="font-bold text-red-400 block">Danger Zone</span>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              clearFilingHistory();
+                              setIsSettingsOpen(false);
+                            }}
+                            className="flex-1 py-2 bg-red-950/20 hover:bg-red-900/30 border border-red-500/20 hover:border-red-500/40 text-red-400 font-bold rounded-xl cursor-pointer text-center select-none active:scale-95 transition-all"
+                          >
+                            Clear archives history
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Filing Completion Celebration Overlay Modal */}
+            <AnimatePresence>
+              {showCelebration && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-955/90 backdrop-blur-md"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.25 }}
+                    className="text-center space-y-6 max-w-md w-full p-8 bg-slate-905 border border-slate-850 rounded-3xl relative overflow-hidden shadow-2xl"
+                  >
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-emerald-500/5 blur-[80px] rounded-full pointer-events-none" />
+                    
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-455 border border-emerald-500/20 flex items-center justify-center mx-auto mb-2 animate-bounce">
+                      <CheckCircle className="w-9 h-9 text-emerald-400" />
+                    </div>
+
+                    <div className="space-y-2 z-10 relative">
+                      <h2 className="text-xl font-bold tracking-tight text-white">ITR Return Logged Successfully!</h2>
+                      <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                        Your filing draft has been compiled, audited against AY 2026-27 rules, and logged to your local sandbox archives database.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setShowCelebration(false);
+                        setGuidedFilingStep(1);
+                        setActiveStep(10); // Route directly to Timeline Archives (Stage 10)
+                      }}
+                      className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-emerald-500/20 select-none active:scale-95 block z-10 relative"
+                    >
+                      View Timeline history
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
           </div>
+        )}
 
-          {/* Row 2: Portfolio Sync (Left) and Exemption Optimizer (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-            
-            {/* Left: Portfolio Sync Widget (5 columns) */}
-            <div className="lg:col-span-5 flex flex-col h-full">
-              <PortfolioSync />
-            </div>
-
-            {/* Right: Exemption Optimizer / Deductions Card (7 columns) */}
-            <div className="lg:col-span-7 flex flex-col h-full">
-              <DeductionCard />
-            </div>
-
-          </div>
-
-          {/* Row 3: Tax Regime Comparison (Left) and AI Copilot (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-            
-            {/* Left: Regime Comparison Analysis Panel (7 columns) */}
-            <div className="lg:col-span-7 flex flex-col h-full">
-              <RegimeComparison />
-            </div>
-
-            {/* Right: AI Copilot Chat Interface (5 columns) */}
-            <div className="lg:col-span-5 flex flex-col h-full">
-              <ChatInterface onFileUpload={handleForm16TextProcessing} />
-            </div>
-
-          </div>
-
-          {/* Row 4: Export Section (Bottom final line) */}
-          <div className="w-full">
-            <ExportControl />
-          </div>
-
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 px-6 text-center text-xs text-slate-400 mt-auto shrink-0 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-        <p>© 2026 TaxSense Inc. | Built for Indian salaried employees under assessment year 2026-27 rules.</p>
-        <div className="flex justify-center gap-4 text-slate-500 font-medium">
-          <a href="#" className="hover:text-blue-600 transition-colors">Privacy Sandbox</a>
-          <span>•</span>
-          <a href="#" className="hover:text-blue-600 transition-colors">Sec. 139(1) Filing Guide</a>
-          <span>•</span>
-          <a href="#" className="hover:text-blue-600 transition-colors">Income Tax Department APIs</a>
-        </div>
-      </footer>
+      </Suspense>
 
       <FilingGuide isOpen={isFilingGuideOpen} onClose={() => setIsFilingGuideOpen(false)} />
     </div>

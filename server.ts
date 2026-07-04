@@ -4,8 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
 import multer from 'multer';
-import * as pdfParseModule from 'pdf-parse';
-const pdfParse = ((pdfParseModule as any).default || pdfParseModule) as any;
+import { PDFParse } from 'pdf-parse';
 
 dotenv.config();
 
@@ -171,7 +170,8 @@ async function startServer() {
         res.status(400).json({ error: 'No file uploaded.' });
         return;
       }
-      const pdfData = await pdfParse(req.file.buffer);
+      const parser = new PDFParse({ data: req.file.buffer });
+      const pdfData = await parser.getText();
       res.json({ text: pdfData.text });
     } catch (error: any) {
       console.error('PDF parsing failed:', error);
@@ -250,7 +250,7 @@ async function startServer() {
   // API: Conversational Agent Turns
   app.post('/api/chat', async (req, res) => {
     try {
-      const { messages, taxData, chatHistory, incomeProfile, confirmedDeductions } = req.body;
+      const { messages, taxData, chatHistory, incomeProfile, confirmedDeductions, activeStep, guidedFilingStep } = req.body;
       
       const resolvedMessages = messages || chatHistory;
       if (!resolvedMessages || !Array.isArray(resolvedMessages)) {
@@ -289,10 +289,26 @@ async function startServer() {
       const ltcg = Number(resolvedTaxData?.ltcg) || 0;
       const calculatedFormType = (stcg > 0 || ltcg > 0) ? 'ITR-2' : (resolvedTaxData?.formType || 'ITR-1');
 
+      const activeStepNum = Number(activeStep) || 3;
+      const getStageName = (step: number) => {
+        switch(step) {
+          case 3: return "Import Documents";
+          case 4: return "AI Analysis Scanner";
+          case 5: return "Optimizations & Regime Recommendations";
+          case 6: return "Guided ITR Filing Workspace (Step " + (guidedFilingStep || 1) + " of 5)";
+          case 10: return "Filing History & Archives";
+          case 11: return "Dashboard Command Center";
+          default: return "Landing / Authentication";
+        }
+      };
+
       const systemInstruction = `You are TaxSense Copilot, an elite AI financial advisor specialized in Indian Income Tax filing for individuals for AY 2026-27.
       Your core mission is to help taxpayers understand old vs new tax regimes, optimize their deductions under Chapter VI-A, and route them correctly through ITR workflows:
       - **ITR-1 (Sahaj)**: For individuals with salary income, one house property, other sources (interest etc.), and total income up to ₹50 Lakhs.
       - **ITR-2**: Automatically upgraded when Capital Gains (short-term/long-term gains from stocks, mutual funds, crypto, or other investments) or multiple house properties are present.
+
+      User's Current Application Location & Context:
+      - Current Stage: Stage ${activeStepNum} - **${getStageName(activeStepNum)}**
 
       User's Active Filing Status:
       - Current Routed Form: **${calculatedFormType}** ${calculatedFormType === 'ITR-2' ? '(Upgraded due to Capital Gains / Investments)' : '(Salaried / Simple Income)'}

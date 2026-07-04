@@ -62,3 +62,13 @@ export interface ChatMessage {
   timestamp: string;
   suggestedPrompts?: string[];
 }
+
+export interface FilingHistoryItem {
+  id: string;
+  date: string;
+  grossSalary: number;
+  totalDeductions: number;
+  netTaxPaid: number;
+  recommendedRegime: 'NEW' | 'OLD';
+  formType: 'ITR-1' | 'ITR-2';
+}

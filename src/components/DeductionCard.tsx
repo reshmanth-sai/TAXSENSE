@@ -452,10 +452,10 @@ export default function DeductionCard() {
                   {activeTab === '80C' && (
                     <motion.div
                       key="80C"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.12 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                       className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch"
                     >
                       <div className="space-y-4">
@@ -573,10 +573,10 @@ export default function DeductionCard() {
                 {activeTab === '80D' && (
                   <motion.div
                     key="80D"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.12 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch"
                   >
                     <div className="space-y-4">
@@ -689,10 +689,10 @@ export default function DeductionCard() {
                 {activeTab === 'HRA' && (
                   <motion.div
                     key="HRA"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.12 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch"
                   >
                     <div className="space-y-4">
@@ -805,10 +805,10 @@ export default function DeductionCard() {
                 {activeTab === 'NPS' && (
                   <motion.div
                     key="NPS"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.12 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch"
                   >
                     <div className="space-y-4">
@@ -921,10 +921,10 @@ export default function DeductionCard() {
                 {activeTab === 'OTHER_SEC' && (
                   <motion.div
                     key="OTHER_SEC"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.12 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     className="space-y-4 max-h-[300px] overflow-y-auto pr-1"
                   >
                     <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-1.5">
