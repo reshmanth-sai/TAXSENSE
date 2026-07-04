@@ -355,13 +355,12 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop with elegant blur */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
           />
 
           <motion.div 
@@ -370,44 +369,42 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.95, y: 15, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="relative bg-white w-full max-w-3xl h-[85vh] max-h-[720px] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-100 z-10 animate-fade-in"
+            className="relative bg-slate-900 border border-white/[0.06] w-full max-w-3xl h-[85vh] max-h-[720px] rounded-3xl shadow-2xl flex flex-col overflow-hidden backdrop-blur-md z-10 animate-fade-in"
           >
-            {/* Header */}
-            <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50">
+            <div className="p-5 border-b border-white/[0.04] flex items-start justify-between bg-slate-950/40 backdrop-blur-md">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="bg-blue-50 text-blue-600 p-1.5 rounded-lg border border-blue-100">
+                  <div className="bg-blue-500/10 text-blue-400 p-1.5 rounded-lg border border-blue-500/20">
                     <BookOpen className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-slate-800">ITR Online Filing Checklists</h2>
+                    <h2 className="text-base font-bold text-slate-100">ITR Online Filing Checklists</h2>
                     <p className="text-xs text-slate-400">Step-by-step guidance mapped against official Income Tax Department procedures</p>
                   </div>
                 </div>
               </div>
               <button 
                 onClick={onClose}
-                className="p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-xl transition-all cursor-pointer"
+                className="p-1.5 hover:bg-white/[0.06] text-slate-400 hover:text-slate-200 rounded-xl transition-all cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Switcher & Recommendation Badge */}
-            <div className="px-6 py-3 bg-slate-100/50 border-b border-slate-150 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
+            <div className="px-6 py-3 bg-slate-950/20 border-b border-white/[0.04] flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center bg-slate-950/60 p-1 rounded-xl border border-white/[0.04] shadow-xs">
                 <button
                   id="btn-switch-checklist-itr1"
                   onClick={() => { setSelectedItr('itr1'); setActiveTab('all'); }}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
                     selectedItr === 'itr1'
-                      ? 'bg-neutral-900 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                      ? 'bg-white/10 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
                   ITR-1 (Sahaj)
                   {formType === 'ITR-1' && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-600/20 text-blue-400 border border-blue-600/30">
                       Recommended
                     </span>
                   )}
@@ -417,48 +414,46 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
                   onClick={() => { setSelectedItr('itr2'); setActiveTab('all'); }}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
                     selectedItr === 'itr2'
-                      ? 'bg-neutral-900 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                      ? 'bg-white/10 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
                   ITR-2 (Capital Gains)
                   {formType === 'ITR-2' && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-100 text-amber-800 animate-pulse">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">
                       Recommended
                     </span>
                   )}
                 </button>
               </div>
 
-              {/* Status context */}
-              <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+              <div className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
                 {selectedItr === 'itr1' ? (
-                  <span className="flex items-center gap-1 text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
-                    <Sparkles className="h-3 w-3 text-blue-500" />
+                  <span className="flex items-center gap-1.5 text-slate-350 bg-slate-950/60 px-2.5 py-1.5 rounded-lg border border-white/[0.04]">
+                    <Sparkles className="h-3 w-3 text-blue-400" />
                     For resident individuals with gross income ≤ ₹50L
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
-                    <Sparkles className="h-3 w-3 text-amber-500" />
+                  <span className="flex items-center gap-1.5 text-slate-350 bg-slate-950/60 px-2.5 py-1.5 rounded-lg border border-white/[0.04]">
+                    <Sparkles className="h-3 w-3 text-amber-400" />
                     For individuals with capital gains, foreign assets, or salary &gt; ₹50L
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Progress Card */}
-            <div className="px-6 py-4 bg-white border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="px-6 py-4 bg-slate-950/20 border-b border-white/[0.04] flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex-1 space-y-2">
-                <div className="flex justify-between text-xs font-semibold text-slate-700">
+                <div className="flex justify-between text-xs font-semibold text-slate-300">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <span>Your {selectedItr === 'itr1' ? 'ITR-1' : 'ITR-2'} Progress</span>
                   </span>
-                  <span className="font-mono text-blue-600">{activeCompletedCount} of {totalSteps} steps completed ({percentage}%)</span>
+                  <span className="font-mono text-blue-400">{activeCompletedCount} of {totalSteps} steps completed ({percentage}%)</span>
                 </div>
-                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-150">
+                <div className="h-2 bg-slate-950 rounded-full overflow-hidden border border-white/[0.04]">
                   <motion.div 
-                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
                     transition={{ type: 'spring', damping: 15, stiffness: 100 }}
@@ -469,7 +464,7 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
                 {activeCompletedCount > 0 && (
                   <button 
                     onClick={resetProgress}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 font-semibold cursor-pointer transition-all active:scale-95"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/[0.04] rounded-xl text-xs text-slate-300 font-semibold cursor-pointer transition-all active:scale-95"
                   >
                     <RefreshCw className="h-3 w-3 text-slate-400" />
                     <span>Reset</span>
@@ -478,14 +473,13 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
               </div>
             </div>
 
-            {/* Quick Navigation Tabs */}
-            <div className="px-6 py-2 bg-slate-50/50 border-b border-slate-100 flex gap-1 overflow-x-auto scrollbar-none text-xs">
+            <div className="px-6 py-2 bg-slate-950/20 border-b border-white/[0.04] flex gap-1 overflow-x-auto scrollbar-none text-xs">
               <button
                 onClick={() => setActiveTab('all')}
                 className={`px-3 py-1.5 font-semibold rounded-lg transition-all ${
                   activeTab === 'all' 
                     ? 'bg-blue-600 text-white shadow-xs' 
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                    : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'
                 }`}
               >
                 All Steps
@@ -497,7 +491,7 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
                   className={`px-3 py-1.5 font-semibold rounded-lg whitespace-nowrap transition-all ${
                     activeTab === cat.id 
                       ? 'bg-blue-600 text-white shadow-xs' 
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
                   {cat.id === 'prep' && '1. Prep'}
@@ -508,12 +502,11 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
               ))}
             </div>
 
-            {/* Checklist items list */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-950/10">
               {displayedCategories.map((category) => (
                 <div key={category.id} className="space-y-3">
-                  <div className="border-b border-slate-100 pb-1.5">
-                    <h3 className="text-sm font-bold text-slate-800">{category.name}</h3>
+                  <div className="border-b border-white/[0.04] pb-1.5">
+                    <h3 className="text-sm font-bold text-slate-200">{category.name}</h3>
                     <p className="text-[11px] text-slate-400 mt-0.5">{category.description}</p>
                   </div>
 
@@ -524,39 +517,37 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
                         <div 
                           key={item.id}
                           onClick={() => toggleItem(item.id)}
-                          className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer select-none group ${
+                          className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer select-none group ${
                             isCompleted 
-                              ? 'bg-emerald-50/30 border-emerald-150 shadow-2xs' 
-                              : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/40'
+                              ? 'bg-emerald-500/[0.03] border-emerald-500/20 hover:bg-emerald-500/[0.05]' 
+                              : 'bg-slate-900/40 border-white/[0.04] hover:border-white/[0.08] hover:bg-slate-900/60'
                           }`}
                         >
-                          {/* Checkbox */}
                           <div className="mt-0.5 shrink-0">
                             <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
                               isCompleted 
-                                ? 'bg-emerald-500 border-emerald-600 text-white scale-100' 
-                                : 'border-slate-300 group-hover:border-slate-400 bg-white'
+                                ? 'bg-emerald-500 border-emerald-600 text-slate-950 scale-100' 
+                                : 'border-slate-800 group-hover:border-slate-700 bg-slate-950'
                             }`}>
-                              {isCompleted && <Check className="w-3.5 h-3.5 stroke-[3px]" />}
+                              {isCompleted && <Check className="w-3.5 h-3.5 text-slate-950 stroke-[3px]" />}
                             </div>
                           </div>
 
-                          {/* Text Detail */}
                           <div className="flex-1 space-y-1">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                               <h4 className={`text-xs font-bold leading-normal transition-colors ${
-                                isCompleted ? 'text-slate-500 line-through' : 'text-slate-800'
+                                isCompleted ? 'text-slate-500 line-through' : 'text-slate-200'
                               }`}>
                                 {item.title}
                               </h4>
                               {item.officialRef && (
-                                <span className="text-[9px] font-mono px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded border border-slate-200">
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 bg-white/5 text-slate-400 rounded border border-white/[0.04]">
                                   {item.officialRef}
                                 </span>
                               )}
                             </div>
                             <p className={`text-[11px] leading-relaxed transition-colors ${
-                              isCompleted ? 'text-slate-400' : 'text-slate-500'
+                              isCompleted ? 'text-slate-500 line-through' : 'text-slate-400'
                             }`}>
                               {item.description}
                             </p>
@@ -567,7 +558,7 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
                                   href={item.officialUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-700 font-bold"
+                                  className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 font-bold"
                                 >
                                   <span>Official Portal Link</span>
                                   <ExternalLink className="h-2.5 w-2.5" />
@@ -583,24 +574,23 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
               ))}
             </div>
 
-            {/* Footer with informational banner */}
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[10px] text-slate-500">
+            <div className="p-4 bg-slate-950/40 border-t border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[10px] text-slate-500 backdrop-blur-md">
               <div className="flex items-center gap-1.5">
-                <AlertCircle className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                <span>Always verify details against official communication received on your registered email & phone number.</span>
+                <AlertCircle className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                <span className="text-slate-400">Always verify details against official communication received on your registered email & phone number.</span>
               </div>
-              <div className="flex items-center gap-3 font-semibold text-slate-600 shrink-0 flex-wrap">
+              <div className="flex items-center gap-3 font-semibold text-slate-400 shrink-0 flex-wrap">
                 <a 
                   href="https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="bg-white hover:bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded-md border border-slate-200 inline-flex items-center gap-1 transition-colors cursor-pointer text-[9px]"
+                  className="bg-white/5 hover:bg-white/10 text-slate-300 font-bold px-2.5 py-1.5 rounded-lg border border-white/[0.04] inline-flex items-center gap-1 transition-colors cursor-pointer text-[9px]"
                 >
                   <span>Official Guidelines</span> <ExternalLink className="h-2.5 w-2.5" />
                 </a>
                 <div className="flex items-center gap-1">
                   <span>AY 2026-27 Rules</span>
-                  <ChevronRight className="h-3 w-3 text-slate-400" />
+                  <ChevronRight className="h-3 w-3 text-slate-500" />
                 </div>
               </div>
             </div>
@@ -610,4 +600,3 @@ export default function FilingGuide({ isOpen, onClose }: FilingGuideProps) {
     </AnimatePresence>
   );
 }
-
