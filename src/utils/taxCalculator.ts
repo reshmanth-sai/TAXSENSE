@@ -107,11 +107,12 @@ export function calculateTax(data: TaxData): TaxCalculation {
   const oldTotalBaseTax = oldBaseTax + totalCapitalGainsTax;
 
   // Rebate under 87A (Old regime): If total taxable income <= 5,00,000, rebate of 100% of tax up to ₹12,500
+  // Note: Rebate under 87A is explicitly NOT allowed to offset Section 112A LTCG tax.
   let oldRebate = 0;
   if (oldTaxableIncome <= 500000) {
-    oldRebate = Math.min(12500, oldTotalBaseTax);
+    oldRebate = Math.min(12500, oldBaseTax + stcgTax);
   }
-  const oldTaxAfterRebate = Math.max(0, oldTotalBaseTax - oldRebate);
+  const oldTaxAfterRebate = Math.max(0, (oldBaseTax + stcgTax) - oldRebate) + ltcgTax;
   const oldCess = Math.round(oldTaxAfterRebate * 0.04);
   const oldTotalTaxPayable = oldTaxAfterRebate + oldCess;
   const oldRefundOrOwed = oldTotalTaxPayable - data.tdsDeducted;
@@ -186,12 +187,13 @@ export function calculateTax(data: TaxData): TaxCalculation {
   const newTotalBaseTax = newBaseTax + totalCapitalGainsTax;
 
   // Rebate under 87A (New regime): If total taxable income <= 12,00,000, rebate of 100% of tax up to ₹60,000.
+  // Note: Rebate under 87A is explicitly NOT allowed to offset Section 112A LTCG tax.
   let newRebate = 0;
   if (newTaxableIncome <= 1200000) {
-    newRebate = Math.min(60000, newTotalBaseTax);
+    newRebate = Math.min(60000, newBaseTax + stcgTax);
   }
   
-  const newTaxAfterRebate = Math.max(0, newTotalBaseTax - newRebate);
+  const newTaxAfterRebate = Math.max(0, (newBaseTax + stcgTax) - newRebate) + ltcgTax;
   const newCess = Math.round(newTaxAfterRebate * 0.04);
   const newTotalTaxPayable = newTaxAfterRebate + newCess;
   const newRefundOrOwed = newTotalTaxPayable - data.tdsDeducted;
