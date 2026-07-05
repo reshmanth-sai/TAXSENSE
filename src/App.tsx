@@ -48,7 +48,8 @@ import {
   User,
   Plus,
   Minus,
-  AlertCircle
+  AlertCircle,
+  Cpu
 } from 'lucide-react';
 
 const ParamInfo: React.FC<{ text: string }> = ({ text }) => {
