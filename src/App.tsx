@@ -8,7 +8,7 @@ const RegimeComparison = lazy(() => import('./components/RegimeComparison'));
 const ExtractionConfirm = lazy(() => import('./components/ExtractionConfirm'));
 const ExportControl = lazy(() => import('./components/ExportControl'));
 const FilingGuide = lazy(() => import('./components/FilingGuide'));
-const Form16Import = lazy(() => import('./components/Form16Import'));
+const DocumentVault = lazy(() => import('./components/DocumentVault'));
 import { useTaxStore, useTaxStoreHydrated } from './store/useTaxStore';
 import LandingPage from './components/LandingPage';
 
@@ -354,7 +354,7 @@ export default function App() {
         const saved = taxCalculationResult.savings;
         botResponse += `Based on your Gross Income of ${formatINR(taxData.grossSalary)}, switching to the New Regime yields a saving of ${formatINR(saved)} under Section 115BAC.`;
       } else if (userMsg.toLowerCase().includes('document') || userMsg.toLowerCase().includes('pdf')) {
-        botResponse += `You can upload files in Stage 2 (Documents) via PDF or text structures, which parses salary breakdowns automatically.`;
+        botResponse += `You can upload files in Stage 2 (Document Vault) via PDF or text structures, which parses salary breakdowns automatically.`;
       } else {
         botResponse += `Your current Gross Income is ${formatINR(taxData.grossSalary)} with ${formatINR(taxData.deduction80C)} in Section 80C. Let me know if you would like me to optimize other tax items.`;
       }
@@ -523,10 +523,12 @@ export default function App() {
               isSidebarCollapsed ? 'w-[72px]' : 'w-60'
             }`}>
               <div className="flex flex-col">
-                <div className="px-4 py-5 flex items-center justify-between border-b border-white/[0.04] dark:border-slate-900/50">
+                <div className={`py-5 border-b border-white/[0.04] dark:border-slate-900/50 flex items-center relative ${
+                  isSidebarCollapsed ? 'px-0 justify-center' : 'px-4 justify-between'
+                }`}>
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2 bg-emerald-600 rounded-lg text-slate-950 font-bold shrink-0">
-                      <Calculator className="h-4 w-4 text-slate-950" />
+                    <div className="w-8 h-8 bg-emerald-600 rounded-lg text-slate-950 font-bold shrink-0 flex items-center justify-center">
+                      <Calculator className="h-4.5 w-4.5 text-slate-950" />
                     </div>
                     {!isSidebarCollapsed && (
                       <span className="font-black text-xs uppercase tracking-wider text-slate-100">TaxSense</span>
@@ -534,9 +536,9 @@ export default function App() {
                   </div>
                   <button
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="p-1 hover:bg-white/[0.06] rounded-lg text-slate-400 hover:text-slate-200 cursor-pointer hidden md:block"
+                    className="absolute -right-3 top-6 p-1 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-full text-slate-400 hover:text-slate-200 cursor-pointer hidden md:block z-50 shadow-lg"
                   >
-                    {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                    {isSidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
                   </button>
                 </div>
 
@@ -544,7 +546,7 @@ export default function App() {
                   {[
                     { label: 'Dashboard', step: 11, icon: LayoutDashboard },
                     { 
-                      label: 'Documents', 
+                      label: 'Document Vault', 
                       step: 3, 
                       icon: FileUp, 
                       completed: taxData.grossSalary !== 850000 || taxData.tdsDeducted !== 15000 
@@ -572,7 +574,10 @@ export default function App() {
                         onClick={() => {
                           setActiveStep(item.step);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer group active:scale-98 ${
+                        title={isSidebarCollapsed ? item.label : undefined}
+                        className={`w-full flex items-center ${
+                          isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'
+                        } py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer group active:scale-98 ${
                           isActive 
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                             : 'text-slate-400 hover:bg-white/[0.03] hover:text-white border border-transparent'
@@ -906,7 +911,7 @@ export default function App() {
                       </motion.div>
                     )}
 
-                    {/* Stage 3: Dedicated Documents page */}
+                    {/* Stage 3: Dedicated Document Vault page */}
                     {activeStep === 3 && (
                       <motion.div
                         key="step-3"
@@ -914,120 +919,11 @@ export default function App() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -15, scale: 0.98 }}
                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                        className="space-y-6 font-sans"
+                        className="space-y-6"
                       >
-                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md">
-                          <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
-                            <FileUp className="w-5 h-5 text-emerald-450" />
-                            Ingest Tax Documents
-                          </h2>
-                          <p className="text-xs text-slate-400">
-                            Upload your Form 16 PDF, salary structure sheets, or paste raw plain-text. Copilot scans parameters against Section 139(1) constraints.
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-                          {/* File drop zone & Progress Stepper */}
-                          <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md flex flex-col justify-between space-y-6">
-                            
-                            <Suspense fallback={<div className="h-64 bg-slate-900/10 animate-pulse rounded-2xl" />}>
-                              <Form16Import onFileUpload={handleForm16TextProcessing} />
-                            </Suspense>
-
-                            {/* Stepped AI progress bar */}
-                            {isExtracting && (
-                              <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-3">
-                                <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                  <span>Neural parsing progress</span>
-                                  <span className="animate-pulse">Active extraction...</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                                  <div className="h-full bg-emerald-500 rounded-full animate-pulse" style={{ width: '65%' }} />
-                                </div>
-                                <div className="flex justify-between text-[8px] text-slate-500 font-bold font-mono">
-                                  <span>1. Upload</span>
-                                  <span>2. OCR Extractor</span>
-                                  <span>3. Classification</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Verification checklist and past uploads */}
-                          <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md space-y-6">
-                            
-                            {/* Checklist */}
-                            <div className="space-y-3">
-                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ingestion Verifications</h3>
-                              
-                              <div className="space-y-2">
-                                {[
-                                  { label: 'AY 2026-27 compliance verified', status: true },
-                                  { label: 'PAN ownership verified (Mohit Kumar)', status: true },
-                                  { label: 'ITR Form format detected (ITR-1 / ITR-2)', status: true },
-                                ].map((chk, i) => (
-                                  <div key={i} className="flex items-center gap-2.5 text-xs font-semibold">
-                                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                                    <span className="text-slate-300">{chk.label}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Past uploads log list */}
-                            <div className="space-y-3 pt-4 border-t border-slate-800/60">
-                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Parsed attachments</h3>
-                              
-                              <div className="space-y-2">
-                                {[
-                                  { name: 'Form_16_Mohit_FY25-26.pdf', size: '254 KB', date: 'Jul 4 19:40' },
-                                ].map((doc) => (
-                                  <div key={doc.name} className="flex items-center justify-between p-2.5 bg-slate-955/40 border border-white/[0.02] rounded-xl text-xs">
-                                    <div className="flex items-center gap-2">
-                                      <FileText className="w-4 h-4 text-slate-500" />
-                                      <div className="flex flex-col">
-                                        <span className="font-bold text-slate-200">{doc.name}</span>
-                                        <span className="text-[8px] text-slate-500">{doc.size} • {doc.date}</span>
-                                      </div>
-                                    </div>
-                                    <span className="text-[8px] bg-emerald-500/10 text-emerald-450 px-2 py-0.5 rounded uppercase font-bold border border-emerald-500/10">Verified</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Collapsible text paste drawer triggers */}
-                            <div className="pt-2">
-                              <button
-                                onClick={() => setShowPasteArea(!showPasteArea)}
-                                className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer select-none"
-                              >
-                                <span>{showPasteArea ? 'Hide Manual paste box' : 'Or paste raw Form-16 text manually'}</span>
-                                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPasteArea ? 'rotate-180' : ''}`} />
-                              </button>
-                              
-                              {showPasteArea && (
-                                <form onSubmit={handleManualTextExtraction} className="mt-3 space-y-3 animate-fade-in">
-                                  <textarea
-                                    value={manualRawText}
-                                    onChange={(e) => setManualRawText(e.target.value)}
-                                    placeholder="Paste parsed Form-16 plain text blocks here..."
-                                    rows={4}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-blue-500 focus:bg-slate-900"
-                                  />
-                                  <button
-                                    type="submit"
-                                    disabled={isPasteProcessing || !manualRawText.trim()}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-                                  >
-                                    {isPasteProcessing ? 'Processing Text...' : 'Parse Plain Text'}
-                                  </button>
-                                </form>
-                              )}
-                            </div>
-
-                          </div>
-                        </div>
+                        <Suspense fallback={<div className="h-[400px] bg-slate-900/10 animate-pulse rounded-3xl" />}>
+                          <DocumentVault onFileUpload={handleForm16TextProcessing} />
+                        </Suspense>
                       </motion.div>
                     )}
 
@@ -1589,7 +1485,7 @@ export default function App() {
                     <span className="font-bold text-xs uppercase tracking-wider text-slate-100">TaxSense Copilot</span>
                     <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-black uppercase shrink-0">
                       {activeStep === 11 && 'Dashboard'}
-                      {activeStep === 3 && 'Documents'}
+                      {activeStep === 3 && 'Document Vault'}
                       {activeStep === 4 && 'AI Scan'}
                       {activeStep === 5 && 'Optimize'}
                       {activeStep === 6 && 'Filing'}

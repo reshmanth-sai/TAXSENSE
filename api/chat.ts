@@ -123,7 +123,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const activeStepNum = Number(activeStep) || 3;
     const getStageName = (step: number) => {
       switch(step) {
-        case 3: return "Import Documents";
+        case 3: return "Document Vault";
         case 4: return "AI Analysis Scanner";
         case 5: return "Optimizations & Regime Recommendations";
         case 6: return "Guided ITR Filing Workspace (Step " + (guidedFilingStep || 1) + " of 5)";
