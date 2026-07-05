@@ -104,10 +104,12 @@ export interface TaxStoreState {
   backgroundStatusMessage: string;
   backgroundProgress: number;
   uploadedFiles: UploadedFile[];
+  ingestionState: 'IDLE' | 'UPLOADING' | 'OCR' | 'EXTRACTING' | 'VERIFYING' | 'GENERATING_RETURN' | 'COMPLETED';
   
   addUploadedFile: (file: UploadedFile) => void;
   removeUploadedFile: (id: string) => void;
   clearUploadedFiles: () => void;
+  setIngestionState: (val: 'IDLE' | 'UPLOADING' | 'OCR' | 'EXTRACTING' | 'VERIFYING' | 'GENERATING_RETURN' | 'COMPLETED') => void;
   
   setIncomeProfile: (profile: Partial<IncomeProfile>) => void;
   updateDeduction: (key: keyof ConfirmedDeductions, value: number) => void;
@@ -198,6 +200,7 @@ export const useTaxStore = create<TaxStoreState>()(
       backgroundStatusMessage: '',
       backgroundProgress: 0,
       uploadedFiles: defaultUploadedFiles,
+      ingestionState: 'IDLE',
 
       setIncomeProfile: (profile) =>
         set((state) => {
@@ -246,6 +249,9 @@ export const useTaxStore = create<TaxStoreState>()(
       setBackgroundProgress: (pct) =>
         set({ backgroundProgress: pct }),
 
+      setIngestionState: (val) =>
+        set({ ingestionState: val }),
+
       addUploadedFile: (file) =>
         set((state) => ({
           uploadedFiles: [file, ...(state.uploadedFiles || [])]
@@ -257,7 +263,7 @@ export const useTaxStore = create<TaxStoreState>()(
         })),
 
       clearUploadedFiles: () =>
-        set({ uploadedFiles: [] }),
+        set({ uploadedFiles: [], ingestionState: 'IDLE' }),
 
       setFormType: (type) =>
         set({ formType: type }),
@@ -311,6 +317,7 @@ export const useTaxStore = create<TaxStoreState>()(
           foreignAssets: false,
           theme: 'light',
           uploadedFiles: [],
+          ingestionState: 'IDLE',
         }));
       },
     }),
@@ -330,6 +337,7 @@ export const useTaxStore = create<TaxStoreState>()(
         theme: state.theme,
         filingHistory: state.filingHistory,
         uploadedFiles: state.uploadedFiles,
+        ingestionState: state.ingestionState,
       }),
     }
   )

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   Lock, 
@@ -14,18 +14,21 @@ import {
   Sparkles, 
   X
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useTaxStore, UploadedFile } from '../store/useTaxStore';
 import { calculateTax, formatINR } from '../utils/taxCalculator';
 
 interface DocumentVaultProps {
   onFileUpload: (fileText: string) => void;
+  setActiveStep?: (step: number) => void;
+  onViewExtractedFields?: () => void;
 }
 
 // Module-level interval ID storage so background compilation timer ticks 
 // are shared across React component mount / unmount lifecycle routes.
 let activeProcessingInterval: NodeJS.Timeout | null = null;
 
-export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
+export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtractedFields }: DocumentVaultProps) {
   const incomeProfile = useTaxStore((state) => state.incomeProfile);
   const confirmedDeductions = useTaxStore((state) => state.confirmedDeductions);
   const setIncomeProfile = useTaxStore((state) => state.setIncomeProfile);
@@ -36,12 +39,15 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
   const backgroundProgress = useTaxStore((state) => state.backgroundProgress);
   const backgroundStatusMessage = useTaxStore((state) => state.backgroundStatusMessage);
   const uploadedFiles = useTaxStore((state) => state.uploadedFiles) || [];
+  const ingestionState = useTaxStore((state) => state.ingestionState);
 
   const setBackgroundProcessing = useTaxStore((state) => state.setBackgroundProcessing);
   const setBackgroundProgress = useTaxStore((state) => state.setBackgroundProgress);
   const setBackgroundStatusMessage = useTaxStore((state) => state.setBackgroundStatusMessage);
+  const setIngestionState = useTaxStore((state) => state.setIngestionState);
   const addUploadedFile = useTaxStore((state) => state.addUploadedFile);
   const removeUploadedFile = useTaxStore((state) => state.removeUploadedFile);
+  const clearUploadedFiles = useTaxStore((state) => state.clearUploadedFiles);
 
   const [dragActive, setDragActive] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -56,14 +62,9 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
   const uploadPercentage = backgroundProgress;
   const statusMessage = backgroundStatusMessage || 'Waiting for document...';
   
-  const uploadState = !isBackgroundProcessing 
-    ? (uploadedFiles.length > 0 && (incomeProfile?.grossSalary ?? 0) > 0 ? 'completed' : 'empty')
-    : (backgroundProgress < 30 ? 'uploading' 
-       : backgroundProgress < 50 ? 'ocr' 
-       : backgroundProgress < 70 ? 'gemini' 
-       : backgroundProgress < 85 ? 'parsing' 
-       : backgroundProgress < 95 ? 'verification' 
-       : 'completed');
+  const uploadState = ingestionState === 'COMPLETED' 
+    ? 'completed' 
+    : (ingestionState === 'IDLE' ? 'empty' : 'uploading');
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -107,6 +108,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
   const executeExtractionFlow = async (fileName: string, fileSize: string, text: string) => {
     setErrorMessage(null);
     setBackgroundProcessing(true);
+    setIngestionState('UPLOADING');
     setBackgroundProgress(15);
     setBackgroundStatusMessage('Uploading your document securely...');
 
@@ -122,6 +124,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
         activeProcessingInterval = null;
         
         setBackgroundProcessing(false);
+        setIngestionState('COMPLETED');
         setBackgroundStatusMessage('Your Form 16 has been successfully processed.');
 
         // Populate workspace variables dynamically
@@ -151,12 +154,16 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
 
         onFileUpload(text);
       } else if (pct < 35) {
+        setIngestionState('OCR');
         setBackgroundStatusMessage('Reading your document...');
       } else if (pct < 65) {
+        setIngestionState('EXTRACTING');
         setBackgroundStatusMessage('AI is understanding your Form 16...');
       } else if (pct < 85) {
+        setIngestionState('VERIFYING');
         setBackgroundStatusMessage('Extracting salary, deductions and tax details...');
       } else {
+        setIngestionState('GENERATING_RETURN');
         setBackgroundStatusMessage('Cross-checking against AY 2026-27 rules...');
       }
     }, 250);
@@ -172,6 +179,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
     if (isPdf) {
       try {
         setBackgroundProcessing(true);
+        setIngestionState('UPLOADING');
         setBackgroundProgress(15);
         setBackgroundStatusMessage('Uploading your document securely...');
 
@@ -192,14 +200,19 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
           pct = Math.min(95, pct + Math.floor(Math.random() * 8) + 2);
           setBackgroundProgress(pct);
           if (pct < 35) {
+            setIngestionState('UPLOADING');
             setBackgroundStatusMessage('Uploading your document securely...');
           } else if (pct < 55) {
+            setIngestionState('OCR');
             setBackgroundStatusMessage('Reading your document...');
           } else if (pct < 75) {
+            setIngestionState('EXTRACTING');
             setBackgroundStatusMessage('AI is understanding your Form 16...');
           } else if (pct < 88) {
+            setIngestionState('VERIFYING');
             setBackgroundStatusMessage('Extracting salary, deductions and tax details...');
           } else {
+            setIngestionState('GENERATING_RETURN');
             setBackgroundStatusMessage('Cross-checking against AY 2026-27 rules...');
           }
         }, 300);
@@ -219,6 +232,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
         if (result.text) {
           setBackgroundProgress(100);
           setBackgroundProcessing(false);
+          setIngestionState('COMPLETED');
           setBackgroundStatusMessage('Your Form 16 has been successfully processed.');
 
           // Populate workspace variables dynamically
@@ -259,6 +273,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
         console.error('PDF ingestion error:', err);
         setErrorMessage("We couldn't verify this document. Please upload another copy or use manual raw text entry.");
         setBackgroundProcessing(false);
+        setIngestionState('IDLE');
         setBackgroundProgress(0);
       }
     } else {
@@ -346,6 +361,9 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
     removeUploadedFile(id);
     // Clear calculations to empty if no files remain
     if (uploadedFiles.length <= 1) {
+      setIngestionState('IDLE');
+      setBackgroundProgress(0);
+      setBackgroundProcessing(false);
       setIncomeProfile({
         grossSalary: 0,
         otherIncome: 0,
@@ -363,15 +381,15 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
 
   // Determine progressive checklist mapping
   const timelineProgress = [
-    { label: 'Upload received', completed: ['completed', 'verification', 'parsing', 'gemini', 'ocr'].includes(uploadState) || (uploadState === 'uploading' && uploadPercentage >= 95) },
-    { label: 'OCR completed', completed: ['completed', 'verification', 'parsing', 'gemini', 'ocr'].includes(uploadState) },
-    { label: 'Salary identified', completed: ['completed', 'verification', 'parsing', 'gemini'].includes(uploadState) },
-    { label: 'PAN verified', completed: ['completed', 'verification', 'parsing', 'gemini'].includes(uploadState) },
-    { label: 'Employer identified', completed: ['completed', 'verification', 'parsing'].includes(uploadState) },
-    { label: 'HRA detected', completed: ['completed', 'verification', 'parsing'].includes(uploadState) },
-    { label: 'PF detected', completed: ['completed', 'verification', 'parsing'].includes(uploadState) },
-    { label: 'Deductions mapped', completed: ['completed', 'verification'].includes(uploadState) },
-    { label: 'Ready for review', completed: ['completed'].includes(uploadState) }
+    { label: 'Upload received', completed: ['COMPLETED', 'GENERATING_RETURN', 'VERIFYING', 'EXTRACTING', 'OCR', 'UPLOADING'].includes(ingestionState) },
+    { label: 'OCR completed', completed: ['COMPLETED', 'GENERATING_RETURN', 'VERIFYING', 'EXTRACTING', 'OCR'].includes(ingestionState) },
+    { label: 'Salary identified', completed: ['COMPLETED', 'GENERATING_RETURN', 'VERIFYING', 'EXTRACTING'].includes(ingestionState) },
+    { label: 'PAN verified', completed: ['COMPLETED', 'GENERATING_RETURN', 'VERIFYING', 'EXTRACTING'].includes(ingestionState) },
+    { label: 'Employer identified', completed: ['COMPLETED', 'GENERATING_RETURN', 'VERIFYING'].includes(ingestionState) },
+    { label: 'HRA detected', completed: ['COMPLETED', 'GENERATING_RETURN', 'VERIFYING'].includes(ingestionState) },
+    { label: 'PF detected', completed: ['COMPLETED', 'GENERATING_RETURN', 'VERIFYING'].includes(ingestionState) },
+    { label: 'Deductions mapped', completed: ['COMPLETED', 'GENERATING_RETURN'].includes(ingestionState) },
+    { label: 'Ready for review', completed: ['COMPLETED'].includes(ingestionState) }
   ];
 
   return (
@@ -483,32 +501,166 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
                 </div>
               </div>
             ) : uploadState === 'completed' ? (
-              <div className="space-y-6 py-6 animate-fade-in">
-                <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                  <CheckCircle className="w-8 h-8 text-emerald-400" />
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-slate-200">Your Form 16 is ready</h3>
-                  <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed font-medium">
-                    We parsed your file and mapped 18 standard tax parameters into the secure return configuration.
-                  </p>
+              <motion.div 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-6 py-2 text-left"
+              >
+                {/* 1. Success Banner */}
+                <div className="flex items-start gap-4 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+                  <div className="p-2 bg-emerald-500/10 text-emerald-450 rounded-xl shrink-0 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-black text-white">Form 16 successfully verified</h3>
+                    <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
+                      We extracted and verified your tax information. Review the summary below before continuing.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-center gap-3">
-                  <button 
+                {/* 2. Premium Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1, duration: 0.3 }}
+                    className="p-3.5 bg-slate-900/60 border border-white/[0.04] rounded-2xl space-y-1"
+                  >
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block">Gross Salary</span>
+                    <p className="font-mono text-sm font-bold text-white leading-none">{formatINR(incomeProfile?.grossSalary ?? 850000)}</p>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.15, duration: 0.3 }}
+                    className="p-3.5 bg-slate-900/60 border border-white/[0.04] rounded-2xl space-y-1"
+                  >
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block">Form</span>
+                    <p className="text-xs font-bold text-slate-200 leading-none">ITR-1</p>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.3 }}
+                    className="p-3.5 bg-slate-900/60 border border-white/[0.04] rounded-2xl space-y-1"
+                  >
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block">Employer</span>
+                    <p className="text-xs font-bold text-slate-200 truncate leading-none">{incomeProfile?.employerName || 'Acme Corp Technologies'}</p>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.25, duration: 0.3 }}
+                    className="p-3.5 bg-slate-900/60 border border-white/[0.04] rounded-2xl space-y-1"
+                  >
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block">Assessment Year</span>
+                    <p className="font-mono text-xs font-bold text-emerald-400 leading-none">2026-27</p>
+                  </motion.div>
+                </div>
+
+                {/* 3. Extraction Summary Checklist */}
+                <div className="p-4 bg-slate-900/40 border border-white/[0.04] rounded-2xl space-y-3">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Extraction Summary</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-[11px] font-semibold text-slate-350">
+                    {[
+                      'Salary extracted',
+                      'TDS detected',
+                      'HRA identified',
+                      'PF contribution identified',
+                      'Employer verified',
+                      'PAN matched',
+                      'Tax regime evaluated',
+                      'Ready for filing'
+                    ].map((item, idx) => (
+                      <motion.div 
+                        key={item} 
+                        initial={{ opacity: 0, x: -5 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 + idx * 0.05, duration: 0.25 }}
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-450 shrink-0" />
+                        <span>{item}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Detected Deductions Section */}
+                {Object.keys(confirmedDeductions || {}).some(k => confirmedDeductions[k] > 0) && (
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-wider pl-1">Detected Deductions</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {Object.keys(confirmedDeductions || {})
+                        .filter(k => confirmedDeductions[k] > 0 && k !== 'hraExemption')
+                        .map(key => {
+                          const displayNames: Record<string, string> = {
+                            '80C': '80C',
+                            '80D': '80D',
+                            'HRA exemption': 'HRA',
+                            '80CCD(1B)': '80CCD(1B)',
+                            '80CCD(2)': '80CCD(2)',
+                            '80DD': '80DD',
+                            '80U': '80U',
+                            '80DDB': '80DDB',
+                            '80E': '80E',
+                            '80EEA': '80EEA',
+                            '80GG': '80GG',
+                            '80TTA': '80TTA',
+                            '80TTB': '80TTB',
+                            '80G': '80G',
+                            '80CCH': '80CCH',
+                            'section24b': '24(b)',
+                            'section24bLetOut': '24(b) Let Out'
+                          };
+                          return (
+                            <span 
+                              key={key}
+                              className="px-2.5 py-1 bg-white/[0.03] border border-white/[0.04] text-[10px] font-black text-slate-300 rounded-lg uppercase tracking-wider"
+                            >
+                              {displayNames[key] || key}
+                            </span>
+                          );
+                        })
+                      }
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. Bottom Action Buttons Footer */}
+                <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-white/[0.04]">
+                  <button
+                    onClick={() => setActiveStep?.(4)}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer"
+                  >
+                    Continue to AI Analysis
+                  </button>
+
+                  <button
                     onClick={() => {
+                      setIngestionState('IDLE');
                       setBackgroundProgress(0);
                       setBackgroundProcessing(false);
-                      // Force empty view trigger
-                      setIncomeProfile({ grossSalary: 0 });
+                      clearUploadedFiles();
                     }}
-                    className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-450 text-slate-950 font-black text-xs rounded-xl shadow-lg active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-5 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] text-slate-350 hover:text-white font-bold text-xs rounded-xl active:scale-95 transition-all cursor-pointer"
                   >
-                    <span>Ingest Another File</span>
+                    Upload Another Form 16
+                  </button>
+
+                  <button
+                    onClick={onViewExtractedFields}
+                    className="px-4 py-2.5 text-slate-450 hover:text-slate-200 font-bold text-xs active:scale-95 transition-all cursor-pointer ml-auto"
+                  >
+                    View extracted fields
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ) : (
               // Active compilation / progress states
               <div className="space-y-6 py-8 animate-fade-in">

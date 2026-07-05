@@ -131,6 +131,7 @@ export default function App() {
   const setForeignAssets = useTaxStore((state) => state.setForeignAssets);
   const currentStep = useTaxStore((state) => state.currentStep);
   const setStep = useTaxStore((state) => state.setStep);
+  const ingestionState = useTaxStore((state) => state.ingestionState);
   const theme = useTaxStore((state) => state.theme) || 'light';
   const setTheme = useTaxStore((state) => state.setTheme);
 
@@ -617,7 +618,7 @@ export default function App() {
               {/* Bottom user settings sidebar profile row */}
               <div className="p-3 border-t border-white/[0.04] dark:border-slate-900/50 space-y-2">
                 {/* Background Ingestion Status indicator */}
-                {isBackgroundProcessing && (
+                {ingestionState !== 'IDLE' && (
                   <div 
                     title={`${backgroundStatusMessage} (${backgroundProgress}%)`}
                     className={`p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1 ${
@@ -626,26 +627,36 @@ export default function App() {
                   >
                     {isSidebarCollapsed ? (
                       <div className="relative">
-                        <Cpu className="w-4.5 h-4.5 text-emerald-450 animate-spin" />
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-450 rounded-full animate-ping" />
+                        {ingestionState === 'COMPLETED' ? (
+                          <CheckCircle className="w-4.5 h-4.5 text-emerald-450" />
+                        ) : (
+                          <>
+                            <Cpu className="w-4.5 h-4.5 text-emerald-450 animate-spin" />
+                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-450 rounded-full animate-ping" />
+                          </>
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-1 text-left">
-                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-emerald-400">
+                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-emerald-450">
                           <span className="flex items-center gap-1">
-                            <Cpu className="w-3.5 h-3.5 text-emerald-450 animate-pulse" /> 
+                            {ingestionState === 'COMPLETED' ? (
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-450" />
+                            ) : (
+                              <Cpu className="w-3.5 h-3.5 text-emerald-450 animate-pulse" /> 
+                            )}
                             AI Ingestion
                           </span>
-                          <span>{backgroundProgress}%</span>
+                          <span>{ingestionState === 'COMPLETED' ? 'Completed' : `${backgroundProgress}%`}</span>
                         </div>
                         <div className="h-1 w-full bg-slate-950 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-emerald-500 rounded-full transition-all duration-300" 
-                            style={{ width: `${backgroundProgress}%` }} 
+                            style={{ width: `${ingestionState === 'COMPLETED' ? 100 : backgroundProgress}%` }} 
                           />
                         </div>
                         <p className="text-[8px] text-slate-400 leading-none truncate font-medium">
-                          {backgroundStatusMessage}
+                          {ingestionState === 'COMPLETED' ? 'Form 16 successfully verified.' : backgroundStatusMessage}
                         </p>
                       </div>
                     )}
@@ -972,7 +983,11 @@ export default function App() {
                         className="space-y-6"
                       >
                         <Suspense fallback={<div className="h-[400px] bg-slate-900/10 animate-pulse rounded-3xl" />}>
-                          <DocumentVault onFileUpload={handleForm16TextProcessing} />
+                          <DocumentVault 
+                            onFileUpload={handleForm16TextProcessing} 
+                            setActiveStep={setActiveStep}
+                            onViewExtractedFields={() => setShowConfirmScreen(true)}
+                          />
                         </Suspense>
                       </motion.div>
                     )}
