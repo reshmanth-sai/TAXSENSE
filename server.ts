@@ -8,6 +8,9 @@ import { PDFParse } from 'pdf-parse';
 
 dotenv.config();
 
+const app = express();
+app.use(express.json());
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
@@ -150,10 +153,7 @@ async function financeNewsHandler(req: any, res: any) {
 }
 
 async function startServer() {
-  const app = express();
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-
-  app.use(express.json());
 
   // API: Health Check
   app.get('/api/health', (req, res) => {
@@ -383,13 +383,13 @@ async function startServer() {
   });
 
   // Vite static middleware serving or production fallback
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
@@ -397,9 +397,15 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`TaxSense server running on http://0.0.0.0:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`TaxSense server running on http://0.0.0.0:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    });
+  }
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
