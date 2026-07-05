@@ -11,41 +11,20 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   const theme = useTaxStore((state) => state.theme) || 'light';
   const setTheme = useTaxStore((state) => state.setTheme);
 
-  useEffect(() => {
-    // Smooth High-Performance Mouse Parallax via CSS Variables
-    let rafid: number;
-    const handleMouseMove = (e: MouseEvent) => {
-      cancelAnimationFrame(rafid);
-      rafid = requestAnimationFrame(() => {
-        const x = (e.clientX / window.innerWidth) - 0.5;
-        const y = (e.clientY / window.innerHeight) - 0.5;
-        document.documentElement.style.setProperty('--mouse-x', `${x}`);
-        document.documentElement.style.setProperty('--mouse-y', `${y}`);
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(rafid);
-    };
-  }, []);
-
-  // Generate 40 twinkling particles
+  // Generate 8 twinkling particles (reduced dramatically for a calm, stable, premium background)
   const particles = useMemo(() => {
-    return Array.from({ length: 40 }).map((_, idx) => ({
+    return Array.from({ length: 8 }).map((_, idx) => ({
       id: idx,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: Math.random() * 1.8 + 0.6, // 0.6px to 2.4px
+      size: Math.random() * 1.0 + 0.4, // 0.4px to 1.4px
       delay: Math.random() * 5,
-      duration: Math.random() * 6 + 5, // 5s to 11s
+      duration: Math.random() * 10 + 8, // 8s to 18s (extremely slow, subtle twinkle)
     }));
   }, []);
 
   return (
-    <div className="min-h-screen h-screen bg-[#040608] text-white font-sans antialiased selection:bg-green-500 selection:text-slate-950 flex flex-col justify-between overflow-hidden relative">
+    <div className="min-h-screen h-screen bg-[#020508] text-white font-sans antialiased selection:bg-green-500 selection:text-slate-950 flex flex-col justify-between overflow-hidden relative">
       
       {/* Pinned fixed cinematic noise texture across the viewport */}
       <div className="cinematic-noise" />
@@ -55,29 +34,25 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.5, ease: 'easeOut' }}
-        style={{
-          transform: 'translate3d(calc(var(--mouse-x, 0) * -8px), calc(var(--mouse-y, 0) * -8px), 0)',
-          transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
-        }}
         className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
       >
         {/* Soft radial emerald focal spotlight behind heading with breathing pulse */}
         <div 
-          style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' }}
           className="absolute top-[32%] left-[50%] w-[750px] h-[400px] pointer-events-none animate-spotlight-pulse" 
         />
         
         {/* Subtle auroral curtain glows (radial gradients instead of expensive blur filters) */}
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.05) 50%, transparent 80%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.04) 0%, rgba(5, 150, 105, 0.01) 50%, transparent 80%)' }}
           className="absolute -top-[10%] left-[5%] w-[800px] h-[600px] animate-aurora-1" 
         />
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.03) 45%, transparent 75%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.03) 0%, rgba(16, 185, 129, 0.01) 45%, transparent 75%)' }}
           className="absolute top-[35%] -right-[10%] w-[900px] h-[700px] animate-aurora-2" 
         />
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.11) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.03) 0%, transparent 70%)' }}
           className="absolute bottom-[10%] left-[10%] w-[700px] h-[600px] animate-aurora-1" 
         />
       </motion.div>
@@ -87,10 +62,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.8, delay: 0.2 }}
-        style={{
-          transform: 'translate3d(calc(var(--mouse-x, 0) * 25px), calc(var(--mouse-y, 0) * 25px), 0)',
-          transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
-        }}
         className="absolute inset-0 pointer-events-none overflow-hidden z-10"
       >
         {particles.map((p) => (
@@ -104,7 +75,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               animationDelay: `${p.delay}s`,
               animationDuration: `${p.duration}s`,
             }}
-            className="absolute bg-emerald-400/25 rounded-full animate-particle-twinkle"
+            className="absolute bg-emerald-400/10 rounded-full animate-particle-twinkle"
           />
         ))}
       </motion.div>
@@ -162,29 +133,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="absolute top-[20%] left-[4%] w-[240px]"
           >
-            <div
-              style={{
-                transform: 'translate3d(calc(var(--mouse-x, 0) * 18px), calc(var(--mouse-y, 0) * 18px), 0)',
-                transition: 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)'
-              }}
-              className="pointer-events-auto select-none"
+            <motion.div 
+              whileHover={{ y: -4, scale: 1.015, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              className="animate-float-card-1 cursor-pointer pointer-events-auto select-none"
             >
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.02, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                className="animate-float-card-1 cursor-pointer"
-              >
-                <div className="p-5 glass-card-premium">
-                  <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
-                    <FileText className="w-4.5 h-4.5" />
-                  </div>
-                  <h3 className="font-bold text-white text-sm">Upload Form 16</h3>
-                  <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                    Drag & drop your Form 16 PDF. We'll extract salary, TDS and deductions.
-                  </p>
+              <div className="p-5 glass-card-premium">
+                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                  <FileText className="w-4.5 h-4.5" />
                 </div>
-              </motion.div>
-            </div>
+                <h3 className="font-bold text-white text-sm">Upload Form 16</h3>
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  Drag & drop your Form 16 PDF. We'll extract salary, TDS and deductions.
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Card 2: 100% Secure (Bottom Left) */}
@@ -194,29 +157,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             transition={{ duration: 0.8, delay: 0.65, ease: [0.16, 1, 0.3, 1] }}
             className="absolute bottom-[18%] left-[7%] w-[230px]"
           >
-            <div
-              style={{
-                transform: 'translate3d(calc(var(--mouse-x, 0) * 14px), calc(var(--mouse-y, 0) * 14px), 0)',
-                transition: 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)'
-              }}
-              className="pointer-events-auto select-none"
+            <motion.div 
+              whileHover={{ y: -4, scale: 1.015, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              className="animate-float-card-2 cursor-pointer pointer-events-auto select-none"
             >
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.02, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                className="animate-float-card-2 cursor-pointer"
-              >
-                <div className="p-5 glass-card-premium">
-                  <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
-                    <ShieldCheck className="w-4.5 h-4.5" />
-                  </div>
-                  <h3 className="font-bold text-white text-sm">100% Secure</h3>
-                  <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                    Your data is encrypted end-to-end and never stored without consent.
-                  </p>
+              <div className="p-5 glass-card-premium">
+                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                  <ShieldCheck className="w-4.5 h-4.5" />
                 </div>
-              </motion.div>
-            </div>
+                <h3 className="font-bold text-white text-sm">100% Secure</h3>
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  Your data is encrypted end-to-end and never stored without consent.
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Card 3: Find missed deductions (Top Right) */}
@@ -226,29 +181,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="absolute top-[23%] right-[5%] w-[250px]"
           >
-            <div
-              style={{
-                transform: 'translate3d(calc(var(--mouse-x, 0) * -18px), calc(var(--mouse-y, 0) * -18px), 0)',
-                transition: 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)'
-              }}
-              className="pointer-events-auto select-none"
+            <motion.div 
+              whileHover={{ y: -4, scale: 1.015, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              className="animate-float-card-3 cursor-pointer pointer-events-auto select-none"
             >
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.02, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                className="animate-float-card-3 cursor-pointer"
-              >
-                <div className="p-5 glass-card-premium">
-                  <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
-                    <Sparkles className="w-4.5 h-4.5" />
-                  </div>
-                  <h3 className="font-bold text-white text-sm">Find missed deductions</h3>
-                  <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                    AI scans 80D, NPS, HRA, home loan & more to find what you can claim.
-                  </p>
+              <div className="p-5 glass-card-premium">
+                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                  <Sparkles className="w-4.5 h-4.5" />
                 </div>
-              </motion.div>
-            </div>
+                <h3 className="font-bold text-white text-sm">Find missed deductions</h3>
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  AI scans 80D, NPS, HRA, home loan & more to find what you can claim.
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Card 4: Compare regimes (Bottom Right) */}
@@ -258,29 +205,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             transition={{ duration: 0.8, delay: 0.95, ease: [0.16, 1, 0.3, 1] }}
             className="absolute bottom-[20%] right-[7%] w-[230px]"
           >
-            <div
-              style={{
-                transform: 'translate3d(calc(var(--mouse-x, 0) * -14px), calc(var(--mouse-y, 0) * -14px), 0)',
-                transition: 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)'
-              }}
-              className="pointer-events-auto select-none"
+            <motion.div 
+              whileHover={{ y: -4, scale: 1.015, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              className="animate-float-card-4 cursor-pointer pointer-events-auto select-none"
             >
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.02, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                className="animate-float-card-4 cursor-pointer"
-              >
-                <div className="p-5 glass-card-premium">
-                  <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
-                    <TrendingUp className="w-4.5 h-4.5" />
-                  </div>
-                  <h3 className="font-bold text-white text-sm">Compare regimes</h3>
-                  <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                    Old vs New regime comparison to help you pay the least tax.
-                  </p>
+              <div className="p-5 glass-card-premium">
+                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                  <TrendingUp className="w-4.5 h-4.5" />
                 </div>
-              </motion.div>
-            </div>
+                <h3 className="font-bold text-white text-sm">Compare regimes</h3>
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  Old vs New regime comparison to help you pay the least tax.
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
 

@@ -1,61 +1,14 @@
-import React from 'react';
-import { Check, ShieldCheck, Sparkles, TrendingUp, Info } from 'lucide-react';
-import { motion } from 'motion/react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import React, { useState } from 'react';
+import { Check, ShieldCheck, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useTaxStore } from '../store/useTaxStore';
 import { calculateTax, formatINR } from '../utils/taxCalculator';
 import { TaxData } from '../types';
 
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: any[];
-}
-
-const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-slate-900 text-white p-3.5 rounded-2xl shadow-xl border border-slate-800 text-xs font-sans space-y-2 max-w-[220px]">
-        <p className="font-bold border-b border-slate-800 pb-1.5 text-slate-200 uppercase tracking-wider text-[10px]">{data.name}</p>
-        <div className="space-y-1.5 text-left">
-          <div className="flex justify-between gap-6">
-            <span className="text-slate-400 font-semibold">Slab Tax:</span>
-            <span className="font-mono font-bold text-slate-100">{formatINR(data['Slab Tax'])}</span>
-          </div>
-          {data['Capital Gains Tax'] > 0 && (
-            <div className="flex justify-between gap-6">
-              <span className="text-slate-400 font-semibold">Capital Gains:</span>
-              <span className="font-mono font-bold text-amber-400">{formatINR(data['Capital Gains Tax'])}</span>
-            </div>
-          )}
-          <div className="flex justify-between gap-6">
-            <span className="text-slate-400 font-semibold">Cess (4%):</span>
-            <span className="font-mono font-bold text-slate-100">{formatINR(data['Education Cess (4%)'])}</span>
-          </div>
-          <div className="flex justify-between gap-6 border-t border-slate-800 pt-1.5 mt-1 font-bold text-emerald-400">
-            <span>Total Tax:</span>
-            <span className="font-mono">{formatINR(data.total)}</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
-
 export default function RegimeComparison() {
   const incomeProfile = useTaxStore((state) => state.incomeProfile);
   const confirmedDeductions = useTaxStore((state) => state.confirmedDeductions);
-  const theme = useTaxStore((state) => state.theme) || 'light';
+  const [showDetails, setShowDetails] = useState(false);
 
   // Map Zustand store profile directly to the TaxData structure expected by calculateTax helper
   const taxData: TaxData = {
@@ -106,85 +59,51 @@ export default function RegimeComparison() {
   const ltcgTax = Math.round(ltcgTaxable * 0.125);
   const totalCGTax = stcgTax + ltcgTax;
 
-  // Mathematically split tax after rebate into components for correct stacked comparison
-  const oldSlabTaxAfterRebate = Math.max(0, oldRegime.baseTax - totalCGTax - oldRegime.rebate87A);
-  const oldCGTaxAfterRebate = Math.max(0, totalCGTax - Math.max(0, oldRegime.rebate87A - Math.max(0, oldRegime.baseTax - totalCGTax)));
-  
-  const newSlabTaxAfterRebate = Math.max(0, newRegime.baseTax - totalCGTax - newRegime.rebate87A);
-  const newCGTaxAfterRebate = Math.max(0, totalCGTax - Math.max(0, newRegime.rebate87A - Math.max(0, newRegime.baseTax - totalCGTax)));
-
-  const chartData = [
-    {
-      name: 'Old Regime',
-      'Slab Tax': oldSlabTaxAfterRebate,
-      'Capital Gains Tax': oldCGTaxAfterRebate,
-      'Education Cess (4%)': oldRegime.cess,
-      total: oldRegime.totalTaxPayable,
-    },
-    {
-      name: 'New Regime',
-      'Slab Tax': newSlabTaxAfterRebate,
-      'Capital Gains Tax': newCGTaxAfterRebate,
-      'Education Cess (4%)': newRegime.cess,
-      total: newRegime.totalTaxPayable,
-    }
-  ];
-
   return (
-    <div id="regime-comparison-card" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm text-slate-800 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
-      <div>
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-4 mb-5 transition-colors duration-200">
+    <div id="regime-comparison-card" className="bg-slate-900/40 border border-white/[0.04] rounded-[24px] p-6 backdrop-blur-md text-slate-100 flex flex-col justify-between transition-colors duration-200 w-full">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between border-b border-white/[0.04] pb-4">
           <div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">Tax Regime Comparison</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">AY 2026-27 Side-by-Side Analysis</p>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Liability Comparison</h3>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">AY 2026-27 Side-by-Side Analysis</p>
           </div>
           {savings > 0 ? (
-            <motion.div 
-              key={savings}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full transition-colors duration-200"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-450" />
-              <span>Save {formatINR(savings)}</span>
-            </motion.div>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wider font-mono">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Optimal Choice Found</span>
+            </div>
           ) : (
-            <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-505 dark:text-slate-400 text-xs font-semibold rounded-full transition-colors duration-200">
+            <div className="px-3 py-1 bg-slate-800 text-slate-400 text-xs font-semibold rounded-full">
               Equal Tax
             </div>
           )}
         </div>
 
         {/* Dynamic comparison bars with Spring Animations */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-5">
           {/* Old Regime bar */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <span className="font-semibold text-slate-300 flex items-center gap-1.5">
                 Old Tax Regime
                 {recommendedRegime === 'OLD' && (
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-455 rounded border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-0.5 font-bold transition-colors duration-200">
+                  <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 flex items-center gap-0.5 font-extrabold uppercase font-mono">
                     <Check className="h-2.5 w-2.5" /> Best Choice
                   </span>
                 )}
               </span>
-              <motion.span 
-                key={oldRegime.totalTaxPayable}
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                className={`font-mono font-bold ${recommendedRegime === 'OLD' ? 'text-emerald-600 dark:text-emerald-405' : 'text-slate-500 dark:text-slate-450'}`}
-              >
+              <span className={`font-mono font-bold text-sm ${recommendedRegime === 'OLD' ? 'text-emerald-400' : 'text-slate-400'}`}>
                 {formatINR(oldRegime.totalTaxPayable)}
-              </motion.span>
+              </span>
             </div>
-            <div className="h-3.5 bg-slate-100 dark:bg-slate-950 rounded-lg overflow-hidden border border-slate-200/60 dark:border-slate-805 p-0.5 transition-colors duration-200">
+            <div className="h-3 bg-slate-950 rounded-lg overflow-hidden border border-slate-900 p-0.5">
               <motion.div
                 className={`h-full rounded-md ${
-                  recommendedRegime === 'OLD' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                  recommendedRegime === 'OLD' ? 'bg-emerald-500 shadow-md shadow-emerald-500/15' : 'bg-slate-700'
                 }`}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(6, oldPct)}%` }}
-                transition={{ type: 'spring', damping: 20, stiffness: 85 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 350 }}
               />
             </div>
           </div>
@@ -192,192 +111,151 @@ export default function RegimeComparison() {
           {/* New Regime bar */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                New Tax Regime (Simplified)
+              <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+                New Tax Regime (Sec 115BAC)
                 {recommendedRegime === 'NEW' && (
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-455 rounded border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-0.5 font-bold transition-colors duration-200">
+                  <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 flex items-center gap-0.5 font-extrabold uppercase font-mono">
                     <Check className="h-2.5 w-2.5" /> Best Choice
                   </span>
                 )}
               </span>
-              <motion.span 
-                key={newRegime.totalTaxPayable}
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                className={`font-mono font-bold ${recommendedRegime === 'NEW' ? 'text-emerald-600 dark:text-emerald-405' : 'text-slate-500 dark:text-slate-455'}`}
-              >
+              <span className={`font-mono font-bold text-sm ${recommendedRegime === 'NEW' ? 'text-emerald-400' : 'text-slate-400'}`}>
                 {formatINR(newRegime.totalTaxPayable)}
-              </motion.span>
+              </span>
             </div>
-            <div className="h-3.5 bg-slate-100 dark:bg-slate-950 rounded-lg overflow-hidden border border-slate-200/60 dark:border-slate-805 p-0.5 transition-colors duration-200">
+            <div className="h-3 bg-slate-950 rounded-lg overflow-hidden border border-slate-900 p-0.5">
               <motion.div
                 className={`h-full rounded-md ${
-                  recommendedRegime === 'NEW' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                  recommendedRegime === 'NEW' ? 'bg-emerald-500 shadow-md shadow-emerald-500/15' : 'bg-slate-700'
                 }`}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(6, newPct)}%` }}
-                transition={{ type: 'spring', damping: 20, stiffness: 85 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 350 }}
               />
             </div>
           </div>
         </div>
 
-        {/* Recharts Graphical Side-by-Side Tax Breakdown */}
-        <div className="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-150 dark:border-slate-850 rounded-2xl p-4.5 mb-6 shadow-2xs transition-colors duration-200">
-          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-305 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 bg-indigo-500 rounded-full"></span>
-            Liability Component Breakdown (₹)
-          </h4>
-          <div className="h-56 w-full text-[10px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
+        {/* Progressive Disclosure detailed calculations */}
+        <div className="space-y-3 pt-2">
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors py-1 cursor-pointer focus:outline-none"
+          >
+            {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <span>{showDetails ? "Hide detailed tax breakdown" : "View detailed parameter calculations"}</span>
+          </button>
+
+          <AnimatePresence>
+            {showDetails && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="overflow-hidden"
               >
-                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} vertical={false} />
-                <XAxis 
-                  dataKey="name" 
-                  tick={{ fill: theme === 'dark' ? '#94a3b8' : '#475569', fontWeight: 600, fontSize: '11px' }}
-                  axisLine={{ stroke: theme === 'dark' ? '#334155' : '#cbd5e1' }}
-                  tickLine={false}
-                />
-                <YAxis 
-                  tickFormatter={(val) => val >= 100000 ? `₹${(val/100000).toFixed(1)}L` : val >= 1000 ? `₹${val/1000}k` : `₹${val}`}
-                  tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontFamily: 'monospace', fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: theme === 'dark' ? '#1e293b' : '#f1f5f9', opacity: 0.4 }} />
-                <Legend 
-                  verticalAlign="top" 
-                  height={32}
-                  iconType="circle"
-                  iconSize={8}
-                  wrapperStyle={{ fontSize: '10px', fontWeight: 600, color: theme === 'dark' ? '#cbd5e1' : '#475569' }}
-                />
-                <Bar dataKey="Slab Tax" stackId="tax" fill="#3b82f6" radius={[0, 0, 0, 0]} barSize={42} />
-                {totalCGTax > 0 && (
-                  <Bar dataKey="Capital Gains Tax" stackId="tax" fill="#f59e0b" barSize={42} />
-                )}
-                <Bar dataKey="Education Cess (4%)" stackId="tax" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={42} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Detailed side-by-side comparison table */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-5 shadow-sm transition-colors duration-200">
-          <table className="w-full text-xs text-left">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400">
-                <th className="p-3 font-semibold">Tax Parameter</th>
-                <th className="p-3 text-right font-semibold">Old Regime</th>
-                <th className="p-3 text-right font-semibold">New Regime</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-105 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
-              <tr>
-                <td className="p-3 text-slate-500 dark:text-slate-400">Gross Total Salary + Interest</td>
-                <td className="p-3 text-right font-mono">{formatINR(oldRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
-                <td className="p-3 text-right font-mono">{formatINR(newRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
-              </tr>
-              
-              {/* Optional Capital Gains section */}
-              {((incomeProfile.stcg || 0) > 0 || (incomeProfile.ltcg || 0) > 0) && (
-                <tr className="bg-amber-50/20 dark:bg-amber-950/10 text-slate-800 dark:text-slate-200">
-                  <td className="p-3 text-slate-600 dark:text-slate-400 font-semibold flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
-                    <span>Capital Gains Total (STCG + LTCG)</span>
-                  </td>
-                  <td className="p-3 text-right font-mono">{formatINR((incomeProfile.stcg || 0) + (incomeProfile.ltcg || 0))}</td>
-                  <td className="p-3 text-right font-mono">{formatINR((incomeProfile.stcg || 0) + (incomeProfile.ltcg || 0))}</td>
-                </tr>
-              )}
-
-              <tr>
-                <td className="p-3 text-slate-500 dark:text-slate-450 font-semibold text-rose-500 dark:text-rose-400">Standard Deduction</td>
-                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-400">-{formatINR(50000)}</td>
-                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-400">-{formatINR(75000)}</td>
-              </tr>
-              
-              <tr>
-                <td className="p-3 text-slate-500 dark:text-slate-400">Claimed Deductions (80C, 80D, HRA etc.)</td>
-                <td className="p-3 text-right font-mono text-slate-500 dark:text-slate-450">-{formatINR(totalDeductionsClaimed)}</td>
-                <td className="p-3 text-right font-mono text-slate-400 dark:text-slate-500">
-                  {confirmedDeductions['80CCD(2)'] ? `-${formatINR(confirmedDeductions['80CCD(2)'])}` : 'Not Allowed'}
-                </td>
-              </tr>
-
-              <tr className="bg-slate-50/50 dark:bg-slate-950/20">
-                <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">Net Taxable Income</td>
-                <td className="p-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{formatINR(oldRegime.taxableIncome)}</td>
-                <td className="p-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{formatINR(newRegime.taxableIncome)}</td>
-              </tr>
-
-              <tr>
-                <td className="p-3 text-slate-500 dark:text-slate-400">Base Slab Tax (Normal slabs)</td>
-                <td className="p-3 text-right font-mono">{formatINR(oldRegime.baseTax)}</td>
-                <td className="p-3 text-right font-mono">{formatINR(newRegime.baseTax)}</td>
-              </tr>
-
-              {totalCGTax > 0 && (
-                <tr className="bg-amber-50/10 dark:bg-amber-950/10">
-                  <td className="p-3 text-amber-800 dark:text-amber-400 font-semibold text-[11px] pl-5">
-                    → Capital Gains Tax (Flat 20% & 12.5%)
-                  </td>
-                  <td className="p-3 text-right font-mono text-amber-700 dark:text-amber-405">+{formatINR(totalCGTax)}</td>
-                  <td className="p-3 text-right font-mono text-amber-700 dark:text-amber-405">+{formatINR(totalCGTax)}</td>
-                </tr>
-              )}
-
-              <tr>
-                <td className="p-3 text-slate-500 dark:text-slate-400">Section 87A Rebate</td>
-                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-455">-{formatINR(oldRegime.rebate87A)}</td>
-                <td className="p-3 text-right font-mono text-rose-500 dark:text-rose-455">-{formatINR(newRegime.rebate87A)}</td>
-              </tr>
-
-              <tr>
-                <td className="p-3 text-slate-500 dark:text-slate-400 font-medium">Health & Education Cess (4%)</td>
-                <td className="p-3 text-right font-mono">{formatINR(oldRegime.cess)}</td>
-                <td className="p-3 text-right font-mono">{formatINR(newRegime.cess)}</td>
-              </tr>
-
-              <tr className="bg-slate-50 dark:bg-slate-950 font-bold border-t border-slate-200 dark:border-slate-800">
-                <td className="p-3 font-bold text-slate-800 dark:text-slate-200">Total Tax Payable</td>
-                <td className={`p-3 text-right font-mono font-bold text-sm ${recommendedRegime === 'OLD' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-755 dark:text-slate-400'}`}>
-                  {formatINR(oldRegime.totalTaxPayable)}
-                </td>
-                <td className={`p-3 text-right font-mono font-bold text-sm ${recommendedRegime === 'NEW' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-755 dark:text-slate-400'}`}>
-                  {formatINR(newRegime.totalTaxPayable)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                <div className="bg-slate-950 border border-white/[0.03] rounded-2xl overflow-hidden shadow-inner mt-2">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-white/[0.04] bg-slate-900/50 text-slate-500 font-semibold font-mono">
+                        <th className="p-3">Tax Parameter</th>
+                        <th className="p-3 text-right">Old Regime</th>
+                        <th className="p-3 text-right">New Regime</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.03] text-slate-350 font-medium">
+                      <tr>
+                        <td className="p-3">Gross Salary + Interest</td>
+                        <td className="p-3 text-right font-mono">{formatINR(oldRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
+                        <td className="p-3 text-right font-mono">{formatINR(newRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
+                      </tr>
+                      {((incomeProfile.stcg || 0) > 0 || (incomeProfile.ltcg || 0) > 0) && (
+                        <tr className="bg-amber-500/[0.02]">
+                          <td className="p-3 text-slate-200 font-semibold">Capital Gains Total</td>
+                          <td className="p-3 text-right font-mono">{formatINR((incomeProfile.stcg || 0) + (incomeProfile.ltcg || 0))}</td>
+                          <td className="p-3 text-right font-mono">{formatINR((incomeProfile.stcg || 0) + (incomeProfile.ltcg || 0))}</td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td className="p-3 text-rose-400">Standard Deduction</td>
+                        <td className="p-3 text-right font-mono text-rose-400">-{formatINR(50000)}</td>
+                        <td className="p-3 text-right font-mono text-rose-400">-{formatINR(75000)}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3">Claimed Deductions (80C, 80D, HRA)</td>
+                        <td className="p-3 text-right font-mono">-{formatINR(totalDeductionsClaimed)}</td>
+                        <td className="p-3 text-right font-mono text-slate-505">
+                          {confirmedDeductions['80CCD(2)'] ? `-${formatINR(confirmedDeductions['80CCD(2)'])}` : 'Not Allowed'}
+                        </td>
+                      </tr>
+                      <tr className="bg-white/[0.01]">
+                        <td className="p-3 font-semibold text-slate-200">Net Taxable Income</td>
+                        <td className="p-3 text-right font-mono font-bold text-slate-200">{formatINR(oldRegime.taxableIncome)}</td>
+                        <td className="p-3 text-right font-mono font-bold text-slate-200">{formatINR(newRegime.taxableIncome)}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3">Base Slab Tax</td>
+                        <td className="p-3 text-right font-mono">{formatINR(oldRegime.baseTax)}</td>
+                        <td className="p-3 text-right font-mono">{formatINR(newRegime.baseTax)}</td>
+                      </tr>
+                      {totalCGTax > 0 && (
+                        <tr className="bg-amber-500/[0.02]">
+                          <td className="p-3 text-amber-405 pl-5">→ Capital Gains Tax</td>
+                          <td className="p-3 text-right font-mono text-amber-400">+{formatINR(totalCGTax)}</td>
+                          <td className="p-3 text-right font-mono text-amber-400">+{formatINR(totalCGTax)}</td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td className="p-3">Section 87A Rebate</td>
+                        <td className="p-3 text-right font-mono text-rose-400">-{formatINR(oldRegime.rebate87A)}</td>
+                        <td className="p-3 text-right font-mono text-rose-400">-{formatINR(newRegime.rebate87A)}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3">Cess (4%)</td>
+                        <td className="p-3 text-right font-mono">{formatINR(oldRegime.cess)}</td>
+                        <td className="p-3 text-right font-mono">{formatINR(newRegime.cess)}</td>
+                      </tr>
+                      <tr className="bg-slate-900/50 font-bold border-t border-white/[0.04]">
+                        <td className="p-3 text-slate-200">Total Tax Liability</td>
+                        <td className={`p-3 text-right font-mono font-extrabold text-sm ${recommendedRegime === 'OLD' ? 'text-emerald-400' : 'text-slate-400'}`}>
+                          {formatINR(oldRegime.totalTaxPayable)}
+                        </td>
+                        <td className={`p-3 text-right font-mono font-extrabold text-sm ${recommendedRegime === 'NEW' ? 'text-emerald-400' : 'text-slate-400'}`}>
+                          {formatINR(newRegime.totalTaxPayable)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Recommendation Banner */}
-      <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors duration-200 ${
+      <div className={`p-4 rounded-xl border flex items-start gap-3 mt-6 ${
         recommendedRegime === 'NEW' 
-          ? 'bg-neutral-900 dark:bg-slate-950 border-neutral-800 dark:border-slate-800 text-neutral-100 dark:text-slate-200' 
-          : 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/50 text-blue-800 dark:text-blue-300'
+          ? 'bg-emerald-500/5 border-emerald-500/10 text-slate-350' 
+          : 'bg-blue-500/5 border-blue-500/10 text-slate-350'
       }`}>
-        <ShieldCheck className={`h-5 w-5 shrink-0 mt-0.5 ${recommendedRegime === 'NEW' ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} />
+        <ShieldCheck className={`h-5 w-5 shrink-0 mt-0.5 ${recommendedRegime === 'NEW' ? 'text-emerald-450' : 'text-blue-400'}`} />
         <div className="space-y-1">
-          <h4 className="text-xs font-bold uppercase tracking-wider font-mono">
+          <h4 className="text-[10px] font-bold uppercase tracking-wider font-mono text-slate-200">
             RECOMMENDED ROUTE: {recommendedRegime === 'NEW' ? 'NEW TAX REGIME' : 'OLD TAX REGIME'}
           </h4>
-          <p className="text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed font-medium">
             {savings > 0 ? (
               <span>
-                By selecting the <strong>{recommendedRegime === 'NEW' ? 'New' : 'Old'} Regime</strong>, you save exactly <strong>{formatINR(savings)}</strong> in tax. 
+                Selecting the <strong>{recommendedRegime === 'NEW' ? 'New' : 'Old'} Regime</strong> saves exactly <strong className="text-emerald-400 font-mono font-bold">{formatINR(savings)}</strong>. 
                 {recommendedRegime === 'NEW' 
-                  ? ' The New Regime offers a flat ₹75,000 standard deduction and lower slab rates.' 
-                  : ' Your 80C, 80D, rent, and advanced deductions make the Old Regime significantly more cost-effective.'}
+                  ? ' The New Regime grants a flat ₹75,000 standard deduction and lower intermediate slabs.' 
+                  : ' Your Section 80C, Section 80D and HRA rent exemptions yield a better deduction threshold.'}
               </span>
             ) : (
               <span>
-                Both regimes result in the exact same tax liability. The <strong>New Regime</strong> is recommended due to minimal documentation requirements.
+                Both tax regimes result in identical tax liability. We recommend the <strong>New Regime</strong> to simplify ITR filing and minimize record-keeping.
               </span>
             )}
           </p>

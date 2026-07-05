@@ -460,41 +460,22 @@ export default function App() {
         </div>
       }>
 
-        {/* Stage 2: Authentication (No Sidebar) */}
+        {/* Stage 2: Sandbox Entry (No Sidebar) */}
         {activeStep === 2 && (
           <div className="relative z-10 flex-1 flex items-center justify-center p-6 bg-transparent overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full animate-pulse pointer-events-none" />
             
             <div className="max-w-md w-full animate-fade-in font-sans relative z-10">
-              <div className="bg-slate-900/60 border border-white/[0.04] dark:border-slate-800/50 rounded-3xl p-8 shadow-2xl backdrop-blur-md space-y-6">
-                <div className="text-center space-y-2">
-                  <div className="w-12 h-12 bg-blue-50 dark:bg-blue-955/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-900/10">
-                    <KeyRound className="w-6 h-6" />
+              <div className="bg-slate-900/60 border border-white/[0.04] dark:border-slate-800/50 rounded-[24px] p-8 shadow-2xl backdrop-blur-md space-y-6">
+                <div className="text-center space-y-4">
+                  <div className="w-12 h-12 bg-emerald-500/10 text-emerald-450 rounded-2xl flex items-center justify-center mx-auto border border-emerald-500/25">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <h2 className="text-xl font-bold tracking-tight text-slate-100">Access Sandbox Workspace</h2>
-                  <p className="text-xs text-slate-400">
-                    Authenticate to enter your personal AY 2026-27 local filing session.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
-                    <input 
-                      type="email" 
-                      value={authEmail}
-                      onChange={(e) => setAuthEmail(e.target.value)}
-                      className="w-full bg-slate-955 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 font-medium focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                    <input 
-                      type="password"
-                      value={authPassword}
-                      onChange={(e) => setAuthPassword(e.target.value)}
-                      className="w-full bg-slate-955 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 font-medium focus:outline-none focus:border-blue-500"
-                    />
+                  <div className="space-y-2">
+                    <h2 className="text-lg font-bold tracking-tight text-slate-100">Welcome to TaxSense Sandbox</h2>
+                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                      Experience the complete AI-powered tax filing workflow. No sign-up required. No personal information is collected. Everything runs inside a secure demonstration workspace.
+                    </p>
                   </div>
                 </div>
 
@@ -506,7 +487,7 @@ export default function App() {
                       setActiveStep(11); // Proceed to Dashboard Welcome Hub (Stage 11)
                     }, 800);
                   }}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md shadow-blue-500/10 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md shadow-blue-500/10 cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isAuthenticating ? (
                     <>
@@ -515,17 +496,17 @@ export default function App() {
                         <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
                         <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
                       </div>
-                      <span>Verifying Sandbox...</span>
+                      <span>Initializing Demonstration Workspace...</span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Sign In as Guest</span>
+                      <span>Enter Sandbox Workspace</span>
+                      <ArrowRight className="w-4 h-4 text-white" />
                     </>
                   )}
                 </button>
 
-                <div className="flex items-center justify-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-wider pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-center gap-1.5 text-[9px] text-slate-500 font-bold uppercase tracking-wider pt-4 border-t border-slate-800/60">
                   <Lock className="w-3 h-3 text-emerald-500" />
                   <span>ISO 27001 Certified encryption • Sandbox secure</span>
                 </div>
@@ -702,7 +683,7 @@ export default function App() {
 
               {/* Main Content Viewport */}
               <div className="flex-1 overflow-y-auto flex flex-col justify-between relative bg-transparent z-10">
-                <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+                <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
                   
                   {/* Dialog Trigger: Extraction Confirmation */}
                   <AnimatePresence>
@@ -796,74 +777,49 @@ export default function App() {
                           
                           {/* Left Columns (Span 2) */}
                           <div className="lg:col-span-2 space-y-6">
-                            
-                            {/* AI Summary and Diagnostic Score */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-3">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                                  AI Summary Diagnosis
-                                </h3>
-                                <p className="text-[11px] text-slate-350 leading-relaxed font-medium">
-                                  "Standard deductions of {formatINR(75000)} mapped. Section 80C PPF/ELSS thresholds are fully claimed. However, you can save an additional {formatINR(taxCalculationResult.savings)} by shifting from Old to the New tax regime structure."
-                                </p>
-                              </div>
-
-                              <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md flex flex-col justify-between">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <Award className="w-3.5 h-3.5 text-blue-400" />
-                                  Tax Health Score
-                                </h3>
-                                <div className="py-2 flex items-baseline gap-2">
-                                  <span className="text-3xl font-extrabold text-white font-mono tracking-tighter">85</span>
-                                  <span className="text-xs text-slate-500 font-bold font-mono">/ 100</span>
+                             {/* AI Summary and Diagnostic Score Hero Card */}
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 backdrop-blur-md space-y-5 relative overflow-hidden">
+                              <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-emerald-500/[0.02] blur-[60px] rounded-full pointer-events-none" />
+                              
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 z-10 relative">
+                                <div className="space-y-3 flex-1">
+                                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                                    AI Tax Diagnostic Summary
+                                  </h3>
+                                  <p className="text-xs text-slate-200 leading-relaxed font-semibold">
+                                    "Standard deductions of {formatINR(75000)} mapped. Section 80C PPF/ELSS thresholds are fully claimed. However, you can save an additional {formatINR(taxCalculationResult.savings)} by shifting from Old to the New tax regime structure."
+                                  </p>
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-bold">Good • Underclaimed Section 80D limits</span>
+                                
+                                <div className="md:border-l md:border-white/[0.04] md:pl-6 shrink-0 flex flex-col justify-center space-y-1">
+                                  <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block font-mono">Tax Health Score</span>
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="text-4xl font-extrabold text-white font-mono tracking-tighter leading-none">85</span>
+                                    <span className="text-[11px] text-slate-500 font-bold font-mono">/ 100</span>
+                                  </div>
+                                  <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-black tracking-wider uppercase inline-block">Good • Claim 80D</span>
+                                </div>
                               </div>
                             </div>
 
                             {/* Volumetric Next Step CTA Spotlight */}
-                            <div className="relative bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden">
+                            <div className="relative bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden">
                               <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
-                              <div className="space-y-1 z-10 text-center md:text-left">
-                                <span className="text-[9px] bg-emerald-500/15 text-emerald-450 px-2 py-0.5 rounded font-black tracking-wider uppercase">Filing Spotlight</span>
+                              <div className="space-y-1.5 z-10 text-center md:text-left">
+                                <span className="text-[9px] bg-emerald-500/15 text-emerald-450 px-2 py-0.5 rounded font-black tracking-wider uppercase">Primary Next Step</span>
                                 <h4 className="text-xs font-bold text-slate-100">Claim Medical Insurance Premium under 80D</h4>
                                 <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                                  We detected zero claims under Section 80D. Did you pay for medical health policies?
+                                  We detected zero claims under Section 80D. Synced profiles usually save an additional {formatINR(25000)} in taxable deductions.
                                 </p>
                               </div>
                               <button
                                 onClick={() => setActiveStep(6)}
-                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 shadow-lg shadow-emerald-500/15 select-none active:scale-95 flex items-center gap-1.5"
+                                className="px-5 py-3 bg-emerald-50 hover:bg-emerald-400 text-slate-955 font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 shadow-lg shadow-emerald-500/15 select-none active:scale-95 flex items-center gap-1.5"
                               >
                                 <span>Continue Filing</span>
                                 <ArrowRight className="w-3.5 h-3.5 text-slate-955" />
                               </button>
-                            </div>
-
-                            {/* Quick Actions Grid */}
-                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md space-y-4">
-                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Filing Operations Panel</h3>
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                {[
-                                  { label: 'Ingest Documents', step: 3, icon: FileUp, desc: 'Upload ITR forms' },
-                                  { label: 'AI Diagnosis', step: 4, icon: BrainCircuit, desc: 'Copilot review' },
-                                  { label: 'Optimize Regime', step: 5, icon: Award, desc: 'Compare slabs' },
-                                  { label: 'Timeline Archives', step: 10, icon: History, desc: 'Sandbox returns' },
-                                ].map((act) => (
-                                  <button
-                                    key={act.label}
-                                    onClick={() => setActiveStep(act.step)}
-                                    className="p-3 bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.04] hover:border-white/[0.08] rounded-2xl text-left space-y-2 cursor-pointer transition-all active:scale-95 flex flex-col justify-between min-h-[100px]"
-                                  >
-                                    <act.icon className="w-5 h-5 text-emerald-400" />
-                                    <div>
-                                      <span className="block text-[10px] font-bold text-slate-200 leading-snug">{act.label}</span>
-                                      <span className="text-[8px] text-slate-500 block font-medium leading-none mt-0.5">{act.desc}</span>
-                                    </div>
-                                  </button>
-                                ))}
-                              </div>
                             </div>
 
                             {/* Recent Documents list */}
@@ -1083,121 +1039,136 @@ export default function App() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -15, scale: 0.98 }}
                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                        className="space-y-6 font-sans"
+                        className="space-y-6 font-sans max-w-2xl mx-auto"
                       >
-                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-5 backdrop-blur-md">
+                        {/* Title Card */}
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-[24px] p-6 backdrop-blur-md">
                           <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
-                            <BrainCircuit className="w-5 h-5 text-emerald-450" />
-                            Gemini AI Diagnostic Scan
+                            <Sparkles className="w-5 h-5 text-emerald-450 animate-pulse" />
+                            TaxSense AI Audit Engine
                           </h2>
                           <p className="text-xs text-slate-400">
-                            Review the progressive diagnosis log. Copilot checks each parameter against the latest Income Tax rules.
+                            Real-time compliance validation checking parameters against official AY 2026-27 Income Tax slabs and rules.
                           </p>
                         </div>
 
-                        {/* Mohit's Prompt Inquiry */}
-                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 border border-white/[0.04] rounded-3xl shadow-xs transition-colors">
-                          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold text-xs shrink-0 select-none">
-                            MK
-                          </div>
-                          <div className="space-y-0.5">
-                            <span className="block text-xs font-bold text-slate-200">Mohit Kumar</span>
-                            <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                              Analyze my parsed salary structure parameters, check eligibility thresholds, and highlight optimization opportunities under AY 2026-27 regulations.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Copilot Response Card */}
-                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-6 space-y-6 relative overflow-hidden transition-all duration-300">
-                          <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-blue-500/3 blur-[60px] rounded-full pointer-events-none" />
-
-                          {/* Copilot Avatar Title */}
-                          <div className="flex items-center gap-2.5 pb-4 border-b border-white/[0.04]">
-                            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                              <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-                            </div>
-                            <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Gemini Tax Copilot</span>
-                          </div>
-
-                          {/* Stepped Thinking Loader */}
-                          {analysisProgress < 4 && (
-                            <div className="flex items-center gap-3 py-2">
-                              <div className="flex gap-1.5 items-center shrink-0 py-1">
-                                <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" />
-                              </div>
-                              <span className="text-xs text-slate-450 dark:text-slate-500 font-semibold font-mono animate-pulse">
-                                {analysisProgress === 0 && "Initializing neural parser..."}
-                                {analysisProgress === 1 && "Ingesting salary variables..."}
-                                {analysisProgress === 2 && "Checking Section 80C thresholds..."}
-                                {analysisProgress === 3 && "Running regime slab diagnostic rules..."}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Progressive Streams */}
+                        {/* Audit Log Card */}
+                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-[24px] p-6 space-y-6 relative overflow-hidden backdrop-blur-md shadow-2xl">
+                          <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-blue-500/[0.01] blur-[60px] rounded-full pointer-events-none" />
+                          
                           <div className="space-y-4">
-                            {analysisProgress >= 1 && (
-                              <motion.div 
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-2 text-xs"
-                              >
-                                <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">1. Gross Salary Parameters</span>
-                                <div className="p-3.5 bg-slate-955/60 border border-slate-850 rounded-2xl leading-relaxed text-slate-400 font-medium">
-                                  Gross Salary registered at {formatINR(taxData.grossSalary)}. Standard Deduction of {formatINR(75000)} is automatically applicable under Section 16(ia) for the New Regime.
-                                </div>
-                              </motion.div>
-                            )}
+                            {/* Step 1 */}
+                            <div className="flex items-start gap-4">
+                              <div className="mt-0.5 shrink-0">
+                                {analysisProgress >= 1 ? (
+                                  <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-[10px] font-black font-mono">✓</div>
+                                ) : analysisProgress === 0 ? (
+                                  <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-[10px] font-bold animate-pulse font-mono">•</div>
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full bg-slate-950 border border-slate-800 text-slate-600 flex items-center justify-center text-[10px] font-bold font-mono">-</div>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <span className={`text-xs font-bold font-mono ${analysisProgress >= 1 ? 'text-slate-200' : analysisProgress === 0 ? 'text-blue-400' : 'text-slate-500'}`}>
+                                  {analysisProgress >= 1 ? "Salary parameters verified" : "Verifying Form 16..."}
+                                </span>
+                                {analysisProgress >= 1 && (
+                                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                                    Gross salary mapped at <span className="font-mono text-slate-200">{formatINR(taxData.grossSalary)}</span>. Basic salary and PF variables identified.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
 
-                            {analysisProgress >= 2 && (
-                              <motion.div 
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-2 text-xs"
-                              >
-                                <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">2. Detected Exemptions & Slabs</span>
-                                <div className="p-3.5 bg-slate-955/60 border border-slate-850 rounded-2xl leading-relaxed text-slate-400 font-medium">
-                                  Section 80C PPF/EPF is fully claimed at {formatINR(150000)}. Rent paid logs qualify under Section 10(13A) Old Regime only. However, medical insurance premium of {formatINR(taxData.deduction80D)} is currently underclaimed.
-                                </div>
-                              </motion.div>
-                            )}
+                            {/* Step 2 */}
+                            <div className="flex items-start gap-4">
+                              <div className="mt-0.5 shrink-0">
+                                {analysisProgress >= 2 ? (
+                                  <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-[10px] font-black font-mono">✓</div>
+                                ) : analysisProgress === 1 ? (
+                                  <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-[10px] font-bold animate-pulse font-mono">•</div>
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full bg-slate-950 border border-slate-800 text-slate-600 flex items-center justify-center text-[10px] font-bold font-mono">-</div>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <span className={`text-xs font-bold font-mono ${analysisProgress >= 2 ? 'text-slate-200' : analysisProgress === 1 ? 'text-blue-400' : 'text-slate-500'}`}>
+                                  {analysisProgress >= 2 ? "Income sources validated" : "Validating income parameters..."}
+                                </span>
+                                {analysisProgress >= 2 && (
+                                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                                    Salary and other income parameters mapped. Form type dynamically assigned as <span className="font-mono text-slate-200">{formType}</span>.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
 
-                            {analysisProgress >= 3 && (
-                              <motion.div 
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-2 text-xs"
-                              >
-                                <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">3. Warnings & Diagnostic Recommendations</span>
-                                <div className="p-3.5 bg-slate-955/60 border border-slate-850 rounded-2xl leading-relaxed text-slate-400 font-medium">
-                                  ⚠️ <strong>Regime Slab Alert:</strong> Your active exemption threshold is below ₹3,75,000. Under current tax configurations, switching to the New Tax Regime saves {formatINR(taxCalculationResult.savings)} compared to the Old regime.
-                                </div>
-                              </motion.div>
-                            )}
+                            {/* Step 3 */}
+                            <div className="flex items-start gap-4">
+                              <div className="mt-0.5 shrink-0">
+                                {analysisProgress >= 3 ? (
+                                  <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-[10px] font-black font-mono">✓</div>
+                                ) : analysisProgress === 2 ? (
+                                  <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-[10px] font-bold animate-pulse font-mono">•</div>
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full bg-slate-950 border border-slate-800 text-slate-600 flex items-center justify-center text-[10px] font-bold font-mono">-</div>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <span className={`text-xs font-bold font-mono ${analysisProgress >= 3 ? 'text-slate-200' : analysisProgress === 2 ? 'text-blue-400' : 'text-slate-500'}`}>
+                                  {analysisProgress >= 3 ? "Deductions & Exemptions audited" : "Auditing exemptions..."}
+                                </span>
+                                {analysisProgress >= 3 && (
+                                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                                    Section 80C fully claimed at <span className="font-mono text-slate-200">{formatINR(150000)}</span>. Rent receipts check completes Section 10(13A). Underclaimed premium identified on medical insurance limits.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
 
-                            {analysisProgress >= 4 && (
-                              <motion.div 
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-4 pt-2 border-t border-slate-800"
-                              >
-                                <div className="flex items-center justify-between text-xs font-bold text-slate-455">
-                                  <span>Validation Confidence Score</span>
-                                  <span className="text-emerald-450">98% Verified</span>
-                                </div>
-                                <button
-                                  onClick={() => setActiveStep(5)}
-                                  className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-emerald-500/10 select-none active:scale-95 flex items-center justify-center gap-1.5"
-                                >
-                                  <span>Proceed to Recommendations</span>
-                                  <ArrowRight className="w-4 h-4 text-slate-955" />
-                                </button>
-                              </motion.div>
-                            )}
+                            {/* Step 4 */}
+                            <div className="flex items-start gap-4">
+                              <div className="mt-0.5 shrink-0">
+                                {analysisProgress >= 4 ? (
+                                  <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-[10px] font-black font-mono">✓</div>
+                                ) : analysisProgress === 3 ? (
+                                  <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-[10px] font-bold animate-pulse font-mono">•</div>
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full bg-slate-950 border border-slate-800 text-slate-600 flex items-center justify-center text-[10px] font-bold font-mono">-</div>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <span className={`text-xs font-bold font-mono ${analysisProgress >= 4 ? 'text-slate-200' : analysisProgress === 3 ? 'text-blue-400' : 'text-slate-500'}`}>
+                                  {analysisProgress >= 4 ? "Regime comparison finalized" : "Computing optimal regime slabs..."}
+                                </span>
+                                {analysisProgress >= 4 && (
+                                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                                    Slab comparisons completed. Switching to the New Tax Regime saves <span className="font-mono font-bold text-emerald-400">{formatINR(taxCalculationResult.savings)}</span> compared to the Old regime.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
+
+                          {analysisProgress >= 4 && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="space-y-4 pt-4 border-t border-white/[0.04]"
+                            >
+                              <div className="flex items-center justify-between text-xs font-bold font-mono">
+                                <span className="text-slate-400">Audit Compliance Score</span>
+                                <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 rounded uppercase">98% Verified</span>
+                              </div>
+                              <button
+                                onClick={() => setActiveStep(5)}
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-blue-500/10 select-none active:scale-95 flex items-center justify-center gap-1.5"
+                              >
+                                <span>Proceed to Recommendations</span>
+                                <ArrowRight className="w-4 h-4 text-white" />
+                              </button>
+                            </motion.div>
+                          )}
                         </div>
                       </motion.div>
                     )}
@@ -1361,23 +1332,26 @@ export default function App() {
                               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Income Ledgers Summary</h3>
                               
                               <div className="space-y-4">
-                                <div className="p-4 bg-slate-955/40 border border-white/[0.02] rounded-xl flex items-center justify-between">
+                                <div className="p-5 bg-slate-955/40 border border-white/[0.02] rounded-xl flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    <FileText className="w-5 h-5 text-slate-500" />
+                                    <FileText className="w-5 h-5 text-slate-500 animate-pulse" />
                                     <div>
                                       <span className="block text-xs font-bold text-slate-200">Gross Salary (Section 17(1))</span>
                                       <span className="text-[9px] text-slate-500">Auto parsed from Form 16</span>
                                     </div>
                                   </div>
-                                  <input 
-                                    type="text" 
-                                    value={taxData.grossSalary}
-                                    onChange={(e) => handleNumericChange('grossSalary', e.target.value)}
-                                    className="bg-slate-900 border border-slate-800 rounded-lg p-1.5 w-32 text-right font-mono text-xs font-bold text-slate-200 focus:outline-none"
-                                  />
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-slate-500 font-mono text-sm font-bold">₹</span>
+                                    <input 
+                                      type="text" 
+                                      value={taxData.grossSalary}
+                                      onChange={(e) => handleNumericChange('grossSalary', e.target.value)}
+                                      className="bg-slate-950 border border-white/[0.06] focus:border-emerald-500/40 rounded-xl py-2 px-3 w-40 text-right font-mono text-sm font-extrabold text-slate-100 focus:outline-none transition-colors"
+                                    />
+                                  </div>
                                 </div>
 
-                                <div className="p-4 bg-slate-955/40 border border-white/[0.02] rounded-xl flex items-center justify-between">
+                                <div className="p-5 bg-slate-955/40 border border-white/[0.02] rounded-xl flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <FileText className="w-5 h-5 text-slate-500" />
                                     <div>
@@ -1385,12 +1359,15 @@ export default function App() {
                                       <span className="text-[9px] text-slate-500">Savings account interest, etc.</span>
                                     </div>
                                   </div>
-                                  <input 
-                                    type="text" 
-                                    value={taxData.otherIncome}
-                                    onChange={(e) => handleNumericChange('otherIncome', e.target.value)}
-                                    className="bg-slate-900 border border-slate-800 rounded-lg p-1.5 w-32 text-right font-mono text-xs font-bold text-slate-200 focus:outline-none"
-                                  />
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-slate-500 font-mono text-sm font-bold">₹</span>
+                                    <input 
+                                      type="text" 
+                                      value={taxData.otherIncome}
+                                      onChange={(e) => handleNumericChange('otherIncome', e.target.value)}
+                                      className="bg-slate-950 border border-white/[0.06] focus:border-emerald-500/40 rounded-xl py-2 px-3 w-40 text-right font-mono text-sm font-extrabold text-slate-100 focus:outline-none transition-colors"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             </div>

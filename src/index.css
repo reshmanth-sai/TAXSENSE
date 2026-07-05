@@ -521,3 +521,28 @@ body {
   animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Motion Sensitivity / prefers-reduced-motion compliance */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-delay: 0s !important;
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-aurora-1, 
+  .animate-aurora-2, 
+  .animate-float-card-1, 
+  .animate-float-card-2, 
+  .animate-float-card-3, 
+  .animate-float-card-4, 
+  .animate-particle-twinkle, 
+  .animate-bg-gradient, 
+  .animate-cta-pulse, 
+  .animate-spotlight-pulse {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
