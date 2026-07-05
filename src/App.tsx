@@ -268,32 +268,6 @@ export default function App() {
   const taxCalculationResult = useMemo(() => {
     return calculateTax(taxData);
   }, [taxData]);
-
-  const handleForm16TextProcessing = async (text: string) => {
-    setIsExtracting(true);
-    setIsStoreExtracting(true);
-    
-    // Simulate smart backend NLP extraction models
-    setTimeout(() => {
-      const mockParsedData: Partial<TaxData> = {
-        grossSalary: 850000,
-        hraExemption: 58000,
-        deduction80C: 150000,
-        deduction80D: 25000,
-        tdsDeducted: 15000,
-        otherIncome: 12000,
-      };
-      setExtractedData(mockParsedData);
-      setIsExtracting(false);
-      setIsStoreExtracting(false);
-      
-      // Only block viewport with confirmation modal if actively on the Document Vault screen
-      if (activeStep === 3) {
-        setShowConfirmScreen(true);
-      }
-    }, 1500);
-  };
-
   const acceptExtractedData = (confirmedData: TaxData) => {
     setIncomeProfile({
       grossSalary: confirmedData.grossSalary || 0,
@@ -312,17 +286,6 @@ export default function App() {
     
     setShowConfirmScreen(false);
     setActiveStep(4); // Route to Copilot diagnosis stage
-  };
-
-  const handleManualTextExtraction = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualRawText.trim()) return;
-    setIsPasteProcessing(true);
-    setTimeout(() => {
-      handleForm16TextProcessing(manualRawText);
-      setIsPasteProcessing(false);
-      setShowPasteArea(false);
-    }, 800);
   };
 
   const handleNumericChange = (field: 'grossSalary' | 'otherIncome' | 'tdsDeducted', val: string) => {
@@ -984,7 +947,7 @@ export default function App() {
                       >
                         <Suspense fallback={<div className="h-[400px] bg-slate-900/10 animate-pulse rounded-3xl" />}>
                           <DocumentVault 
-                            onFileUpload={handleForm16TextProcessing} 
+                            onFileUpload={() => {}} 
                             setActiveStep={setActiveStep}
                             onViewExtractedFields={() => setShowConfirmScreen(true)}
                           />
