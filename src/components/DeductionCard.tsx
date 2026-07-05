@@ -40,24 +40,24 @@ export default function DeductionCard() {
   const isExtracting = useTaxStore((state) => state.isExtracting);
   const incomeProfile = useTaxStore((state) => state.incomeProfile);
 
-  const val80C = confirmedDeductions['80C'] || 0;
-  const val80D = confirmedDeductions['80D'] || 0;
-  const valHRA = confirmedDeductions['HRA exemption'] || confirmedDeductions.hraExemption || 0;
-  const valNPS = confirmedDeductions['80CCD(1B)'] || 0;
+  const val80C = confirmedDeductions?.['80C'] || 0;
+  const val80D = confirmedDeductions?.['80D'] || 0;
+  const valHRA = confirmedDeductions?.['HRA exemption'] || confirmedDeductions?.hraExemption || 0;
+  const valNPS = confirmedDeductions?.['80CCD(1B)'] || 0;
 
   // Other deductions
-  const val80CCD2 = confirmedDeductions['80CCD(2)'] || 0;
-  const val80CCH = confirmedDeductions['80CCH'] || 0;
-  const valSection24bLetOut = confirmedDeductions['section24bLetOut'] || 0;
-  const val80DD = confirmedDeductions['80DD'] || 0;
-  const val80U = confirmedDeductions['80U'] || 0;
-  const val80DDB = confirmedDeductions['80DDB'] || 0;
-  const val80E = confirmedDeductions['80E'] || 0;
-  const val80EEA = confirmedDeductions['80EEA'] || 0;
-  const val80GG = confirmedDeductions['80GG'] || 0;
-  const val80TTA = confirmedDeductions['80TTA'] || 0;
-  const val80TTB = confirmedDeductions['80TTB'] || 0;
-  const val80G = confirmedDeductions['80G'] || 0;
+  const val80CCD2 = confirmedDeductions?.['80CCD(2)'] || 0;
+  const val80CCH = confirmedDeductions?.['80CCH'] || 0;
+  const valSection24bLetOut = confirmedDeductions?.['section24bLetOut'] || 0;
+  const val80DD = confirmedDeductions?.['80DD'] || 0;
+  const val80U = confirmedDeductions?.['80U'] || 0;
+  const val80DDB = confirmedDeductions?.['80DDB'] || 0;
+  const val80E = confirmedDeductions?.['80E'] || 0;
+  const val80EEA = confirmedDeductions?.['80EEA'] || 0;
+  const val80GG = confirmedDeductions?.['80GG'] || 0;
+  const val80TTA = confirmedDeductions?.['80TTA'] || 0;
+  const val80TTB = confirmedDeductions?.['80TTB'] || 0;
+  const val80G = confirmedDeductions?.['80G'] || 0;
 
   // Limits
   const LIMIT_80C = 150000;
@@ -66,7 +66,7 @@ export default function DeductionCard() {
   const LIMIT_NPS = 50000;
 
   // Statutory Limits for Advanced Sections
-  const basic = incomeProfile.basicSalary || Math.round((incomeProfile.grossSalary || 0) * 0.4);
+  const basic = incomeProfile?.basicSalary || Math.round((incomeProfile?.grossSalary || 0) * 0.4);
   const LIMIT_80CCD2 = Math.round(basic * 0.14);
   const LIMIT_80CCH = 150000;
   const LIMIT_24B_LETOUT = 500000;
@@ -118,8 +118,8 @@ export default function DeductionCard() {
     (val80TTB || val80TTA);
 
   // Calculate dynamic old regime marginal tax rate for advisor callouts
-  const grossSalary = incomeProfile.grossSalary || 0;
-  const otherIncome = incomeProfile.otherIncome || 0;
+  const grossSalary = incomeProfile?.grossSalary || 0;
+  const otherIncome = incomeProfile?.otherIncome || 0;
   const oldBaseSalaryTotal = Math.max(0, grossSalary - valHRA) + otherIncome;
   const oldSlabTaxable = Math.max(0, oldBaseSalaryTotal - totalClaimed - 50000); // including standard deduction of 50k
   

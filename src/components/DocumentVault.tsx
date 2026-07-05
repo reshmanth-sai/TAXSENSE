@@ -57,7 +57,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
   const statusMessage = backgroundStatusMessage || 'Waiting for document...';
   
   const uploadState = !isBackgroundProcessing 
-    ? (uploadedFiles.length > 0 && incomeProfile.grossSalary > 0 ? 'completed' : 'empty')
+    ? (uploadedFiles.length > 0 && (incomeProfile?.grossSalary ?? 0) > 0 ? 'completed' : 'empty')
     : (backgroundProgress < 30 ? 'uploading' 
        : backgroundProgress < 50 ? 'ocr' 
        : backgroundProgress < 70 ? 'gemini' 
@@ -578,7 +578,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
           </div>
 
           {/* B. Document Summary Card */}
-          {uploadedFiles.length > 0 && incomeProfile.grossSalary > 0 && (
+          {uploadedFiles.length > 0 && (incomeProfile?.grossSalary ?? 0) > 0 && (
             <div className="bg-slate-900/40 border border-white/[0.04] rounded-[24px] p-6 backdrop-blur-md relative overflow-hidden animate-fade-in">
               <div className="absolute inset-0 bg-radial-at-t from-emerald-500/[0.02] via-transparent to-transparent opacity-75 pointer-events-none" />
               
@@ -590,12 +590,12 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1">
                   <span className="text-[10px] text-slate-500 font-bold uppercase">Gross Salary</span>
-                  <p className="font-mono text-sm font-bold text-white leading-none">{formatINR(incomeProfile.grossSalary)}</p>
+                  <p className="font-mono text-sm font-bold text-white leading-none">{formatINR(incomeProfile?.grossSalary ?? 0)}</p>
                 </div>
                 
                 <div className="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1">
                   <span className="text-[10px] text-slate-500 font-bold uppercase">Employer</span>
-                  <p className="text-xs font-bold text-slate-200 truncate leading-none">{incomeProfile.employerName || 'Not identified'}</p>
+                  <p className="text-xs font-bold text-slate-200 truncate leading-none">{incomeProfile?.employerName || 'Not identified'}</p>
                 </div>
 
                 <div className="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1">
@@ -613,11 +613,11 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
               <div className="mt-4 pt-4 border-t border-slate-800/40 flex flex-wrap items-center gap-2 text-xs">
                 <span className="text-[10px] text-slate-500 font-bold uppercase mr-1">Sections Found:</span>
                 {[
-                  { section: '80C', value: confirmedDeductions['80C'] },
-                  { section: '80D', value: confirmedDeductions['80D'] },
-                  { section: 'HRA', value: confirmedDeductions['HRA exemption'] },
-                  { section: 'PF', value: incomeProfile.pfContribution },
-                  { section: 'TDS', value: incomeProfile.tdsDeducted }
+                  { section: '80C', value: confirmedDeductions?.['80C'] ?? 0 },
+                  { section: '80D', value: confirmedDeductions?.['80D'] ?? 0 },
+                  { section: 'HRA', value: confirmedDeductions?.['HRA exemption'] ?? confirmedDeductions?.hraExemption ?? 0 },
+                  { section: 'PF', value: incomeProfile?.pfContribution ?? 0 },
+                  { section: 'TDS', value: incomeProfile?.tdsDeducted ?? 0 }
                 ].map((sec) => (
                   <span 
                     key={sec.section}

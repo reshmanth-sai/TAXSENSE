@@ -13,33 +13,33 @@ export default function RegimeComparison() {
   // Map Zustand store profile directly to the TaxData structure expected by calculateTax helper
   const taxData: TaxData = {
     assessmentYear: '2026-27',
-    grossSalary: incomeProfile.grossSalary || 0,
-    hraExemption: confirmedDeductions['HRA exemption'] || confirmedDeductions.hraExemption || 0,
+    grossSalary: incomeProfile?.grossSalary || 0,
+    hraExemption: confirmedDeductions?.['HRA exemption'] || confirmedDeductions?.hraExemption || 0,
     ltaExemption: 0,
     standardDeductionOld: 50000,
     standardDeductionNew: 75000,
-    otherIncome: incomeProfile.otherIncome || 0,
-    deduction80C: confirmedDeductions['80C'] || 0,
-    deduction80D: confirmedDeductions['80D'] || 0,
-    deduction80TTA: confirmedDeductions['80TTA'] || 0,
-    deduction80G: confirmedDeductions['80G'] || 0,
-    section24b: confirmedDeductions['section24b'] || 0,
-    tdsDeducted: incomeProfile.tdsDeducted || 0,
+    otherIncome: incomeProfile?.otherIncome || 0,
+    deduction80C: confirmedDeductions?.['80C'] || 0,
+    deduction80D: confirmedDeductions?.['80D'] || 0,
+    deduction80TTA: confirmedDeductions?.['80TTA'] || 0,
+    deduction80G: confirmedDeductions?.['80G'] || 0,
+    section24b: confirmedDeductions?.['section24b'] || 0,
+    tdsDeducted: incomeProfile?.tdsDeducted || 0,
     // Capital Gains
-    stcg: incomeProfile.stcg || 0,
-    ltcg: incomeProfile.ltcg || 0,
+    stcg: incomeProfile?.stcg || 0,
+    ltcg: incomeProfile?.ltcg || 0,
     // Advanced & Portfolio fields
-    deduction80CCD1B: confirmedDeductions['80CCD(1B)'] || 0,
-    deduction80CCD2: confirmedDeductions['80CCD(2)'] || 0,
-    deduction80DD: confirmedDeductions['80DD'] || 0,
-    deduction80U: confirmedDeductions['80U'] || 0,
-    deduction80DDB: confirmedDeductions['80DDB'] || 0,
-    deduction80E: confirmedDeductions['80E'] || 0,
-    deduction80EEA: confirmedDeductions['80EEA'] || 0,
-    deduction80GG: confirmedDeductions['80GG'] || 0,
-    deduction80TTB: confirmedDeductions['80TTB'] || 0,
-    deduction80CCH: confirmedDeductions['80CCH'] || 0,
-    section24bLetOut: confirmedDeductions['section24bLetOut'] || 0,
+    deduction80CCD1B: confirmedDeductions?.['80CCD(1B)'] || 0,
+    deduction80CCD2: confirmedDeductions?.['80CCD(2)'] || 0,
+    deduction80DD: confirmedDeductions?.['80DD'] || 0,
+    deduction80U: confirmedDeductions?.['80U'] || 0,
+    deduction80DDB: confirmedDeductions?.['80DDB'] || 0,
+    deduction80E: confirmedDeductions?.['80E'] || 0,
+    deduction80EEA: confirmedDeductions?.['80EEA'] || 0,
+    deduction80GG: confirmedDeductions?.['80GG'] || 0,
+    deduction80TTB: confirmedDeductions?.['80TTB'] || 0,
+    deduction80CCH: confirmedDeductions?.['80CCH'] || 0,
+    section24bLetOut: confirmedDeductions?.['section24bLetOut'] || 0,
   };
 
   // Perform tax calculations
@@ -54,8 +54,8 @@ export default function RegimeComparison() {
   const totalDeductionsClaimed = Math.max(0, oldRegime.totalDeductions - 50000);
 
   // Capital gains tax components for display
-  const stcgTax = Math.round((incomeProfile.stcg || 0) * 0.20);
-  const ltcgTaxable = Math.max(0, (incomeProfile.ltcg || 0) - 125000);
+  const stcgTax = Math.round((incomeProfile?.stcg || 0) * 0.20);
+  const ltcgTaxable = Math.max(0, (incomeProfile?.ltcg || 0) - 125000);
   const ltcgTax = Math.round(ltcgTaxable * 0.125);
   const totalCGTax = stcgTax + ltcgTax;
 
@@ -167,14 +167,14 @@ export default function RegimeComparison() {
                     <tbody className="divide-y divide-white/[0.03] text-slate-350 font-medium">
                       <tr>
                         <td className="p-3">Gross Salary + Interest</td>
-                        <td className="p-3 text-right font-mono">{formatINR(oldRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
-                        <td className="p-3 text-right font-mono">{formatINR(newRegime.grossTotalIncome - (incomeProfile.stcg || 0) - (incomeProfile.ltcg || 0))}</td>
+                        <td className="p-3 text-right font-mono">{formatINR(oldRegime.grossTotalIncome - (incomeProfile?.stcg || 0) - (incomeProfile?.ltcg || 0))}</td>
+                        <td className="p-3 text-right font-mono">{formatINR(newRegime.grossTotalIncome - (incomeProfile?.stcg || 0) - (incomeProfile?.ltcg || 0))}</td>
                       </tr>
-                      {((incomeProfile.stcg || 0) > 0 || (incomeProfile.ltcg || 0) > 0) && (
+                      {((incomeProfile?.stcg || 0) > 0 || (incomeProfile?.ltcg || 0) > 0) && (
                         <tr className="bg-amber-500/[0.02]">
                           <td className="p-3 text-slate-200 font-semibold">Capital Gains Total</td>
-                          <td className="p-3 text-right font-mono">{formatINR((incomeProfile.stcg || 0) + (incomeProfile.ltcg || 0))}</td>
-                          <td className="p-3 text-right font-mono">{formatINR((incomeProfile.stcg || 0) + (incomeProfile.ltcg || 0))}</td>
+                          <td className="p-3 text-right font-mono">{formatINR((incomeProfile?.stcg || 0) + (incomeProfile?.ltcg || 0))}</td>
+                          <td className="p-3 text-right font-mono">{formatINR((incomeProfile?.stcg || 0) + (incomeProfile?.ltcg || 0))}</td>
                         </tr>
                       )}
                       <tr>
@@ -186,7 +186,7 @@ export default function RegimeComparison() {
                         <td className="p-3">Claimed Deductions (80C, 80D, HRA)</td>
                         <td className="p-3 text-right font-mono">-{formatINR(totalDeductionsClaimed)}</td>
                         <td className="p-3 text-right font-mono text-slate-505">
-                          {confirmedDeductions['80CCD(2)'] ? `-${formatINR(confirmedDeductions['80CCD(2)'])}` : 'Not Allowed'}
+                          {confirmedDeductions?.['80CCD(2)'] ? `-${formatINR(confirmedDeductions['80CCD(2)'])}` : 'Not Allowed'}
                         </td>
                       </tr>
                       <tr className="bg-white/[0.01]">
