@@ -12,31 +12,18 @@ import {
   Eye, 
   Clock, 
   Sparkles, 
-  ChevronDown, 
-  FileDown, 
-  X,
-  FileSpreadsheet,
-  ArrowRight,
-  TrendingUp
+  X
 } from 'lucide-react';
-import { useTaxStore } from '../store/useTaxStore';
+import { useTaxStore, UploadedFile } from '../store/useTaxStore';
 import { calculateTax, formatINR } from '../utils/taxCalculator';
-
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: string;
-  employer: string;
-  financialYear: string;
-  pages: number;
-  uploadTime: string;
-  status: 'Verified' | 'Failed' | 'Processing';
-  confidence: number;
-}
 
 interface DocumentVaultProps {
   onFileUpload: (fileText: string) => void;
 }
+
+// Module-level interval ID storage so background compilation timer ticks 
+// are shared across React component mount / unmount lifecycle routes.
+let activeProcessingInterval: NodeJS.Timeout | null = null;
 
 export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
   const incomeProfile = useTaxStore((state) => state.incomeProfile);
@@ -44,53 +31,39 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
   const setIncomeProfile = useTaxStore((state) => state.setIncomeProfile);
   const updateDeduction = useTaxStore((state) => state.updateDeduction);
 
+  // Grab global background processing variables from persistent Zustand store
+  const isBackgroundProcessing = useTaxStore((state) => state.isBackgroundProcessing);
+  const backgroundProgress = useTaxStore((state) => state.backgroundProgress);
+  const backgroundStatusMessage = useTaxStore((state) => state.backgroundStatusMessage);
+  const uploadedFiles = useTaxStore((state) => state.uploadedFiles) || [];
+
+  const setBackgroundProcessing = useTaxStore((state) => state.setBackgroundProcessing);
+  const setBackgroundProgress = useTaxStore((state) => state.setBackgroundProgress);
+  const setBackgroundStatusMessage = useTaxStore((state) => state.setBackgroundStatusMessage);
+  const addUploadedFile = useTaxStore((state) => state.addUploadedFile);
+  const removeUploadedFile = useTaxStore((state) => state.removeUploadedFile);
+
   const [dragActive, setDragActive] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Vault state engine:
-  // 'empty' -> waiting for upload
-  // 'uploading' -> uploading securely...
-  // 'ocr' -> reading PDF...
-  // 'gemini' -> understanding Form 16...
-  // 'parsing' -> extracting parameters...
-  // 'verification' -> cross-checking rules...
-  // 'completed' -> processed successfully
-  const [uploadState, setUploadState] = useState<'empty' | 'uploading' | 'ocr' | 'gemini' | 'parsing' | 'verification' | 'completed'>('empty');
-  const [uploadPercentage, setUploadPercentage] = useState(0);
-  const [statusMessage, setStatusMessage] = useState('Waiting for document...');
   const [activeFileName, setActiveFileName] = useState<string | null>(null);
   const [activeFileSize, setActiveFileSize] = useState<string | null>(null);
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [manualRawText, setManualRawText] = useState('');
   const [isPasteProcessing, setIsPasteProcessing] = useState(false);
 
-  // Simulated timer ref for cancellation
-  const processingTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Persist files in local state, initialized with default Mohit Kumar Form 16 if active
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(() => {
-    if (incomeProfile.grossSalary > 0) {
-      return [{
-        id: 'mohit-form16-default',
-        name: 'Form_16_Mohit_FY25-26.pdf',
-        size: '254 KB',
-        employer: incomeProfile.employerName || 'Acme Corp Technologies',
-        financialYear: 'FY 2025-26',
-        pages: 3,
-        uploadTime: 'Jul 4, 19:40',
-        status: 'Verified',
-        confidence: 99
-      }];
-    }
-    return [];
-  });
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      if (processingTimerRef.current) clearInterval(processingTimerRef.current);
-    };
-  }, []);
+  // Derive dynamic state for view elements
+  const uploadPercentage = backgroundProgress;
+  const statusMessage = backgroundStatusMessage || 'Waiting for document...';
+  
+  const uploadState = !isBackgroundProcessing 
+    ? (uploadedFiles.length > 0 && incomeProfile.grossSalary > 0 ? 'completed' : 'empty')
+    : (backgroundProgress < 30 ? 'uploading' 
+       : backgroundProgress < 50 ? 'ocr' 
+       : backgroundProgress < 70 ? 'gemini' 
+       : backgroundProgress < 85 ? 'parsing' 
+       : backgroundProgress < 95 ? 'verification' 
+       : 'completed');
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -120,31 +93,36 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
 
   // Safe cancellation
   const cancelProcessing = () => {
-    if (processingTimerRef.current) {
-      clearInterval(processingTimerRef.current);
-      processingTimerRef.current = null;
+    if (activeProcessingInterval) {
+      clearInterval(activeProcessingInterval);
+      activeProcessingInterval = null;
     }
-    setUploadState('empty');
-    setUploadPercentage(0);
-    setStatusMessage('Filing pipeline cancelled by user.');
+    setBackgroundProcessing(false);
+    setBackgroundProgress(0);
+    setBackgroundStatusMessage('Filing pipeline cancelled by user.');
     setActiveFileName(null);
     setActiveFileSize(null);
   };
 
   const executeExtractionFlow = async (fileName: string, fileSize: string, text: string) => {
     setErrorMessage(null);
-    setUploadState('uploading');
-    setUploadPercentage(15);
-    setStatusMessage('Uploading your document securely...');
+    setBackgroundProcessing(true);
+    setBackgroundProgress(15);
+    setBackgroundStatusMessage('Uploading your document securely...');
+
+    if (activeProcessingInterval) clearInterval(activeProcessingInterval);
 
     let pct = 15;
-    processingTimerRef.current = setInterval(() => {
+    activeProcessingInterval = setInterval(() => {
       pct = Math.min(100, pct + Math.floor(Math.random() * 20) + 10);
-      setUploadPercentage(pct);
+      setBackgroundProgress(pct);
+      
       if (pct === 100) {
-        if (processingTimerRef.current) clearInterval(processingTimerRef.current);
-        setUploadState('completed');
-        setStatusMessage('Your Form 16 has been successfully processed.');
+        if (activeProcessingInterval) clearInterval(activeProcessingInterval);
+        activeProcessingInterval = null;
+        
+        setBackgroundProcessing(false);
+        setBackgroundStatusMessage('Your Form 16 has been successfully processed.');
 
         // Populate workspace variables dynamically
         setIncomeProfile({
@@ -159,7 +137,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
         updateDeduction('80D', 25000);
         updateDeduction('HRA exemption', 58000);
 
-        setUploadedFiles(prev => [{
+        addUploadedFile({
           id: 'file-' + Date.now(),
           name: fileName,
           size: fileSize,
@@ -169,21 +147,17 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
           uploadTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
           status: 'Verified',
           confidence: 96
-        }, ...prev]);
+        });
 
         onFileUpload(text);
       } else if (pct < 35) {
-        setUploadState('ocr');
-        setStatusMessage('Reading your document...');
+        setBackgroundStatusMessage('Reading your document...');
       } else if (pct < 65) {
-        setUploadState('gemini');
-        setStatusMessage('AI is understanding your Form 16...');
+        setBackgroundStatusMessage('AI is understanding your Form 16...');
       } else if (pct < 85) {
-        setUploadState('parsing');
-        setStatusMessage('Extracting salary, deductions and tax details...');
+        setBackgroundStatusMessage('Extracting salary, deductions and tax details...');
       } else {
-        setUploadState('verification');
-        setStatusMessage('Cross-checking against AY 2026-27 rules...');
+        setBackgroundStatusMessage('Cross-checking against AY 2026-27 rules...');
       }
     }, 250);
   };
@@ -197,9 +171,9 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
 
     if (isPdf) {
       try {
-        setUploadState('uploading');
-        setUploadPercentage(15);
-        setStatusMessage('Uploading your document securely...');
+        setBackgroundProcessing(true);
+        setBackgroundProgress(15);
+        setBackgroundStatusMessage('Uploading your document securely...');
 
         const formData = new FormData();
         formData.append('file', file);
@@ -210,33 +184,30 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
           body: formData,
         });
 
+        if (activeProcessingInterval) clearInterval(activeProcessingInterval);
+
         // Progressive loading ticks
         let pct = 15;
-        processingTimerRef.current = setInterval(() => {
+        activeProcessingInterval = setInterval(() => {
           pct = Math.min(95, pct + Math.floor(Math.random() * 8) + 2);
-          setUploadPercentage(pct);
+          setBackgroundProgress(pct);
           if (pct < 35) {
-            setUploadState('uploading');
-            setStatusMessage('Uploading your document securely...');
+            setBackgroundStatusMessage('Uploading your document securely...');
           } else if (pct < 55) {
-            setUploadState('ocr');
-            setStatusMessage('Reading your document...');
+            setBackgroundStatusMessage('Reading your document...');
           } else if (pct < 75) {
-            setUploadState('gemini');
-            setStatusMessage('AI is understanding your Form 16...');
+            setBackgroundStatusMessage('AI is understanding your Form 16...');
           } else if (pct < 88) {
-            setUploadState('parsing');
-            setStatusMessage('Extracting salary, deductions and tax details...');
+            setBackgroundStatusMessage('Extracting salary, deductions and tax details...');
           } else {
-            setUploadState('verification');
-            setStatusMessage('Cross-checking against AY 2026-27 rules...');
+            setBackgroundStatusMessage('Cross-checking against AY 2026-27 rules...');
           }
         }, 300);
 
         const response = await responsePromise;
-        if (processingTimerRef.current) {
-          clearInterval(processingTimerRef.current);
-          processingTimerRef.current = null;
+        if (activeProcessingInterval) {
+          clearInterval(activeProcessingInterval);
+          activeProcessingInterval = null;
         }
 
         if (!response.ok) {
@@ -246,9 +217,9 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
 
         const result = await response.json();
         if (result.text) {
-          setUploadPercentage(100);
-          setUploadState('completed');
-          setStatusMessage('Your Form 16 has been successfully processed.');
+          setBackgroundProgress(100);
+          setBackgroundProcessing(false);
+          setBackgroundStatusMessage('Your Form 16 has been successfully processed.');
 
           // Populate workspace variables dynamically
           setIncomeProfile({
@@ -263,8 +234,8 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
           updateDeduction('80D', 25000);
           updateDeduction('HRA exemption', 58000);
 
-          // Add to files state
-          const newFile: UploadedFile = {
+          // Add to files state in store
+          addUploadedFile({
             id: 'file-' + Date.now(),
             name: file.name,
             size: sizeStr,
@@ -274,20 +245,21 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
             uploadTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
             status: 'Verified',
             confidence: 98
-          };
-          setUploadedFiles(prev => [newFile, ...prev]);
+          });
+
           onFileUpload(result.text);
         } else {
           throw new Error('PDF parsed empty.');
         }
       } catch (err: any) {
-        if (processingTimerRef.current) {
-          clearInterval(processingTimerRef.current);
-          processingTimerRef.current = null;
+        if (activeProcessingInterval) {
+          clearInterval(activeProcessingInterval);
+          activeProcessingInterval = null;
         }
         console.error('PDF ingestion error:', err);
         setErrorMessage("We couldn't verify this document. Please upload another copy or use manual raw text entry.");
-        setUploadState('empty');
+        setBackgroundProcessing(false);
+        setBackgroundProgress(0);
       }
     } else {
       // Direct text files or csv fallback
@@ -302,7 +274,8 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
         reader.readAsText(file);
       } catch (err: any) {
         setErrorMessage('Failed to read files. Try copying raw text.');
-        setUploadState('empty');
+        setBackgroundProcessing(false);
+        setBackgroundProgress(0);
       }
     }
   };
@@ -312,9 +285,9 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
     if (!manualRawText.trim()) return;
 
     setIsPasteProcessing(true);
-    setUploadState('uploading');
-    setUploadPercentage(30);
-    setStatusMessage('Uploading raw payload securely...');
+    setBackgroundProcessing(true);
+    setBackgroundProgress(30);
+    setBackgroundStatusMessage('Uploading raw payload securely...');
 
     try {
       const response = await fetch('/api/extract', {
@@ -327,8 +300,9 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
 
       const result = await response.json();
       if (result.success && result.data) {
-        setUploadPercentage(100);
-        setUploadState('completed');
+        setBackgroundProgress(100);
+        setBackgroundProcessing(false);
+        setBackgroundStatusMessage('Your raw Form 16 has been processed.');
         
         setIncomeProfile({
           grossSalary: result.data.grossSalary || 850000,
@@ -343,7 +317,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
         updateDeduction('80D', result.data.deduction80D || 25000);
         updateDeduction('HRA exemption', result.data.hraExemption || 58000);
 
-        setUploadedFiles(prev => [{
+        addUploadedFile({
           id: 'manual-' + Date.now(),
           name: 'Manual_Extraction_Import.txt',
           size: `${(manualRawText.length / 1024).toFixed(1)} KB`,
@@ -353,13 +327,14 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
           uploadTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
           status: 'Verified',
           confidence: 96
-        }, ...prev]);
+        });
 
         onFileUpload(manualRawText);
       }
     } catch (err) {
       setErrorMessage('Direct text extraction failed. Please review values.');
-      setUploadState('empty');
+      setBackgroundProcessing(false);
+      setBackgroundProgress(0);
     } finally {
       setIsPasteProcessing(false);
       setShowPasteArea(false);
@@ -368,7 +343,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
   };
 
   const deleteFile = (id: string) => {
-    setUploadedFiles(prev => prev.filter(f => f.id !== id));
+    removeUploadedFile(id);
     // Clear calculations to empty if no files remain
     if (uploadedFiles.length <= 1) {
       setIncomeProfile({
@@ -522,7 +497,12 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
 
                 <div className="flex items-center justify-center gap-3">
                   <button 
-                    onClick={() => setUploadState('empty')}
+                    onClick={() => {
+                      setBackgroundProgress(0);
+                      setBackgroundProcessing(false);
+                      // Force empty view trigger
+                      setIncomeProfile({ grossSalary: 0 });
+                    }}
                     className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-450 text-slate-950 font-black text-xs rounded-xl shadow-lg active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>Ingest Another File</span>
@@ -778,7 +758,7 @@ export default function DocumentVault({ onFileUpload }: DocumentVaultProps) {
                   
                   <div className="flex items-center justify-between">
                     <span className={`font-semibold transition-colors duration-300 ${
-                      chk.completed ? 'text-slate-200 font-bold' : 'text-slate-500'
+                      chk.completed ? 'text-slate-200 font-bold' : 'text-slate-550 font-semibold'
                     }`}>
                       {chk.label}
                     </span>

@@ -119,6 +119,9 @@ export default function App() {
   const addChatMessage = useTaxStore((state) => state.addChatMessage);
   const setIsStoreExtracting = useTaxStore((state) => state.setIsExtracting);
   const clearSession = useTaxStore((state) => state.clearSession);
+  const isBackgroundProcessing = useTaxStore((state) => state.isBackgroundProcessing);
+  const backgroundProgress = useTaxStore((state) => state.backgroundProgress);
+  const backgroundStatusMessage = useTaxStore((state) => state.backgroundStatusMessage);
   const formType = useTaxStore((state) => state.formType);
   const setFormType = useTaxStore((state) => state.setFormType);
   const multiHouse = useTaxStore((state) => state.multiHouse);
@@ -183,6 +186,12 @@ export default function App() {
         clearTimeout(t4);
       };
     }
+  }, [activeStep]);
+
+  // Automatically clear overlay modals when routing step changes
+  useEffect(() => {
+    setShowConfirmScreen(false);
+    setShowCelebration(false);
   }, [activeStep]);
 
   // Global keyboard shortcut listeners
@@ -275,7 +284,11 @@ export default function App() {
       setExtractedData(mockParsedData);
       setIsExtracting(false);
       setIsStoreExtracting(false);
-      setShowConfirmScreen(true);
+      
+      // Only block viewport with confirmation modal if actively on the Document Vault screen
+      if (activeStep === 3) {
+        setShowConfirmScreen(true);
+      }
     }, 1500);
   };
 
@@ -602,6 +615,42 @@ export default function App() {
 
               {/* Bottom user settings sidebar profile row */}
               <div className="p-3 border-t border-white/[0.04] dark:border-slate-900/50 space-y-2">
+                {/* Background Ingestion Status indicator */}
+                {isBackgroundProcessing && (
+                  <div 
+                    title={`${backgroundStatusMessage} (${backgroundProgress}%)`}
+                    className={`p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1 ${
+                      isSidebarCollapsed ? 'flex justify-center items-center' : ''
+                    }`}
+                  >
+                    {isSidebarCollapsed ? (
+                      <div className="relative">
+                        <Cpu className="w-4.5 h-4.5 text-emerald-450 animate-spin" />
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-450 rounded-full animate-ping" />
+                      </div>
+                    ) : (
+                      <div className="space-y-1 text-left">
+                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-emerald-400">
+                          <span className="flex items-center gap-1">
+                            <Cpu className="w-3.5 h-3.5 text-emerald-450 animate-pulse" /> 
+                            AI Ingestion
+                          </span>
+                          <span>{backgroundProgress}%</span>
+                        </div>
+                        <div className="h-1 w-full bg-slate-950 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-300" 
+                            style={{ width: `${backgroundProgress}%` }} 
+                          />
+                        </div>
+                        <p className="text-[8px] text-slate-400 leading-none truncate font-medium">
+                          {backgroundStatusMessage}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
                   onClick={() => setIsSettingsOpen(true)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all cursor-pointer`}

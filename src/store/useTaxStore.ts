@@ -10,6 +10,32 @@ export function useTaxStoreHydrated() {
   return hydrated;
 }
 
+export interface UploadedFile {
+  id: string;
+  name: string;
+  size: string;
+  employer: string;
+  financialYear: string;
+  pages: number;
+  uploadTime: string;
+  status: 'Verified' | 'Failed' | 'Processing';
+  confidence: number;
+}
+
+const defaultUploadedFiles: UploadedFile[] = [
+  {
+    id: 'mohit-form16-default',
+    name: 'Form_16_Mohit_FY25-26.pdf',
+    size: '254 KB',
+    employer: 'Acme Corp Technologies',
+    financialYear: 'FY 2025-26',
+    pages: 3,
+    uploadTime: 'Jul 4, 19:40',
+    status: 'Verified',
+    confidence: 99
+  }
+];
+
 export interface IncomeProfile {
   grossSalary: number;
   tdsDeducted: number;
@@ -74,6 +100,14 @@ export interface TaxStoreState {
   foreignAssets: boolean;
   theme?: 'light' | 'dark';
   filingHistory: FilingHistoryItem[];
+  isBackgroundProcessing: boolean;
+  backgroundStatusMessage: string;
+  backgroundProgress: number;
+  uploadedFiles: UploadedFile[];
+  
+  addUploadedFile: (file: UploadedFile) => void;
+  removeUploadedFile: (id: string) => void;
+  clearUploadedFiles: () => void;
   
   setIncomeProfile: (profile: Partial<IncomeProfile>) => void;
   updateDeduction: (key: keyof ConfirmedDeductions, value: number) => void;
@@ -88,6 +122,9 @@ export interface TaxStoreState {
   addFilingHistory: (item: FilingHistoryItem) => void;
   clearFilingHistory: () => void;
   clearSession: () => void;
+  setBackgroundProcessing: (val: boolean) => void;
+  setBackgroundStatusMessage: (msg: string) => void;
+  setBackgroundProgress: (pct: number) => void;
 }
 
 const defaultIncomeProfile: IncomeProfile = {
@@ -157,6 +194,10 @@ export const useTaxStore = create<TaxStoreState>()(
       foreignAssets: false,
       theme: 'light',
       filingHistory: [],
+      isBackgroundProcessing: false,
+      backgroundStatusMessage: '',
+      backgroundProgress: 0,
+      uploadedFiles: defaultUploadedFiles,
 
       setIncomeProfile: (profile) =>
         set((state) => {
@@ -195,6 +236,28 @@ export const useTaxStore = create<TaxStoreState>()(
 
       setIsChatLoading: (val) =>
         set({ isChatLoading: val }),
+
+      setBackgroundProcessing: (val) =>
+        set({ isBackgroundProcessing: val }),
+
+      setBackgroundStatusMessage: (msg) =>
+        set({ backgroundStatusMessage: msg }),
+
+      setBackgroundProgress: (pct) =>
+        set({ backgroundProgress: pct }),
+
+      addUploadedFile: (file) =>
+        set((state) => ({
+          uploadedFiles: [file, ...(state.uploadedFiles || [])]
+        })),
+
+      removeUploadedFile: (id) =>
+        set((state) => ({
+          uploadedFiles: (state.uploadedFiles || []).filter((f) => f.id !== id)
+        })),
+
+      clearUploadedFiles: () =>
+        set({ uploadedFiles: [] }),
 
       setFormType: (type) =>
         set({ formType: type }),
@@ -247,6 +310,7 @@ export const useTaxStore = create<TaxStoreState>()(
           multiHouse: false,
           foreignAssets: false,
           theme: 'light',
+          uploadedFiles: [],
         }));
       },
     }),
@@ -265,6 +329,7 @@ export const useTaxStore = create<TaxStoreState>()(
         foreignAssets: state.foreignAssets,
         theme: state.theme,
         filingHistory: state.filingHistory,
+        uploadedFiles: state.uploadedFiles,
       }),
     }
   )
