@@ -141,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     Here is the taxpayer's active financial profile parsed in their local browser sandbox:
     - Assessment Year: AY 2026-27 (FY 2025-26)
     - Eligible ITR Form: ${calculatedFormType} (Sahaj/ITR-1 if salary only; ITR-2 if capital gains present)
-    - Taxpayer Name: Mohit Kumar
+    - Taxpayer Name: ${resolvedTaxData?.employeeName || 'Mohit Kumar'}
     - Gross Salary (Sec. 17(1)): ₹${(resolvedTaxData?.grossSalary || 0).toLocaleString('en-IN')}
     - HRA Exemption: ₹${(resolvedTaxData?.hraExemption || 0).toLocaleString('en-IN')}
     - Section 80C Deductions: ₹${(resolvedTaxData?.deduction80C || 0).toLocaleString('en-IN')} (EPF, PPF, ELSS, Life Insurance, Home Loan Principal)

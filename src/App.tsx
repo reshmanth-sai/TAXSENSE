@@ -134,6 +134,7 @@ export default function App() {
   const ingestionState = useTaxStore((state) => state.ingestionState);
   const theme = useTaxStore((state) => state.theme) || 'light';
   const setTheme = useTaxStore((state) => state.setTheme);
+  const uploadedFiles = useTaxStore((state) => state.uploadedFiles) || [];
 
   // Generate 40 twinkling particles for unified background canvas
   const particles = useMemo(() => {
@@ -345,9 +346,11 @@ export default function App() {
   // Get dynamic greeting greeting message based on time of day
   const getGreeting = () => {
     const hours = new Date().getHours();
-    if (hours < 12) return 'Good Morning, Mohit';
-    if (hours < 18) return 'Good Afternoon, Mohit';
-    return 'Good Evening, Mohit';
+    const name = incomeProfile?.employeeName || 'Mohit';
+    const shortName = name.split(/\s+/)[0];
+    if (hours < 12) return `Good Morning, ${shortName}`;
+    if (hours < 18) return `Good Afternoon, ${shortName}`;
+    return `Good Evening, ${shortName}`;
   };
 
   // Show the landing page immediately to avoid initial loading block/spinner
@@ -636,12 +639,19 @@ export default function App() {
                 <div className="flex items-center justify-between gap-2 px-3 py-2">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">
-                      MK
+                      {(() => {
+                        const name = incomeProfile?.employeeName || 'Mohit Kumar';
+                        const parts = name.trim().split(/\s+/);
+                        if (parts.length >= 2) {
+                          return (parts[0][0] + parts[1][0]).toUpperCase();
+                        }
+                        return parts[0].slice(0, 2).toUpperCase();
+                      })()}
                     </div>
                     {!isSidebarCollapsed && (
                       <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] font-bold text-slate-200 truncate">Mohit Kumar</span>
-                        <span className="text-[8px] text-slate-500 truncate">PAN: MK*****32F</span>
+                        <span className="text-[10px] font-bold text-slate-200 truncate">{incomeProfile?.employeeName || 'Mohit Kumar'}</span>
+                        <span className="text-[8px] text-slate-500 truncate">PAN: {incomeProfile?.pan || 'MK*****32F'}</span>
                       </div>
                     )}
                   </div>
@@ -858,21 +868,34 @@ export default function App() {
                                 Ingested Document Ledger
                               </h3>
                               <div className="space-y-2.5">
-                                {[
-                                  { name: 'Form_16_Mohit_FY25-26.pdf', size: '254 KB', status: 'Extracted', date: 'Jul 4 19:40' },
-                                  { name: 'Equity_Capital_Gains.csv', size: '1.2 MB', status: 'Extracted', date: 'Jul 4 19:42' },
-                                ].map((doc) => (
-                                  <div key={doc.name} className="flex items-center justify-between p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl text-xs">
+                                {uploadedFiles.length > 0 ? (
+                                  uploadedFiles.map((doc) => (
+                                    <div key={doc.id} className="flex items-center justify-between p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl text-xs">
+                                      <div className="flex items-center gap-3">
+                                        <FileText className="w-4 h-4 text-slate-500 shrink-0" />
+                                        <div className="flex flex-col">
+                                          <span className="font-bold text-slate-200">{doc.name}</span>
+                                          <span className="text-[8px] text-slate-500">{doc.size} • {doc.uploadTime}</span>
+                                        </div>
+                                      </div>
+                                      <span className="text-[8px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/15 px-2 py-0.5 rounded font-black tracking-wider uppercase">{doc.status}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-[10px] text-slate-500 italic p-3 text-center">No documents uploaded yet.</p>
+                                )}
+                                {(taxData.stcg > 0 || taxData.ltcg > 0) && (
+                                  <div className="flex items-center justify-between p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl text-xs">
                                     <div className="flex items-center gap-3">
                                       <FileText className="w-4 h-4 text-slate-500 shrink-0" />
                                       <div className="flex flex-col">
-                                        <span className="font-bold text-slate-200">{doc.name}</span>
-                                        <span className="text-[8px] text-slate-500">{doc.size} • {doc.date}</span>
+                                        <span className="font-bold text-slate-200">Equity_Capital_Gains.csv</span>
+                                        <span className="text-[8px] text-slate-500">1.2 MB • Synced</span>
                                       </div>
                                     </div>
-                                    <span className="text-[8px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/15 px-2 py-0.5 rounded font-black tracking-wider uppercase">{doc.status}</span>
+                                    <span className="text-[8px] bg-blue-500/10 text-blue-450 border border-blue-500/15 px-2 py-0.5 rounded font-black tracking-wider uppercase">ITR-2 Synced</span>
                                   </div>
-                                ))}
+                                )}
                               </div>
                             </div>
 
@@ -1139,7 +1162,7 @@ export default function App() {
                                 Why this recommendation?
                               </h3>
                               <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                                "Under Section 115BAC, tax rates are lower, and standard deductions are increased to ₹75,000. Your standard deductions, salary thresholds, and Section 80C exemptions totaling ₹2.08 Lakhs are not enough to offset the lower tax rate of the Old regime slabs."
+                                "Under Section 115BAC, tax rates are lower, and standard deductions are increased to ₹75,000. Your total Old Regime deductions and exemptions (including 80C, 80D, HRA) of {formatINR(taxData.deduction80C + taxData.deduction80D + taxData.hraExemption + (taxData.section24b || 0) + (taxData.deduction80CCD1B || 0) + 50000)} are not enough to offset the lower tax rates of the New Regime."
                               </p>
                               
                               <div className="p-3 bg-white/[0.01] border border-white/[0.02] rounded-xl flex items-center gap-3">
@@ -1232,11 +1255,11 @@ export default function App() {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
-                                  <input type="text" defaultValue="Mohit Kumar" disabled className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
+                                  <input type="text" value={incomeProfile?.employeeName || 'Mohit Kumar'} readOnly className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
                                 </div>
                                 <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Permanent Account Number (PAN)</label>
-                                  <input type="text" defaultValue="MKM*****32F" disabled className="w-full bg-slate-955 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
+                                  <input type="text" value={incomeProfile?.pan || 'MK*****32F'} readOnly className="w-full bg-slate-955 border border-slate-850 rounded-xl py-2 px-3 text-xs text-slate-400 focus:outline-none" />
                                 </div>
                                 <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Employer Category</label>

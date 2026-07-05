@@ -22,7 +22,12 @@ export interface UploadedFile {
   confidence: number;
 }
 
-const defaultUploadedFiles: UploadedFile[] = [
+const isDev = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || 
+   window.location.hostname === '127.0.0.1' || 
+   window.location.search.includes('demo=true'));
+
+const defaultUploadedFiles: UploadedFile[] = isDev ? [
   {
     id: 'mohit-form16-default',
     name: 'Form_16_Mohit_FY25-26.pdf',
@@ -34,7 +39,7 @@ const defaultUploadedFiles: UploadedFile[] = [
     status: 'Verified',
     confidence: 99
   }
-];
+] : [];
 
 export interface IncomeProfile {
   grossSalary: number;
@@ -44,9 +49,12 @@ export interface IncomeProfile {
   standardDeduction: number;
   otherIncome: number;
   employerName?: string;
+  employeeName?: string;
+  pan?: string;
   pfContribution?: number;
   stcg?: number;
   ltcg?: number;
+  assessmentYear?: string;
 }
 
 export interface ConfirmedDeductions {
@@ -129,7 +137,7 @@ export interface TaxStoreState {
   setBackgroundProgress: (pct: number) => void;
 }
 
-const defaultIncomeProfile: IncomeProfile = {
+const defaultIncomeProfile: IncomeProfile = isDev ? {
   grossSalary: 850000,
   tdsDeducted: 15000,
   basicSalary: 340000,
@@ -137,7 +145,22 @@ const defaultIncomeProfile: IncomeProfile = {
   standardDeduction: 75000, // standard default under AY 2026-27 rules
   otherIncome: 12000,
   employerName: 'Acme Corp Technologies',
+  employeeName: 'Mohit Kumar',
+  pan: 'MK*****32F',
   pfContribution: 40800,
+  stcg: 0,
+  ltcg: 0,
+} : {
+  grossSalary: 0,
+  tdsDeducted: 0,
+  basicSalary: 0,
+  hraReceived: 0,
+  standardDeduction: 75000,
+  otherIncome: 0,
+  employerName: '',
+  employeeName: '',
+  pan: '',
+  pfContribution: 0,
   stcg: 0,
   ltcg: 0,
 };

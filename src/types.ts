@@ -13,6 +13,8 @@ export interface TaxData {
   section24b: number; // Home Loan Interest (Max 2L)
   tdsDeducted: number; // Tax Deducted at Source
   employerName?: string;
+  employeeName?: string;
+  pan?: string;
   pfContribution?: number;
   basicSalary?: number;
 

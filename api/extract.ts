@@ -116,6 +116,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           type: Type.OBJECT,
           properties: {
             assessmentYear: { type: Type.STRING, description: 'The assessment year e.g. "2025-26"' },
+            employeeName: { type: Type.STRING, description: 'Full name of the employee/taxpayer', nullable: true },
+            pan: { type: Type.STRING, description: 'PAN of the employee/taxpayer', nullable: true },
             grossSalary: { type: Type.INTEGER, description: 'Gross Salary amount in INR' },
             hraExemption: { type: Type.INTEGER, description: 'HRA exemption amount computed and shown in Form 16 Part B.', nullable: true },
             ltaExemption: { type: Type.INTEGER, description: 'LTA exemption in INR', nullable: true },
