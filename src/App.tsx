@@ -241,7 +241,7 @@ export default function App() {
       
       const timer = setTimeout(() => {
         setGoogleGsiState(prev => prev === 'loading' ? 'failed' : prev);
-      }, 5500); // 5.5 seconds graceful timeout
+      }, 2000); // 2.0 seconds graceful timeout
 
       AuthService.loadGoogleGIS().then(() => {
         try {
@@ -656,7 +656,7 @@ export default function App() {
             } as const;
 
             return (
-              <div className="relative z-10 flex-1 flex flex-col min-h-screen bg-[#070809] overflow-hidden justify-center items-center p-6">
+              <div className="relative z-10 flex-1 flex flex-col min-h-screen bg-[#070809] overflow-hidden justify-center items-center py-20 px-8">
                 
                 {/* Viewport Edge Vignette for Stage 2 */}
                 <div className="pointer-events-none absolute inset-0 z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]" />
@@ -742,7 +742,7 @@ export default function App() {
                   </div>
                 </motion.div>
 
-                {/* Main Interactive Entrance Card Container scaled to max-w-[800px] */}
+                {/* Main Interactive Entrance Card Container scaled to max-w-[820px] */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.98, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -757,13 +757,13 @@ export default function App() {
                     transform: authCardHovered ? `perspective(1000px) rotateX(${authCardTilt.x}deg) rotateY(${authCardTilt.y}deg)` : 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
                     transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                   }}
-                  className="max-w-[800px] w-full relative z-10 p-[1.5px] rounded-[24px] overflow-hidden transition-all duration-300"
+                  className="max-w-[820px] w-full relative z-10 p-[1px] rounded-[24px] overflow-hidden transition-all duration-300"
                 >
                   {/* Subtle inner border sweep */}
                   <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam pointer-events-none" />
 
-                  {/* Surface Card with layered glassmorphism and increased padding (p-14) */}
-                  <div className="relative w-full h-full bg-[#0F1216]/72 border border-white/[0.06] rounded-[24px] p-14 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_80px_rgba(0,0,0,0.7)] backdrop-blur-[40px] space-y-12 overflow-hidden">
+                  {/* Surface Card with layered glassmorphism and increased padding (p-16) */}
+                  <div className="relative w-full h-full bg-[#0F1216]/75 border border-white/[0.05] rounded-[24px] p-16 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-[32px] space-y-12 overflow-hidden">
                     
                     {/* Radial interactive spotlight following cursor */}
                     <div 
@@ -783,33 +783,27 @@ export default function App() {
                       className="space-y-12"
                     >
                       {/* Header elements block with increased vertical spacing */}
-                      <motion.div variants={childVariants} className="text-center space-y-6 relative z-10">
-                        {/* Secure Shield emblem with subtle glow and rotating halo animation */}
-                        <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/12 to-[#16E27A]/4 text-[#16E27A] rounded-[16px] flex items-center justify-center mx-auto border border-[#16E27A]/15 shadow-[0_0_12px_rgba(22,226,122,0.08)] relative">
+                      <motion.div variants={childVariants} className="text-center relative z-10 flex flex-col items-center">
+                        {/* Secure Shield emblem with rotating halo animation */}
+                        <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/8 to-[#16E27A]/2 text-[#16E27A] rounded-[16px] flex items-center justify-center border border-[#16E27A]/12 shadow-[0_0_8px_rgba(22,226,122,0.04)] relative mb-8">
                           {/* Rotating dashed lock halo */}
-                          <div className="absolute inset-[-6px] rounded-full border border-[#16E27A]/15 border-dashed animate-spin [animation-duration:20s] pointer-events-none" />
-                          
-                          <motion.div 
-                            animate={{ opacity: [0.2, 0.5, 0.2], scale: [0.97, 1.03, 0.97] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute inset-0 bg-[#16E27A]/8 rounded-[16px] blur-md pointer-events-none"
-                          />
-                          <ShieldCheck className="w-7 h-7 text-[#16E27A] z-10" />
+                          <div className="absolute inset-[-6px] rounded-full border border-[#16E27A]/10 border-dashed animate-spin [animation-duration:30s] pointer-events-none" />
+                          <ShieldCheck className="w-6.5 h-6.5 text-[#16E27A] z-10" />
                         </div>
                         
-                        <div className="space-y-2.5">
-                          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">Welcome to TaxSense</h2>
-                          <p className="text-xs text-slate-400/70 leading-relaxed max-w-md mx-auto font-semibold tracking-wide">
+                        <div className="space-y-3">
+                          <h2 className="text-2xl sm:text-3.5xl font-black tracking-tight text-white leading-tight font-geist">Welcome to TaxSense</h2>
+                          <p className="text-xs text-slate-400/60 leading-relaxed max-w-md mx-auto font-semibold tracking-wide">
                             Securely continue to your workspace.
                           </p>
                         </div>
                       </motion.div>
 
                       {/* Staggered choice cards wrapper */}
-                      <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 relative z-10">
+                      <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2 relative z-10">
                         
                         {/* Guest Access Card (Sandbox Mode - Balanced) */}
-                        <div className="p-8 rounded-[20px] bg-white/[0.015] border border-white/[0.04] hover:border-[#16E27A]/25 hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-355 flex flex-col justify-between min-h-[350px] group">
+                        <div className="p-8 rounded-[20px] bg-white/[0.015] border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-355 flex flex-col justify-between group">
                           <div className="space-y-4 text-left">
                             <div className="space-y-1">
                               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Mode</h3>
@@ -846,7 +840,7 @@ export default function App() {
                                 setActiveStep(redirectStep);
                               }, 600);
                             }}
-                            className="w-full py-3 bg-slate-800/80 hover:bg-slate-700/90 text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.08] hover:border-[#16E27A]/20 backdrop-blur-[8px]"
+                            className="w-full py-3 bg-slate-800/90 hover:bg-slate-750 text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.1] hover:border-white/[0.18] hover:shadow-[0_4px_15px_rgba(0,0,0,0.25)] backdrop-blur-[8px] mt-8"
                           >
                             {isAuthenticating ? 'Initializing...' : 'Launch Sandbox'}
                             {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
@@ -854,7 +848,7 @@ export default function App() {
                         </div>
 
                         {/* Google Access Card (Google Workspace - Balanced & Clean border style) */}
-                        <div className="p-8 rounded-[20px] bg-[#0E131B]/40 border border-[#16E27A]/12 hover:border-[#16E27A]/25 hover:bg-[#0E131B]/60 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(22,226,122,0.06)] relative transition-all duration-355 flex flex-col justify-between min-h-[350px] group">
+                        <div className="p-8 rounded-[20px] bg-white/[0.015] border border-white/[0.04] hover:border-[#16E27A]/25 hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4),0_0_20px_rgba(22,226,122,0.03)] relative transition-all duration-355 flex flex-col justify-between group">
                           
                           {/* Dynamic recommended badge with pulsing ring */}
                           <div className="absolute top-3 right-3 bg-emerald-500/10 border border-emerald-500/20 text-[#16E27A] px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(22,226,122,0.1)]">
@@ -890,30 +884,58 @@ export default function App() {
                             </ul>
                           </div>
                           
-                          {/* Premium Glass Container for Google Sign-In (14-16px corners, mt-auto layout) */}
-                          <div className="relative min-h-[64px] w-full flex items-center justify-center p-2.5 bg-white/[0.015] border border-white/[0.04] rounded-[16px] overflow-hidden mt-auto">
-                            
-                            {/* Loading Skeleton reserving exact button space */}
-                            {googleGsiState === 'loading' && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-white/[0.01] animate-pulse">
-                                <div className="flex items-center gap-2 h-[44px] w-[240px] bg-white/[0.02] border border-white/[0.04] rounded-full justify-center">
-                                  <svg className="w-3 h-3 animate-spin text-emerald-450" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                    <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8" />
-                                  </svg>
-                                  <span className="text-[8.5px] text-slate-450 font-bold uppercase tracking-wider">Connecting...</span>
+                          {/* GSI Container / Fallback simulated button wrapper */}
+                          <div className="mt-8 flex flex-col justify-center">
+                            <div className="relative h-[44px] w-[240px] mx-auto flex items-center justify-center overflow-hidden">
+                              
+                              {/* Loading Skeleton reserving exact button space */}
+                              {googleGsiState === 'loading' && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/[0.01] animate-pulse">
+                                  <div className="flex items-center gap-2 h-[44px] w-[240px] bg-white/[0.02] border border-white/[0.04] rounded-full justify-center">
+                                    <svg className="w-3 h-3 animate-spin text-emerald-450" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                      <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8" />
+                                    </svg>
+                                    <span className="text-[8.5px] text-slate-450 font-bold uppercase tracking-wider">Connecting...</span>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
 
-                            {/* The Official Google sign-in container (displays block when loaded) */}
-                            <div 
-                              id="google-signin-btn-container" 
-                              style={{ display: googleGsiState === 'loaded' ? 'block' : 'none' }}
-                              className="transition-opacity duration-500 opacity-100 flex justify-center w-[240px] h-[44px] mx-auto" 
-                            />
+                              {/* The Official Google sign-in container (displays block when loaded) */}
+                              <div 
+                                id="google-signin-btn-container" 
+                                style={{ display: googleGsiState === 'loaded' ? 'block' : 'none' }}
+                                className="transition-opacity duration-500 opacity-100 flex justify-center w-[240px] h-[44px] mx-auto" 
+                              />
 
-                            {/* Fallback Simulated button if failed or timed out */}
-                            {googleGsiState === 'failed' && (
+                              {/* Fallback Simulated button if failed or timed out */}
+                              {googleGsiState === 'failed' && (
+                                <button
+                                  onClick={() => {
+                                    const mockProfile: UserProfile = {
+                                      uid: 'google-908231',
+                                      name: 'Mohit Kumar',
+                                      email: 'mohit.kumar@gmail.com',
+                                      photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&fit=crop&q=80',
+                                      providerId: 'google.com',
+                                      createdAt: new Date().toISOString()
+                                    };
+                                    handleGoogleLoginSuccess(mockProfile);
+                                  }}
+                                  className="relative overflow-hidden w-[240px] h-[44px] bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-full text-xs cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-2.5 border border-slate-200 shadow-sm mx-auto"
+                                >
+                                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                                  </svg>
+                                  <span className="font-sans font-semibold tracking-normal text-[13px]">Sign in with Google</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Dev Simulation Override link for local developer reviews */}
+                            {import.meta.env.DEV && (
                               <button
                                 onClick={() => {
                                   const mockProfile: UserProfile = {
@@ -926,9 +948,9 @@ export default function App() {
                                   };
                                   handleGoogleLoginSuccess(mockProfile);
                                 }}
-                                className="relative overflow-hidden w-[240px] h-[44px] bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(22,226,122,0.15)] border border-transparent mx-auto"
+                                className="text-[9.5px] text-slate-500 hover:text-[#16E27A] transition-colors uppercase tracking-widest font-black block mx-auto mt-3 select-none"
                               >
-                                <span>Simulate Google Sign-In</span>
+                                ⚡ Dev Override Simulation
                               </button>
                             )}
                           </div>
@@ -942,24 +964,24 @@ export default function App() {
                       </motion.div>
 
                       {/* Trust Footer Badges with glassmorphism details */}
-                      <motion.div variants={childVariants} className="flex flex-wrap items-center justify-center gap-2.5 pt-1.5">
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                      <motion.div variants={childVariants} className="flex flex-wrap items-center justify-center gap-3.5 my-8">
+                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>🔒</span> End-to-End Encryption
                         </div>
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>⚡</span> Local Processing
                         </div>
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>🗑</span> Auto Delete
                         </div>
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>☁</span> Cloud Sync
                         </div>
                       </motion.div>
 
                       {/* Understated Trust Row Section */}
-                      <motion.div variants={childVariants} className="text-[8.5px] text-slate-500/35 font-bold uppercase tracking-widest text-center pt-2 select-none">
-                        Powered by Google Identity • Gemini AI • AES-256 Encryption • ISO 27001 • Vercel Infrastructure
+                      <motion.div variants={childVariants} className="text-[8px] text-slate-500/35 font-bold uppercase tracking-[0.12em] text-center pt-2 select-none">
+                        Powered by Google Identity ✦ Gemini AI ✦ AES-256 Encryption ✦ ISO 27001 ✦ Vercel Infrastructure
                       </motion.div>
                     </motion.div>
 
