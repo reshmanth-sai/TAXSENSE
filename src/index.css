@@ -4,7 +4,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-geist: "Geist", "Inter Tight", "Inter", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
@@ -767,6 +767,36 @@ a:focus-visible {
 }
 .animate-shield-pulse {
   animation: shield-glow-pulse 8s infinite ease-in-out;
+}
+
+/* Programmatic Google Tactile Button */
+.btn-tactile-google {
+  background: rgba(255, 255, 255, 0.015) !important;
+  backdrop-filter: blur(12px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, box-shadow, border-color, background-color;
+}
+
+.btn-tactile-google:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.025) !important;
+  border-color: rgba(22, 226, 122, 0.22) !important;
+  transform: translateY(-1.5px) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.35),
+    0 0 15px rgba(22, 226, 122, 0.03) !important;
+}
+
+.btn-tactile-google:active:not(:disabled) {
+  transform: translateY(0) scale(0.985) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.01),
+    0 2px 4px rgba(0, 0, 0, 0.15) !important;
 }
 
 

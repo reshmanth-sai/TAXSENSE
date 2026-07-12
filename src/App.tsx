@@ -775,9 +775,9 @@ export default function App() {
                   }}
                   style={{
                     transform: authCardHovered ? `perspective(1000px) rotateX(${authCardTilt.x}deg) rotateY(${authCardTilt.y}deg)` : 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
-                  transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                    transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                   }}
-                  className="max-w-[820px] w-full relative z-10 p-[1px] rounded-[24px] overflow-hidden transition-all duration-300"
+                  className="max-w-[720px] w-full relative z-10 p-[1px] rounded-[24px] overflow-hidden transition-all duration-300"
                 >
                   {/* Subtle inner border sweep */}
                   <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam" />
@@ -817,54 +817,61 @@ export default function App() {
                         </div>
                         
                         <div className="space-y-2 mt-2">
-                          <h2 className="text-2xl sm:text-[32px] font-bold tracking-tight text-white leading-none font-geist">Welcome to TaxSense</h2>
-                          <p className="text-[11.5px] text-slate-450 leading-relaxed max-w-md mx-auto font-medium tracking-wide mt-1 select-none">
-                            Securely continue to your workspace.
+                          <h2 className="text-2xl sm:text-[30px] font-bold tracking-tight text-white leading-none font-geist">Continue securely</h2>
+                          <p className="text-[11.5px] text-slate-450 leading-relaxed max-w-md mx-auto font-medium tracking-wide mt-2 select-none">
+                            Choose how you'd like to access your TaxSense workspace.
                           </p>
                         </div>
                       </motion.div>
 
                       {/* Staggered choice cards wrapper */}
-                      <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 relative z-10">
+                      <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2 relative z-10 items-stretch">
                         
-                        {/* Guest Access Card (Sandbox Mode - Balanced) */}
+                        {/* Soft Center Separator line */}
+                        <div className="hidden md:block absolute top-[5%] bottom-[5%] left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-white/[0.05] to-transparent pointer-events-none" />
+
+                        {/* Guest Access Card (Try Instantly) */}
                         <div className="p-8 rounded-[20px] flex flex-col justify-between group glass-option-card-sandbox">
-                          <div className="space-y-4 text-left">
+                          <div className="space-y-5 text-left">
                             <div className="space-y-1.5">
-                              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Mode</h3>
-                              <p className="text-[10px] text-slate-400/75 leading-relaxed font-semibold">
+                              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-geist">Try Instantly</h3>
+                              <p className="text-[10px] text-slate-400/75 leading-relaxed font-semibold font-geist">
                                 Start instantly without creating an account.
                               </p>
                             </div>
                             
-                            <ul className="space-y-2.5 text-[10px] font-semibold leading-normal mt-4">
-                              <li className="flex items-center gap-2.5 text-slate-350 py-0.5">
-                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
-                                  <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
+                            {/* Elegant Feature Rows (No checkboxes) */}
+                            <div className="space-y-4 pt-1">
+                              <div className="flex gap-3 text-left">
+                                <div className="w-6.5 h-6.5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[11px] flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <span>⚡</span>
                                 </div>
-                                <span>Instant sandbox access</span>
-                              </li>
-                              <li className="flex items-center gap-2.5 text-slate-350 py-0.5">
-                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
-                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                  </svg>
+                                <div className="space-y-0.5">
+                                  <h4 className="text-[10px] font-bold text-white uppercase tracking-wider font-geist">Instant Sandbox</h4>
+                                  <p className="text-[9.5px] text-slate-450 font-medium font-geist">Temporary isolated workspace</p>
                                 </div>
-                                <span>Local temporary session</span>
-                              </li>
-                              <li className="flex items-center gap-2.5 text-slate-350 py-0.5">
-                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
-                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="3 6 5 6 21 6" />
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                  </svg>
+                              </div>
+
+                              <div className="flex gap-3 text-left">
+                                <div className="w-6.5 h-6.5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[11px] flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <span>🔒</span>
                                 </div>
-                                <span>Auto deletes after inactivity</span>
-                              </li>
-                            </ul>
+                                <div className="space-y-0.5">
+                                  <h4 className="text-[10px] font-bold text-white uppercase tracking-wider font-geist">Local Processing</h4>
+                                  <p className="text-[9.5px] text-slate-450 font-medium font-geist">Files never leave your device</p>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-3 text-left">
+                                <div className="w-6.5 h-6.5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[11px] flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <span>🗂</span>
+                                </div>
+                                <div className="space-y-0.5">
+                                  <h4 className="text-[10px] font-bold text-white uppercase tracking-wider font-geist">Auto Cleanup</h4>
+                                  <p className="text-[9.5px] text-slate-450 font-medium font-geist">Session automatically expires</p>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                           
                           <button
@@ -886,11 +893,11 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* Google Access Card (Google Workspace - Balanced & Clean border style) */}
+                        {/* Google Access Card (Continue Securely) */}
                         <div className="p-8 rounded-[20px] relative flex flex-col justify-between group glass-option-card-google">
                           
                           {/* Dynamic recommended badge with pulsing ring */}
-                           <div className="absolute top-3 right-3 bg-emerald-500/8 border border-emerald-500/15 text-[#16E27A] px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_6px_rgba(22,226,122,0.05)]">
+                           <div className="absolute top-3 right-3 bg-emerald-500/10 border border-emerald-500/20 text-[#16E27A] px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(22,226,122,0.08)] select-none">
                             <span className="relative flex h-1 w-1">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-1 w-1 bg-[#16E27A]"></span>
@@ -898,56 +905,61 @@ export default function App() {
                             <span>Recommended</span>
                           </div>
                           
-                          <div className="space-y-4 text-left">
+                          <div className="space-y-5 text-left">
                             <div className="space-y-1.5">
-                              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Google Workspace</h3>
-                              <p className="text-[10px] text-slate-400/75 leading-relaxed font-semibold">
+                              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-geist">Continue Securely</h3>
+                              <p className="text-[10px] text-slate-400/75 leading-relaxed font-semibold font-geist">
                                 Secure cloud sync with synchronized history.
                               </p>
                             </div>
                             
-                            {/* Feature benefits with dedicated visual indicators/icons */}
-                            <ul className="space-y-2.5 text-[10px] font-semibold leading-normal mt-4">
-                              <li className="flex items-center gap-2.5 text-slate-300 py-0.5">
-                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
-                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.02-1.42-2.5-3-3A5 5 0 0 0 4 11.5c0 2.21 1.79 4 4 4h9.5" />
-                                  </svg>
+                            {/* Elegant Feature Rows (No checkboxes) */}
+                            <div className="space-y-4 pt-1">
+                              <div className="flex gap-3 text-left">
+                                <div className="w-6.5 h-6.5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[11px] flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <span>☁</span>
                                 </div>
-                                <span>Save progress (Cloud Sync)</span>
-                              </li>
-                              <li className="flex items-center gap-2.5 text-slate-300 py-0.5">
-                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
-                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                  </svg>
+                                <div className="space-y-0.5">
+                                  <h4 className="text-[10px] font-bold text-white uppercase tracking-wider font-geist">Cloud Sync</h4>
+                                  <p className="text-[9.5px] text-slate-450 font-medium font-geist">Securely sync between devices</p>
                                 </div>
-                                <span>Secure Document Vault</span>
-                              </li>
-                              <li className="flex items-center gap-2.5 text-slate-300 py-0.5">
-                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
-                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                  </svg>
+                              </div>
+
+                              <div className="flex gap-3 text-left">
+                                <div className="w-6.5 h-6.5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[11px] flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <span>🛡</span>
                                 </div>
-                                <span>AI Copilot chat history</span>
-                              </li>
-                            </ul>
+                                <div className="space-y-0.5">
+                                  <h4 className="text-[10px] font-bold text-white uppercase tracking-wider font-geist">Secure Vault</h4>
+                                  <p className="text-[9.5px] text-slate-450 font-medium font-geist">AES-256 cloud encryption</p>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-3 text-left">
+                                <div className="w-6.5 h-6.5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[11px] flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <span>💬</span>
+                                </div>
+                                <div className="space-y-0.5">
+                                  <h4 className="text-[10px] font-bold text-white uppercase tracking-wider font-geist">AI History</h4>
+                                  <p className="text-[9.5px] text-slate-450 font-medium font-geist">Synchronized Copilot chats</p>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                             {/* Custom Designed Google Sign-In Button */}
+
+                          {/* Custom Designed Google Sign-In Button */}
                           <div className="mt-8 flex flex-col justify-center items-center">
                             <button
                               type="button"
                               disabled={googleGsiState === 'loading' || googleGsiState === 'success'}
                               onClick={handleGoogleSignIn}
                               aria-label="Continue with Google"
-                              className={`w-[220px] h-[44px] rounded-full text-xs tracking-wide cursor-pointer flex items-center justify-between px-5 transition-all duration-200 font-semibold border z-20 relative select-none ${
+                              className={`w-[220px] h-[44px] rounded-full text-xs tracking-wide cursor-pointer flex items-center justify-between px-5 transition-all duration-200 font-semibold border z-20 relative select-none btn-tactile-google ${
                                 googleGsiState === 'success'
                                   ? 'bg-[#16E27A]/10 border-[#16E27A]/25 text-[#16E27A] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_0_15px_rgba(22,226,122,0.15)]'
                                   : googleGsiState === 'loading'
-                                  ? 'bg-white/[0.01] border-white/[0.02] text-slate-500 cursor-wait'
-                                  : 'bg-white/[0.02] border-white/[0.05] hover:border-[#16E27A]/25 hover:bg-white/[0.03] text-slate-200 hover:text-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.35),0_0_15px_rgba(22,226,122,0.03)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985]'
+                                  ? 'text-slate-500 cursor-wait'
+                                  : ''
                               }`}
                             >
                               {googleGsiState === 'loading' ? (
@@ -995,13 +1007,12 @@ export default function App() {
                                   };
                                   handleGoogleLoginSuccess(mockProfile);
                                 }}
-                                className="text-[9.5px] text-slate-500 hover:text-[#16E27A] transition-colors uppercase tracking-widest font-black block mx-auto mt-3 select-none"
+                                className="text-[9.5px] text-slate-500 hover:text-[#16E27A] transition-colors uppercase tracking-widest font-black block mx-auto mt-4 select-none z-30"
                               >
                                 ⚡ Dev Override Simulation
                               </button>
                             )}
                           </div>
-
                         </div>
                       </motion.div>
 
@@ -1012,26 +1023,25 @@ export default function App() {
 
                       {/* Trust Footer Badges with glassmorphism details */}
                       <motion.div variants={childVariants} className="flex flex-wrap items-center justify-center gap-3.5 my-8">
-                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-95">
-                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">🔒</span> End-to-End Encryption
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-95 transition-all duration-200 hover:shadow-[0_0_12px_rgba(255,255,255,0.02)]">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">🔒</span> AES-256 Encryption
                         </div>
-                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-85">
-                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">⚡</span> Local Processing
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-85 transition-all duration-200 hover:shadow-[0_0_12px_rgba(255,255,255,0.02)]">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">🛡</span> ISO 27001 Certified
                         </div>
-                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-75">
-                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">🗑</span> Auto Delete
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-75 transition-all duration-200 hover:shadow-[0_0_12px_rgba(255,255,255,0.02)]">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">⚡</span> Local AI Processing
                         </div>
-                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-65">
-                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">☁</span> Cloud Sync
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-65 transition-all duration-200 hover:shadow-[0_0_12px_rgba(255,255,255,0.02)]">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">☁</span> Secure Cloud Sync
                         </div>
                       </motion.div>
 
                       {/* Understated Trust Row Section */}
-                      <motion.div variants={childVariants} className="text-[8.5px] text-slate-450/45 font-bold uppercase tracking-[0.08em] text-center pt-2 select-none font-geist">
-                        Powered by Google Identity ✦ Gemini AI ✦ AES-256 Encryption ✦ ISO 27001 ✦ Vercel Infrastructure
+                      <motion.div variants={childVariants} className="text-[8.5px] text-slate-500/40 font-semibold uppercase tracking-[0.1em] text-center pt-2 select-none font-geist">
+                        Powered by Google Identity ✦ Gemini AI ✦ AES-256 Encryption ✦ ISO 27001
                       </motion.div>
                     </motion.div>
-
                   </div>
                 </motion.div>
               </div>
