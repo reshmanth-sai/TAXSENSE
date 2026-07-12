@@ -856,21 +856,22 @@ export default function App() {
                               
                               {/* Loading Skeleton reserving exact button space */}
                               {googleGsiState === 'loading' && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-white/[0.01] animate-pulse">
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/[0.01] animate-pulse z-10">
                                   <div className="flex items-center gap-2 h-[44px] w-[240px] bg-white/[0.02] border border-white/[0.04] rounded-full justify-center">
-                                    <svg className="w-3 h-3 animate-spin text-emerald-450" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                      <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8" />
+                                    <svg className="w-3.5 h-3.5 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeDasharray="32" strokeDashoffset="8" />
                                     </svg>
-                                    <span className="text-[8.5px] text-slate-450 font-bold uppercase tracking-wider">Connecting...</span>
+                                    <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Connecting...</span>
                                   </div>
                                 </div>
                               )}
 
-                              {/* The Official Google sign-in container (displays block when loaded) */}
+                              {/* The Official Google sign-in container */}
                               <div 
                                 id="google-signin-btn-container" 
-                                style={{ display: googleGsiState === 'loaded' ? 'block' : 'none' }}
-                                className="transition-opacity duration-500 opacity-100 flex justify-center w-[240px] h-[44px] mx-auto" 
+                                className={`transition-opacity duration-500 flex justify-center w-[240px] h-[44px] mx-auto absolute inset-0 z-20 ${
+                                  googleGsiState === 'loaded' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                                }`} 
                               />
 
                               {/* Fallback Simulated button if failed or timed out */}
@@ -887,7 +888,7 @@ export default function App() {
                                     };
                                     handleGoogleLoginSuccess(mockProfile);
                                   }}
-                                  className="relative overflow-hidden w-[240px] h-[44px] bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-full text-xs cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-2.5 border border-slate-200 shadow-sm mx-auto"
+                                  className="relative overflow-hidden w-[240px] h-[44px] bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-full text-xs cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-2.5 border border-slate-200 shadow-sm mx-auto z-30"
                                 >
                                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
