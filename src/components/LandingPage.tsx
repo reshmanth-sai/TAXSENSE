@@ -143,9 +143,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   });
   const journeyLineScaleX = useSpring(journeyScrollProgress, { stiffness: 80, damping: 25, restDelta: 0.001 });
 
-  // Dynamic background blueprint grid scroll translation offset
-  const gridY = useTransform(scrollYProgress, [0, 1], ["0px", "60px"]);
-
   // Monitor journeyScrollProgress changes to activate step indicators
   useEffect(() => {
     return journeyScrollProgress.onChange((val) => {
@@ -291,12 +288,11 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       {/* Viewport Edge Vignette for cinematic layout depth */}
       <div className="pointer-events-none fixed inset-0 z-40 shadow-[inset_0_0_100px_rgba(0,0,0,0.85)]" />
 
-      {/* Dynamic Scroll-Linked Grid Background Overlay (~1% opacity, 100px grid size) */}
-      <motion.div 
+      {/* Blueprint Grid Background Overlay (~1% opacity, 100px grid size, static to prevent scroll repaint) */}
+      <div 
         style={{ 
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.007) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.007) 1px, transparent 1px)', 
-          backgroundSize: '100px 100px',
-          y: gridY
+          backgroundSize: '100px 100px'
         }} 
         className="absolute inset-0 z-0 pointer-events-none" 
       />
