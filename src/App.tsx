@@ -10,9 +10,10 @@ const ExportControl = lazy(() => import('./components/ExportControl'));
 const FilingGuide = lazy(() => import('./components/FilingGuide'));
 const DocumentVault = lazy(() => import('./components/DocumentVault'));
 const AICopilot = lazy(() => import('./components/copilot/AICopilot').then(m => ({ default: m.AICopilot })));
-import { useTaxStore, useTaxStoreHydrated } from './store/useTaxStore';
+import { useTaxStore, useTaxStoreHydrated, UserProfile } from './store/useTaxStore';
 import LandingPage from './components/LandingPage';
 import { ExportService } from './services/ExportService';
+import { AuthService } from './services/AuthService';
 
 import { 
   Lock, 
@@ -115,6 +116,10 @@ export default function App() {
   const addChatMessage = useTaxStore((state) => state.addChatMessage);
   const setIsStoreExtracting = useTaxStore((state) => state.setIsExtracting);
   const clearSession = useTaxStore((state) => state.clearSession);
+  const user = useTaxStore((state) => state.user);
+  const authMode = useTaxStore((state) => state.authMode);
+  const setUser = useTaxStore((state) => state.setUser);
+  const setAuthMode = useTaxStore((state) => state.setAuthMode);
   const isBackgroundProcessing = useTaxStore((state) => state.isBackgroundProcessing);
   const backgroundProgress = useTaxStore((state) => state.backgroundProgress);
   const backgroundStatusMessage = useTaxStore((state) => state.backgroundStatusMessage);
@@ -193,6 +198,105 @@ export default function App() {
     setShowConfirmScreen(false);
     setShowCelebration(false);
   }, [activeStep]);
+
+  const handleGoogleLoginSuccess = (profile: UserProfile) => {
+    setIsAuthenticating(true);
+    setTimeout(() => {
+      setIsAuthenticating(false);
+      setUser(profile);
+      setAuthMode('GOOGLE');
+      
+      const redirectStep = (window as any)._migrationRedirectStep || 11;
+      (window as any)._migrationRedirectStep = null;
+      setActiveStep(redirectStep);
+    }, 600);
+  };
+
+  // Google GSI script loader and initialization
+  useEffect(() => {
+    if (activeStep === 2) {
+      AuthService.loadGoogleGIS().then(() => {
+        try {
+          const google = (window as any).google;
+          if (google) {
+            google.accounts.id.initialize({
+              client_id: '12345678-mock.apps.googleusercontent.com',
+              callback: (response: any) => {
+                const payload = AuthService.decodeJwt(response.credential);
+                if (payload) {
+                  const profile: UserProfile = {
+                    uid: payload.sub,
+                    name: payload.name,
+                    email: payload.email,
+                    photoURL: payload.picture,
+                    providerId: 'google.com',
+                    createdAt: new Date().toISOString()
+                  };
+                  handleGoogleLoginSuccess(profile);
+                }
+              }
+            });
+            
+            google.accounts.id.renderButton(
+              document.getElementById('google-signin-btn-container'),
+              { theme: 'outline', size: 'medium', text: 'signin_with', width: 220 }
+            );
+          }
+        } catch (e) {
+          console.error("Error initializing Google GIS:", e);
+        }
+      }).catch((err) => {
+        console.error("Failed to load GIS script:", err);
+      });
+    }
+  }, [activeStep]);
+
+  // Auto-forward logged-in users past the login screen
+  useEffect(() => {
+    if (hydrated && activeStep === 2 && authMode !== null) {
+      setActiveStep(11);
+    }
+  }, [hydrated, activeStep, authMode]);
+
+  // Guest Session Inactivity Expiry (15 minutes)
+  useEffect(() => {
+    if (authMode === 'GUEST') {
+      const checkExpiry = () => {
+        const lastActive = localStorage.getItem('taxsense_last_active');
+        if (lastActive) {
+          const inactiveMs = Date.now() - parseInt(lastActive, 10);
+          const maxInactiveMs = 15 * 60 * 1000; // 15 minutes of inactivity
+          if (inactiveMs > maxInactiveMs) {
+            clearSession();
+            setActiveStep(2);
+            alert("Your guest session has expired due to 15 minutes of inactivity.");
+          }
+        }
+      };
+
+      // Set initial activity
+      localStorage.setItem('taxsense_last_active', Date.now().toString());
+
+      // Setup interval to check inactivity
+      const interval = setInterval(checkExpiry, 30000); // Check every 30 seconds
+
+      // Listen to user interaction events to refresh inactivity timer
+      const refreshActivity = () => {
+        localStorage.setItem('taxsense_last_active', Date.now().toString());
+      };
+      
+      window.addEventListener('mousemove', refreshActivity);
+      window.addEventListener('keydown', refreshActivity);
+      window.addEventListener('click', refreshActivity);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('mousemove', refreshActivity);
+        window.removeEventListener('keydown', refreshActivity);
+        window.removeEventListener('click', refreshActivity);
+      };
+    }
+  }, [authMode]);
 
   // Global keyboard shortcut listeners
   useEffect(() => {
@@ -460,52 +564,90 @@ export default function App() {
         {/* Stage 2: Sandbox Entry (No Sidebar) */}
         {activeStep === 2 && (
           <div className="relative z-10 flex-1 flex items-center justify-center p-6 bg-transparent overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full animate-pulse pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#16E27A]/5 blur-[130px] rounded-full animate-pulse pointer-events-none" />
             
-            <div className="max-w-md w-full animate-fade-in font-sans relative z-10">
+            <div className="max-w-2xl w-full animate-fade-in font-sans relative z-10">
               <div className="bg-slate-900/60 border border-white/[0.04] dark:border-slate-800/50 rounded-[24px] p-8 shadow-2xl backdrop-blur-md space-y-6">
-                <div className="text-center space-y-4">
-                  <div className="w-12 h-12 bg-emerald-500/10 text-emerald-450 rounded-2xl flex items-center justify-center mx-auto border border-emerald-500/25">
+                <div className="text-center space-y-3">
+                  <div className="w-12 h-12 bg-[#16E27A]/10 text-[#16E27A] rounded-2xl flex items-center justify-center mx-auto border border-[#16E27A]/25 shadow-md shadow-[#16E27A]/5">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <div className="space-y-2">
-                    <h2 className="text-lg font-bold tracking-tight text-slate-100">Welcome to TaxSense Sandbox</h2>
-                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      Experience the complete AI-powered tax filing workflow. No sign-up required. No personal information is collected. Everything runs inside a secure demonstration workspace.
+                  <div className="space-y-1">
+                    <h2 className="text-xl font-bold tracking-tight text-white">Access TaxSense Workspace</h2>
+                    <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto font-medium">
+                      Select how you want to access the demonstration workspace. You can start instantly as a guest or sign in securely with Google.
                     </p>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setIsAuthenticating(true);
-                    setTimeout(() => {
-                      setIsAuthenticating(false);
-                      setActiveStep(11); // Proceed to Dashboard Welcome Hub (Stage 11)
-                    }, 800);
-                  }}
-                  className="w-full py-3 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-[#16E27A]/10 hover:shadow-[#16E27A]/20 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {isAuthenticating ? (
-                    <>
-                      <div className="flex gap-1 items-center shrink-0">
-                        <div className="w-1.5 h-1.5 bg-[#050607] rounded-full animate-bounce [animation-delay:-0.3s]" />
-                        <div className="w-1.5 h-1.5 bg-[#050607] rounded-full animate-bounce [animation-delay:-0.15s]" />
-                        <div className="w-1.5 h-1.5 bg-[#050607] rounded-full animate-bounce" />
-                      </div>
-                      <span>Initializing Demonstration Workspace...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Enter Sandbox Workspace</span>
-                      <ArrowRight className="w-4 h-4 text-[#050607]" />
-                    </>
-                  )}
-                </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+                  {/* Guest Access Card */}
+                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-all flex flex-col justify-between space-y-5">
+                    <div className="space-y-1.5 text-left">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">Continue as Guest</h3>
+                      <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                        Instant access. Data is stored temporarily in your browser session and expires after 15 minutes of inactivity. No sign-up required.
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setIsAuthenticating(true);
+                        setTimeout(() => {
+                          setIsAuthenticating(false);
+                          setAuthMode('GUEST');
+                          setUser(null);
+                          const redirectStep = (window as any)._migrationRedirectStep || 11;
+                          (window as any)._migrationRedirectStep = null;
+                          setActiveStep(redirectStep);
+                        }, 600);
+                      }}
+                      className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-slate-700/80"
+                    >
+                      {isAuthenticating ? 'Loading...' : 'Start as Guest'}
+                      {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
+                    </button>
+                  </div>
+
+                  {/* Google Access Card */}
+                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-[#16E27A]/10 hover:border-[#16E27A]/25 transition-all flex flex-col justify-between space-y-5 shadow-sm shadow-[#16E27A]/3">
+                    <div className="space-y-1.5 text-left">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                        Sign In with Google
+                      </h3>
+                      <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                        Securely saves your Form 16s, filing progress, secure Document Vault, and AI chat history across all your devices.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {/* Google GSI Native button container */}
+                      <div id="google-signin-btn-container" className="flex justify-center w-full min-h-[36px]" />
+                      
+                      {/* Fallback/Simulated secure button */}
+                      <button
+                        onClick={() => {
+                          const mockProfile: UserProfile = {
+                            uid: 'google-908231',
+                            name: 'Mohit Kumar',
+                            email: 'mohit.kumar@gmail.com',
+                            photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&fit=crop&q=80',
+                            providerId: 'google.com',
+                            createdAt: new Date().toISOString()
+                          };
+                          handleGoogleLoginSuccess(mockProfile);
+                        }}
+                        className="w-full py-2.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-sm shadow-[#16E27A]/10"
+                      >
+                        Simulate Google Login
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-center gap-1.5 text-[9px] text-slate-500 font-bold uppercase tracking-wider pt-4 border-t border-slate-800/60">
-                  <Lock className="w-3 h-3 text-emerald-500" />
-                  <span>ISO 27001 Certified encryption • Sandbox secure</span>
+                  <Lock className="w-3 h-3 text-[#16E27A]" />
+                  <span>ISO 27001 Certified encryption • Public Beta</span>
                 </div>
               </div>
             </div>
@@ -645,6 +787,40 @@ export default function App() {
                   </div>
                 )}
 
+                {authMode === 'GUEST' && (
+                  isSidebarCollapsed ? (
+                    <button
+                      onClick={() => {
+                        (window as any)._migrationRedirectStep = activeStep;
+                        setActiveStep(2);
+                      }}
+                      title="Guest Session - Click to Sign In"
+                      className="w-full flex items-center justify-center p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer"
+                    >
+                      <AlertCircle className="w-4 h-4 text-amber-400" />
+                    </button>
+                  ) : (
+                    <div className="p-2.5 bg-amber-500/5 border border-amber-500/10 rounded-xl space-y-1.5 text-left">
+                      <div className="text-[9px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        Guest Session
+                      </div>
+                      <div className="text-[9px] text-slate-400 leading-normal">
+                        Temporary workspace. Saved data expires after 15m of inactivity.
+                      </div>
+                      <button
+                        onClick={() => {
+                          (window as any)._migrationRedirectStep = activeStep;
+                          setActiveStep(2);
+                        }}
+                        className="w-full text-center py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold rounded text-[9px] uppercase tracking-wider cursor-pointer transition-colors"
+                      >
+                        Sign In to Save
+                      </button>
+                    </div>
+                  )
+                )}
+
                 <button
                   onClick={() => setIsSettingsOpen(true)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all cursor-pointer`}
@@ -654,26 +830,33 @@ export default function App() {
                 </button>
                 <div className="flex items-center justify-between gap-2 px-3 py-2">
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">
-                      {(() => {
-                        const name = incomeProfile?.employeeName || 'Mohit Kumar';
-                        const parts = name.trim().split(/\s+/);
-                        if (parts.length >= 2) {
-                          return (parts[0][0] + parts[1][0]).toUpperCase();
-                        }
-                        return parts[0].slice(0, 2).toUpperCase();
-                      })()}
+                    <div className="w-6 h-6 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 font-bold flex items-center justify-center text-[10px] shrink-0 overflow-hidden">
+                      {user?.photoURL ? (
+                        <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        (() => {
+                          const name = user?.name || incomeProfile?.employeeName || 'Guest User';
+                          const parts = name.trim().split(/\s+/);
+                          if (parts.length >= 2) {
+                            return (parts[0][0] + parts[1][0]).toUpperCase();
+                          }
+                          return parts[0].slice(0, 2).toUpperCase();
+                        })()
+                      )}
                     </div>
                     {!isSidebarCollapsed && (
                       <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] font-bold text-slate-200 truncate">{incomeProfile?.employeeName || 'Mohit Kumar'}</span>
-                        <span className="text-[8px] text-slate-500 truncate">PAN: {incomeProfile?.pan || 'MK*****32F'}</span>
+                        <span className="text-[10px] font-bold text-slate-200 truncate">{user?.name || incomeProfile?.employeeName || 'Guest User'}</span>
+                        <span className="text-[8px] text-slate-500 truncate">
+                          {authMode === 'GUEST' ? 'Guest Mode' : (user?.email || `PAN: ${incomeProfile?.pan || 'MK*****32F'}`)}
+                        </span>
                       </div>
                     )}
                   </div>
                   {!isSidebarCollapsed && (
                     <button
                       onClick={() => {
+                        AuthService.revokeGoogleSession();
                         clearSession();
                         setActiveStep(2);
                       }}
@@ -793,9 +976,33 @@ export default function App() {
                             </p>
                             
                             <div className="pt-2 flex flex-wrap items-center gap-3">
-                              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">ITR-1 Eligible</span>
-                              <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Sandbox Active</span>
+                              <span className="text-[10px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">ITR-1 Eligible</span>
+                              {authMode === 'GUEST' ? (
+                                <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Guest Session • Data stored temporarily</span>
+                              ) : (
+                                <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider flex items-center gap-1">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                                  Google Account Connected ({user?.email})
+                                </span>
+                              )}
                             </div>
+
+                            {authMode === 'GUEST' && (
+                              <div className="mt-3 p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                                <span className="text-slate-400 font-medium text-left">
+                                  Save your filing history, uploaded documents, and AI conversations by signing in.
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    (window as any)._migrationRedirectStep = 11;
+                                    setActiveStep(2);
+                                  }}
+                                  className="px-3 py-1 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                                >
+                                  Save Progress
+                                </button>
+                              </div>
+                            )}
                           </div>
                           
                           {/* Circular Filing Progress Ring */}

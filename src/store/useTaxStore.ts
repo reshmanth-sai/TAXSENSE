@@ -117,6 +117,15 @@ export interface FilingHistoryItem {
   taxData?: TaxData;
 }
 
+export interface UserProfile {
+  uid: string;
+  name: string;
+  email: string;
+  photoURL?: string;
+  providerId: string;
+  createdAt: string;
+}
+
 export type CurrentStep = 'HOME' | 'LANDING' | 'CONFIRM_EXTRACTION' | 'CHAT_QA' | 'FINAL_EXPORT';
 
 export interface TaxStoreState {
@@ -168,6 +177,10 @@ export interface TaxStoreState {
   setRawForm16Text: (text: string) => void;
   activeStep: number;
   setActiveStep: (step: number) => void;
+  user: UserProfile | null;
+  authMode: 'GUEST' | 'GOOGLE' | null;
+  setUser: (user: UserProfile | null) => void;
+  setAuthMode: (mode: 'GUEST' | 'GOOGLE' | null) => void;
 }
 
 const defaultIncomeProfile: IncomeProfile = isDev ? {
@@ -275,6 +288,10 @@ export const useTaxStore = create<TaxStoreState>()(
         const currentStep = stepMap[step] || 'LANDING';
         set({ activeStep: step, currentStep });
       },
+      user: null,
+      authMode: null,
+      setUser: (user) => set({ user }),
+      setAuthMode: (mode) => set({ authMode: mode }),
 
       setIncomeProfile: (profile) =>
         set((state) => {
@@ -434,6 +451,8 @@ export const useTaxStore = create<TaxStoreState>()(
           incognito: false,
           isFloatingAIChatOpen: false,
           rawForm16Text: '',
+          user: null,
+          authMode: null,
         }));
       },
 
@@ -459,6 +478,8 @@ export const useTaxStore = create<TaxStoreState>()(
           ingestionState: 'IDLE',
           isFloatingAIChatOpen: false,
           rawForm16Text: '',
+          user: null,
+          authMode: null,
         }));
       },
     }),
@@ -483,6 +504,8 @@ export const useTaxStore = create<TaxStoreState>()(
         ingestionState: state.ingestionState,
         chatHistory: state.chatHistory,
         rawForm16Text: state.rawForm16Text,
+        user: state.user,
+        authMode: state.authMode,
       }),
     }
   )
