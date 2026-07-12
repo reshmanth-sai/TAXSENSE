@@ -141,13 +141,18 @@ export default function App() {
   // Workspace entrance card coordinate tracking
   const [authCardCoords, setAuthCardCoords] = useState({ x: 0, y: 0 });
   const [authCardHovered, setAuthCardHovered] = useState(false);
+  const [authCardTilt, setAuthCardTilt] = useState({ x: 0, y: 0 });
 
   const handleAuthCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    setAuthCardCoords({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setAuthCardCoords({ x, y });
+
+    // Calculate tilt (max 1.5 degrees for premium depth)
+    const tiltX = -((y / rect.height) - 0.5) * 1.5;
+    const tiltY = ((x / rect.width) - 0.5) * 1.5;
+    setAuthCardTilt({ x: tiltX, y: tiltY });
   };
 
 
@@ -580,233 +585,301 @@ export default function App() {
         </div>
       }>
         {/* Stage 2: Sandbox Entry (No Sidebar) */}
-        {activeStep === 2 && (
-          <div className="relative z-10 flex-1 flex flex-col min-h-screen bg-[#070809] overflow-hidden justify-center items-center p-6">
-            
-            {/* Viewport Edge Vignette for Stage 2 */}
-            <div className="pointer-events-none absolute inset-0 z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]" />
+        {activeStep === 2 && (() => {
+          const containerVariants = {
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.08,
+                delayChildren: 0.15
+              }
+            }
+          } as const;
 
-            {/* Very faint technical grid overlay (1% opacity, 120px spacing) */}
-            <div 
-              style={{ 
-                backgroundImage: 'linear-gradient(rgba(255,255,255,0.007) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.007) 1px, transparent 1px)', 
-                backgroundSize: '120px 120px'
-              }} 
-              className="absolute inset-0 z-0 pointer-events-none" 
-            />
+          const childVariants = {
+            hidden: { opacity: 0, y: 15, filter: "blur(2px)" },
+            visible: { 
+              opacity: 1, 
+              y: 0, 
+              filter: "blur(0px)",
+              transition: { type: "spring" as const, stiffness: 120, damping: 22 }
+            }
+          } as const;
 
-            {/* Microscopic slowly drifting ambient particles (2% opacity) */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-20">
-              {[...Array(8)].map((_, i) => {
-                const delay = i * 2;
-                const size = (i % 2) + 3; // 3px or 4px
-                const left = (i * 13) % 100;
-                const duration = 18 + (i % 3) * 4;
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      left: `${left}%`,
-                      width: `${size}px`,
-                      height: `${size}px`,
-                      backgroundColor: i % 2 === 0 ? '#16E27A' : '#3B82F6',
-                      animationDelay: `${delay}s`,
-                      animationDuration: `${duration}s`,
-                      bottom: '-10px',
-                    }}
-                    className="absolute rounded-full animate-drift"
-                  />
-                );
-              })}
-            </div>
-
-            {/* Cinematic background auroras (large radial glows behind the card) */}
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-              {/* Emerald radial glow */}
-              <motion.div 
-                animate={{
-                  x: [0, 20, -10, 0],
-                  y: [0, -30, 20, 0]
-                }}
-                transition={{ duration: 75, repeat: Infinity, ease: "easeInOut" }}
-                style={{ background: 'radial-gradient(circle, rgba(22, 226, 122, 0.045) 0%, transparent 70%)' }}
-                className="absolute top-[20%] left-[25%] w-[800px] h-[500px]" 
-              />
+          return (
+            <div className="relative z-10 flex-1 flex flex-col min-h-screen bg-[#070809] overflow-hidden justify-center items-center p-6">
               
-              {/* Blue secondary glow */}
-              <motion.div 
-                animate={{
-                  x: [0, -15, 10, 0],
-                  y: [0, 25, -20, 0]
-                }}
-                transition={{ duration: 85, repeat: Infinity, ease: "easeInOut" }}
-                style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.02) 0%, transparent 70%)' }}
-                className="absolute bottom-[10%] right-[15%] w-[800px] h-[500px]" 
+              {/* Viewport Edge Vignette for Stage 2 */}
+              <div className="pointer-events-none absolute inset-0 z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]" />
+
+              {/* Fading technical grid overlay (gently pulses in and out) */}
+              <div 
+                style={{ 
+                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.007) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.007) 1px, transparent 1px)', 
+                  backgroundSize: '120px 120px'
+                }} 
+                className="absolute inset-0 z-0 pointer-events-none animate-grid-pulse" 
               />
-            </div>
 
-            {/* Floating Entrance Navbar (Arc Browser Style) */}
-            <motion.div 
-              initial={{ opacity: 0, y: -15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[1200px] z-50 flex items-center justify-between px-6 py-3.5 bg-[#0E131B]/40 border border-white/[0.04] rounded-full backdrop-blur-md shadow-lg shadow-black/20"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold text-xs">
-                  T
-                </div>
-                <span className="text-xs font-black tracking-wider uppercase text-white">TaxSense</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#16E27A] animate-ping" />
-                <span className="text-[9px] text-slate-450 uppercase font-bold tracking-wider">Public Beta Active</span>
-              </div>
-            </motion.div>
-
-            {/* Main Interactive Entrance Card Container */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-              onMouseMove={handleAuthCardMouseMove}
-              onMouseEnter={() => setAuthCardHovered(true)}
-              onMouseLeave={() => setAuthCardHovered(false)}
-              className="max-w-[720px] w-full relative z-10 p-[1.5px] rounded-[22px] overflow-hidden transition-all duration-300"
-            >
-              {/* Subtle inner border sweep */}
-              <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam pointer-events-none" />
-
-              {/* Surface Card with layered glassmorphism */}
-              <div className="relative w-full h-full bg-[#0F1216]/75 border border-white/[0.06] rounded-[22px] p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_80px_rgba(0,0,0,0.7)] backdrop-blur-[40px] space-y-8 overflow-hidden">
-                
-                {/* Radial interactive spotlight following cursor */}
-                <div 
-                  style={{
-                    background: `radial-gradient(220px circle at ${authCardCoords.x}px ${authCardCoords.y}px, rgba(22, 226, 122, 0.025), transparent 85%)`
-                  }}
-                  className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${authCardHovered ? 'opacity-100' : 'opacity-0'}`}
-                />
-
-                {/* Glass reflections overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.003] to-white/[0.008] pointer-events-none" />
-
-                <div className="text-center space-y-4 relative z-10">
-                  {/* Secure Shield emblem with breathing pulse animation */}
-                  <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/15 to-[#16E27A]/5 text-[#16E27A] rounded-[16px] flex items-center justify-center mx-auto border border-[#16E27A]/20 shadow-[0_0_15px_rgba(22,226,122,0.1)] relative">
-                    <motion.div 
-                      animate={{ opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute inset-0 bg-[#16E27A]/10 rounded-[16px] blur-sm pointer-events-none"
-                    />
-                    <ShieldCheck className="w-7 h-7 text-[#16E27A] z-10" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-black tracking-tight text-white">Start your secure filing workspace</h2>
-                    <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto font-semibold">
-                      Choose how you'd like to continue.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Staggered choice cards wrapper */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 relative z-10">
-                  
-                  {/* Guest Access Card (Minimal, Dark, Neutral) */}
-                  <div className="p-6 rounded-2xl bg-white/[0.015] border border-white/[0.04] hover:border-white/[0.08] hover:-translate-y-1 hover:bg-white/[0.025] transition-all duration-355 flex flex-col justify-between space-y-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group">
-                    <div className="space-y-2 text-left">
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">Continue as Guest</h3>
-                      <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
-                        Instant sandbox access. Data is stored temporarily in browser memory and is automatically wiped after 15 minutes of inactivity.
-                      </p>
-                    </div>
-                    
-                    <button
-                      onClick={() => {
-                        setIsAuthenticating(true);
-                        setTimeout(() => {
-                          setIsAuthenticating(false);
-                          setAuthMode('GUEST');
-                          setUser(null);
-                          const redirectStep = (window as any)._migrationRedirectStep || 11;
-                          (window as any)._migrationRedirectStep = null;
-                          setActiveStep(redirectStep);
-                        }, 600);
+              {/* Microscopic slowly drifting ambient particles (2% opacity) */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-20">
+                {[...Array(8)].map((_, i) => {
+                  const delay = i * 2;
+                  const size = (i % 2) + 2.5; // 2.5px or 3.5px
+                  const left = (i * 13) % 100;
+                  const duration = 18 + (i % 3) * 4;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        left: `${left}%`,
+                        width: `${size}px`,
+                        height: `${size}px`,
+                        backgroundColor: i % 2 === 0 ? '#16E27A' : '#3B82F6',
+                        animationDelay: `${delay}s`,
+                        animationDuration: `${duration}s`,
+                        bottom: '-10px',
                       }}
-                      className="w-full py-3 bg-[#1C2026] hover:bg-[#252A33] text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.04] hover:border-white/[0.08] shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
-                    >
-                      {isAuthenticating ? 'Initializing...' : 'Start as Guest'}
-                      {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
-                    </button>
-                  </div>
-
-                  {/* Google Access Card (Emerald Glow, subtle border recommendations) */}
-                  <div className="p-6 rounded-2xl bg-[#0E131B]/40 border border-[#16E27A]/15 hover:border-[#16E27A]/30 hover:bg-[#0E131B]/60 hover:-translate-y-1 transition-all duration-355 flex flex-col justify-between space-y-6 shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_15px_rgba(22,226,122,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(22,226,122,0.06)] relative group">
-                    <div className="absolute top-0 right-0 bg-[#16E27A]/10 text-[#16E27A] px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-bl-lg border-l border-b border-[#16E27A]/15">
-                      Recommended
-                    </div>
-                    
-                    <div className="space-y-2 text-left">
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                        Sign In with Google
-                      </h3>
-                      <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
-                        Saves progress dynamically, locks Form 16 documents to your encrypted Vault, and retains AI chat history across devices.
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2.5">
-                      {/* Google GSI Native button container */}
-                      <div id="google-signin-btn-container" className="flex justify-center w-full min-h-[36px]" />
-                      
-                      {/* Fallback/Simulated secure button */}
-                      <button
-                        onClick={() => {
-                          const mockProfile: UserProfile = {
-                            uid: 'google-908231',
-                            name: 'Mohit Kumar',
-                            email: 'mohit.kumar@gmail.com',
-                            photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&fit=crop&q=80',
-                            providerId: 'google.com',
-                            createdAt: new Date().toISOString()
-                          };
-                          handleGoogleLoginSuccess(mockProfile);
-                        }}
-                        className="relative overflow-hidden w-full py-3 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(22,226,122,0.15)] hover:shadow-[0_4px_20px_rgba(22,226,122,0.3)] border border-transparent group"
-                      >
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-                        <span>Simulate Google Login</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Animated Divider (fade -> center glow -> fade) */}
-                <div className="relative w-full h-[1px] bg-gradient-to-r from-transparent via-white/[0.08] to-transparent my-4">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-[1px] bg-[#16E27A]/30 blur-[1px]" />
-                </div>
-
-                {/* Trust Footer Badges */}
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-1.5 relative z-10">
-                  <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.04] text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#16E27A]" />
-                    End-to-End Encrypted
-                  </div>
-                  <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.04] text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#16E27A]" />
-                    Local Processing
-                  </div>
-                  <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.04] text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#16E27A]" />
-                    Files Never Shared
-                  </div>
-                </div>
-
+                      className="absolute rounded-full animate-drift"
+                    />
+                  );
+                })}
               </div>
-            </motion.div>
-          </div>
-        )}
+
+              {/* Cinematic background auroras (large radial glows behind the card) */}
+              <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                {/* Emerald radial glow */}
+                <motion.div 
+                  animate={{
+                    x: [0, 15, -8, 0],
+                    y: [0, -20, 15, 0]
+                  }}
+                  transition={{ duration: 40, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: 'radial-gradient(circle, rgba(22, 226, 122, 0.04) 0%, transparent 70%)' }}
+                  className="absolute top-[20%] left-[25%] w-[800px] h-[500px]" 
+                />
+                
+                {/* Blue secondary glow */}
+                <motion.div 
+                  animate={{
+                    x: [0, -10, 8, 0],
+                    y: [0, 20, -15, 0]
+                  }}
+                  transition={{ duration: 45, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.015) 0%, transparent 70%)' }}
+                  className="absolute bottom-[10%] right-[15%] w-[800px] h-[500px]" 
+                />
+              </div>
+
+              {/* Floating Entrance Navbar (Arc Browser Style) */}
+              <motion.div 
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[1200px] z-50 flex items-center justify-between px-6 py-3.5 bg-[#0E131B]/40 border border-white/[0.04] rounded-full backdrop-blur-md shadow-lg shadow-black/20"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold text-xs">
+                    T
+                  </div>
+                  <span className="text-xs font-black tracking-wider uppercase text-white">TaxSense</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16E27A] animate-ping" />
+                  <span className="text-[9px] text-slate-450 uppercase font-bold tracking-wider">Public Beta Active</span>
+                </div>
+              </motion.div>
+
+              {/* Main Interactive Entrance Card Container */}
+              <motion.div
+                initial={{ opacity: 0, y: 30, scale: 0.98, filter: "blur(8px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                onMouseMove={handleAuthCardMouseMove}
+                onMouseEnter={() => setAuthCardHovered(true)}
+                onMouseLeave={() => {
+                  setAuthCardHovered(false);
+                  setAuthCardTilt({ x: 0, y: 0 });
+                }}
+                style={{
+                  transform: authCardHovered ? `perspective(1000px) rotateX(${authCardTilt.x}deg) rotateY(${authCardTilt.y}deg)` : 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
+                  transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+                className="max-w-[720px] w-full relative z-10 p-[1.5px] rounded-[22px] overflow-hidden transition-all duration-300"
+              >
+                {/* Subtle inner border sweep */}
+                <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam pointer-events-none" />
+
+                {/* Surface Card with layered glassmorphism */}
+                <div className="relative w-full h-full bg-[#0F1216]/72 border border-white/[0.06] rounded-[22px] p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_80px_rgba(0,0,0,0.7)] backdrop-blur-[40px] space-y-8 overflow-hidden">
+                  
+                  {/* Radial interactive spotlight following cursor */}
+                  <div 
+                    style={{
+                      background: `radial-gradient(220px circle at ${authCardCoords.x}px ${authCardCoords.y}px, rgba(22, 226, 122, 0.025), transparent 85%)`
+                    }}
+                    className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${authCardHovered ? 'opacity-100' : 'opacity-0'}`}
+                  />
+
+                  {/* Glass reflections overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.003] to-white/[0.008] pointer-events-none" />
+
+                  <motion.div 
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-8"
+                  >
+                    {/* Header elements block */}
+                    <motion.div variants={childVariants} className="text-center space-y-4 relative z-10">
+                      {/* Secure Shield emblem with breathing pulse and rotating halo animation */}
+                      <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/15 to-[#16E27A]/5 text-[#16E27A] rounded-[16px] flex items-center justify-center mx-auto border border-[#16E27A]/20 shadow-[0_0_20px_rgba(22,226,122,0.15)] relative">
+                        {/* Rotating dashed lock halo */}
+                        <div className="absolute inset-[-6px] rounded-full border border-[#16E27A]/20 border-dashed animate-spin [animation-duration:20s] pointer-events-none" />
+                        
+                        <motion.div 
+                          animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.95, 1.05, 0.95] }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                          className="absolute inset-0 bg-[#16E27A]/10 rounded-[16px] blur-md pointer-events-none"
+                        />
+                        <ShieldCheck className="w-7 h-7 text-[#16E27A] z-10" />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h2 className="text-2xl font-black tracking-tight text-white">Welcome to your secure TaxSense workspace</h2>
+                        <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto font-semibold">
+                          Choose how you'd like to continue.
+                        </p>
+                      </div>
+                    </motion.div>
+
+                    {/* Staggered choice cards wrapper */}
+                    <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 relative z-10">
+                      
+                      {/* Guest Access Card (Sandbox Mode - Minimal, Dark, Neutral) */}
+                      <div className="p-6 rounded-2xl bg-white/[0.015] border border-white/[0.04] hover:border-white/[0.08] hover:-translate-y-1 hover:bg-white/[0.025] hover:scale-[1.01] transition-all duration-355 flex flex-col justify-between space-y-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group">
+                        <div className="space-y-4 text-left">
+                          <div className="space-y-1">
+                            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Mode</h3>
+                            <p className="text-[10px] text-slate-450 leading-tight font-semibold">
+                              Start instantly without creating an account.
+                            </p>
+                          </div>
+                          
+                          <ul className="space-y-1.5 text-[10px] font-semibold leading-relaxed">
+                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> Instant access</li>
+                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> Local temporary session</li>
+                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> Auto deletes after inactivity</li>
+                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> No documents stored permanently</li>
+                          </ul>
+                        </div>
+                        
+                        <button
+                          onClick={() => {
+                            setIsAuthenticating(true);
+                            setTimeout(() => {
+                              setIsAuthenticating(false);
+                              setAuthMode('GUEST');
+                              setUser(null);
+                              const redirectStep = (window as any)._migrationRedirectStep || 11;
+                              (window as any)._migrationRedirectStep = null;
+                              setActiveStep(redirectStep);
+                            }, 600);
+                          }}
+                          className="w-full py-3 bg-[#1C2026] hover:bg-[#252A33] hover:text-white text-slate-300 hover:shadow-[0_0_12px_rgba(255,255,255,0.03)] font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.04] hover:border-white/[0.08]"
+                        >
+                          {isAuthenticating ? 'Initializing...' : 'Launch Sandbox'}
+                          {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
+                        </button>
+                      </div>
+
+                      {/* Google Access Card (Google Workspace - Recommended) */}
+                      <div className="p-6 rounded-2xl bg-[#0E131B]/40 border border-[#16E27A]/15 hover:border-[#16E27A]/30 hover:bg-[#0E131B]/60 hover:-translate-y-1 hover:scale-[1.01] transition-all duration-355 flex flex-col justify-between space-y-6 shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_15px_rgba(22,226,122,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(22,226,122,0.06)] relative group">
+                        
+                        {/* Dynamic recommended badge with pulsing ring */}
+                        <div className="absolute top-3 right-3 bg-emerald-500/10 border border-emerald-500/20 text-[#16E27A] px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(22,226,122,0.1)]">
+                          <span className="relative flex h-1 w-1">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1 w-1 bg-[#16E27A]"></span>
+                          </span>
+                          <span>⭐ Recommended</span>
+                        </div>
+                        
+                        <div className="space-y-4 text-left">
+                          <div className="space-y-1">
+                            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Google Workspace</h3>
+                            <p className="text-[10px] text-slate-450 leading-tight font-semibold">
+                              Secure cloud sync with synchronized history.
+                            </p>
+                          </div>
+                          
+                          <ul className="space-y-1.5 text-[10px] font-semibold leading-relaxed">
+                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> Save filing progress</li>
+                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> Cloud document vault</li>
+                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> AI Copilot history</li>
+                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> Multi-device sync</li>
+                          </ul>
+                        </div>
+                        
+                        <div className="space-y-2.5">
+                          {/* Google GSI Native button container */}
+                          <div id="google-signin-btn-container" className="flex justify-center w-full min-h-[36px]" />
+                          
+                          {/* Fallback/Simulated secure button */}
+                          <button
+                            onClick={() => {
+                              const mockProfile: UserProfile = {
+                                uid: 'google-908231',
+                                name: 'Mohit Kumar',
+                                email: 'mohit.kumar@gmail.com',
+                                photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&fit=crop&q=80',
+                                providerId: 'google.com',
+                                createdAt: new Date().toISOString()
+                              };
+                              handleGoogleLoginSuccess(mockProfile);
+                            }}
+                            className="relative overflow-hidden w-full py-3 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(22,226,122,0.15)] hover:shadow-[0_4px_20px_rgba(22,226,122,0.3)] border border-transparent group"
+                          >
+                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                            <span>Simulate Google Login</span>
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Animated Divider (fade -> center glow -> fade) */}
+                    <motion.div variants={childVariants} className="relative w-full h-[1px] bg-gradient-to-r from-transparent via-white/[0.08] to-transparent my-4">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-[1px] bg-[#16E27A]/30 blur-[1px]" />
+                    </motion.div>
+
+                    {/* Trust Footer Badges */}
+                    <motion.div variants={childVariants} className="flex flex-wrap items-center justify-center gap-2.5 pt-1.5">
+                      <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <span>🔒</span> End-to-End Encryption
+                      </div>
+                      <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <span>⚡</span> Local Processing
+                      </div>
+                      <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <span>🗑</span> Auto Delete
+                      </div>
+                      <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <span>☁</span> Cloud Sync
+                      </div>
+                    </motion.div>
+
+                    {/* Trust Row Section */}
+                    <motion.div variants={childVariants} className="text-[8.5px] text-slate-500 font-bold uppercase tracking-widest text-center opacity-45 pt-1">
+                      Powered by Google Identity • Gemini AI • AES-256 Encryption • ISO 27001 • Vercel Infrastructure
+                    </motion.div>
+                  </motion.div>
+
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
 
         {/* Stage 3-11: Workspace layout with Sidebar */}
         {activeStep >= 3 && (

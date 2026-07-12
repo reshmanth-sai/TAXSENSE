@@ -607,4 +607,13 @@ a:focus-visible {
   animation: drift-particle 15s infinite ease-in-out;
 }
 
+@keyframes grid-pulse {
+  0% { opacity: 0.08; }
+  50% { opacity: 0.2; }
+  100% { opacity: 0.08; }
+}
+.animate-grid-pulse {
+  animation: grid-pulse 28s infinite ease-in-out;
+}
+
 
