@@ -241,7 +241,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   };
 
   const activeIndex = sections.findIndex(s => s.id === activeSection);
-  const progressPercent = Math.round((Math.max(0, activeIndex) / (sections.length - 1)) * 100);
+  const activeStepText = activeIndex >= 0 ? `${activeIndex + 1} / ${sections.length}` : `1 / ${sections.length}`;
 
   const faqs = [
     {
@@ -265,25 +265,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-[#050607] text-[#F6F7F8] font-sans antialiased selection:bg-[#16E27A] selection:text-[#050607] overflow-x-hidden relative">
       
-      {/* Scroll Progress Indicator (Top on Mobile, hidden unless scrolling; Always visible on Desktop) */}
-      <motion.div 
-        style={{ scaleX }} 
-        className={`fixed top-0 left-0 right-0 h-[2.5px] bg-[#16E27A] origin-left z-[100] pointer-events-none transition-opacity duration-300 ${
-          isScrolling ? 'opacity-100' : 'opacity-0 lg:opacity-100'
-        }`} 
-      />
-
       {/* LEFT SCROLL JOURNEY RAIL (Desktop only) */}
-      <div className="fixed left-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-center gap-4 select-none">
+      <div className="fixed left-12 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-center gap-4 select-none">
         <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">
-          {progressPercent}%
+          {activeStepText}
         </span>
         
-        <div className="h-[280px] w-[1.5px] bg-white/[0.04] relative flex flex-col justify-between items-center py-2">
-          {/* Dynamic Fill line */}
+        <div className="h-[280px] w-[2px] bg-gradient-to-b from-white/[0.02] via-white/[0.06] to-white/[0.02] relative flex flex-col justify-between items-center py-2">
+          {/* Dynamic Fill line with vertical gradient and lower opacity */}
           <motion.div 
             style={{ scaleY }} 
-            className="absolute top-0 left-0 right-0 bg-[#16E27A] origin-top h-full w-full" 
+            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-[#16E27A]/75 to-[#16E27A] origin-top h-full w-full opacity-60" 
           />
           
           {sections.map((s, idx) => {
@@ -301,17 +293,22 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <motion.div 
                   className={`rounded-full transition-all duration-300 ${
                     isActive 
-                      ? 'w-3 h-3 bg-[#16E27A] shadow-md shadow-[#16E27A]/40 border border-slate-950 z-20' 
+                      ? 'w-2.5 h-2.5 bg-[#16E27A] shadow-[0_0_8px_rgba(22,226,122,0.6)] border border-slate-950 z-20' 
                       : isCompleted 
                         ? 'w-2 h-2 bg-[#16E27A] z-20' 
                         : 'w-2 h-2 bg-slate-750 hover:bg-slate-500 z-20'
                   }`}
-                  animate={isActive ? { scale: [1, 1.15, 1] } : {}}
-                  transition={isActive ? { repeat: Infinity, duration: 2, ease: "easeInOut" } : {}}
+                  animate={isActive ? { opacity: [0.7, 1, 0.7] } : {}}
+                  transition={isActive ? { repeat: Infinity, duration: 3.5, ease: "easeInOut" } : {}}
                 />
 
+                {/* Pulsing outer ring with soft outer glow for active dot */}
                 {isActive && (
-                  <span className="absolute inset-0 rounded-full border border-[#16E27A]/30 animate-ping pointer-events-none" />
+                  <motion.span 
+                    animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.3, 1] }}
+                    transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                    className="absolute w-5 h-5 rounded-full border border-[#16E27A]/30 pointer-events-none" 
+                  />
                 )}
 
                 <AnimatePresence>
@@ -402,14 +399,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button 
-            onClick={toggleSound}
-            title={soundEnabled ? "Mute interface sounds" : "Enable interface sounds"}
-            className="p-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05] rounded-full text-slate-400 hover:text-white cursor-pointer transition-colors"
-          >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-          </button>
-
           <button
             onClick={handleStartWorkspace}
             className="px-4 py-1.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs rounded-full transition-all cursor-pointer shadow-md shadow-[#16E27A]/10 active:scale-95 border border-transparent"
