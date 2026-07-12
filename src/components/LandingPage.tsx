@@ -205,7 +205,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
     
     const interval = setInterval(() => {
       if (charIndex < targetText.length) {
-        currentText += targetText.substring(0, charIndex + 2);
+        currentText = targetText.substring(0, charIndex + 2);
         setCopilotResponse(currentText);
         charIndex += 2;
       } else {
