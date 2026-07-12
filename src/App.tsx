@@ -274,12 +274,29 @@ export default function App() {
             setTimeout(() => {
               const container = document.getElementById('google-signin-btn-container');
               if (container) {
-                google.accounts.id.renderButton(
-                  container,
-                  { theme: 'outline', size: 'large', text: 'signin_with', width: 240, shape: 'pill' }
-                );
-                clearTimeout(timer);
-                setGoogleGsiState('loaded');
+                try {
+                  google.accounts.id.renderButton(
+                    container,
+                    { theme: 'outline', size: 'large', text: 'signin_with', width: 240, shape: 'pill' }
+                  );
+                  
+                  // Wait 500ms to verify if the button has been successfully rendered in DOM
+                  setTimeout(() => {
+                    const containerCheck = document.getElementById('google-signin-btn-container');
+                    if (containerCheck && (containerCheck.children.length > 0 || containerCheck.innerHTML.trim() !== '')) {
+                      clearTimeout(timer);
+                      setGoogleGsiState('loaded');
+                    } else {
+                      console.warn("Google button container is empty (possibly blocked origin or invalid client ID). Falling back to simulation.");
+                      clearTimeout(timer);
+                      setGoogleGsiState('failed');
+                    }
+                  }, 500);
+                } catch (e) {
+                  console.error("Error calling renderButton:", e);
+                  clearTimeout(timer);
+                  setGoogleGsiState('failed');
+                }
               } else {
                 clearTimeout(timer);
                 setGoogleGsiState('failed');
