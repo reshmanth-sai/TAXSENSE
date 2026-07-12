@@ -25,7 +25,43 @@ interface LandingPageProps {
   onStart: () => void;
 }
 
-// Reusable Railway-style cursor-aware card component
+// 60 FPS lightweight spring-interpolated counter component
+interface AnimatedCounterProps {
+  value: number;
+  prefix?: string;
+}
+
+const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ value, prefix = "" }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+
+  useEffect(() => {
+    let start = displayValue;
+    const end = value;
+    if (start === end) return;
+
+    const duration = 400; // ms
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const ease = progress * (2 - progress); // EaseOutQuad
+      const current = Math.round(start + (end - start) * ease);
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [value]);
+
+  return <span>{prefix}{displayValue.toLocaleString('en-IN')}</span>;
+};
+
+// Reusable Railway-style cursor-aware card component with Vercel conic border beams
 interface PremiumCardProps extends HTMLMotionProps<'div'> {
   children: React.ReactNode;
 }
@@ -42,6 +78,11 @@ const PremiumCard: React.FC<PremiumCardProps> = ({ children, className = '', ...
     });
   };
 
+  // Safely extract paddings to prevent inner content layout issues
+  const classes = className.split(' ');
+  const paddingClass = classes.find(c => c.startsWith('p-')) || 'p-6';
+  const otherClasses = classes.filter(c => !c.startsWith('p-')).join(' ');
+
   return (
     <motion.div
       onMouseMove={handleMouseMove}
@@ -53,17 +94,25 @@ const PremiumCard: React.FC<PremiumCardProps> = ({ children, className = '', ...
         setIsHovered(false);
         if (props.onMouseLeave) props.onMouseLeave(e);
       }}
-      className={`relative overflow-hidden bg-gradient-to-br from-white/[0.025] to-white/[0.005] border border-white/[0.05] border-t-white/[0.12] rounded-2xl backdrop-blur-[12px] transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.05)] ${className}`}
+      className={`relative p-[1.5px] rounded-2xl overflow-hidden transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.65)] ${otherClasses}`}
       {...props}
     >
-      {/* Subtle radial cursor follow glow (clipped inside, under 4% opacity) */}
+      {/* Conic glowing border beam (Vercel style, 3.5s duration) */}
       <div 
-        style={{
-          background: `radial-gradient(150px circle at ${coords.x}px ${coords.y}px, rgba(22, 226, 122, 0.035), transparent 80%)`,
-        }}
-        className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-[-200%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.15),transparent_50%)] animate-border-beam pointer-events-none transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} 
       />
-      {children}
+
+      {/* Surface wrapper */}
+      <div className={`relative w-full h-full bg-gradient-to-br from-white/[0.025] to-white/[0.005] border border-white/[0.05] border-t-white/[0.12] rounded-2xl backdrop-blur-[12px] ${paddingClass}`}>
+        {/* Subtle radial cursor follow glow */}
+        <div 
+          style={{
+            background: `radial-gradient(150px circle at ${coords.x}px ${coords.y}px, rgba(22, 226, 122, 0.035), transparent 80%)`,
+          }}
+          className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+        />
+        {children}
+      </div>
     </motion.div>
   );
 };
@@ -107,11 +156,60 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   const journeyRef = useRef<HTMLDivElement>(null);
   const [journeyProgress, setJourneyProgress] = useState(0);
 
-  // Dynamic values for Dashboard Mockup animation
-  const [mockSavings, setMockSavings] = useState(0);
+  // Interactive allowance slider in Hero Mockup
+  const [sliderDeduction, setSliderDeduction] = useState(0);
   const [mockRegime, setMockRegime] = useState('OLD');
-  const [mockProgress, setMockProgress] = useState(45);
   const [mockBadge, setMockBadge] = useState('Sandbox Active');
+
+  // Dynamic values derived from allowance slider
+  const computedSavings = useMemo(() => 18240 + Math.round(sliderDeduction * 0.3), [sliderDeduction]);
+  const computedProgress = useMemo(() => Math.min(100, 72 + Math.round((sliderDeduction / 25000) * 28)), [sliderDeduction]);
+
+  // AI Copilot Interactive Query Simulator
+  const promptResponses = [
+    {
+      q: "What is Section 80D?",
+      a: "Section 80D allows a deduction of up to **₹25,000** for medical insurance premiums paid for yourself, spouse, and dependent children. You can claim an additional **₹25,000** (or ₹50,000 if senior citizen) for parents' premiums."
+    },
+    {
+      q: "Is standard deduction automatic?",
+      a: "Yes. For FY 2025-26 (AY 2026-27), a standard deduction of **₹75,000** under the New Tax Regime (and **₹50,000** under the Old Tax Regime) is applied automatically to all salaried individuals."
+    },
+    {
+      q: "Saves under New Regime?",
+      a: "You save **₹18,240** based on your gross salary of ₹8,50,000. Under the New Regime, tax brackets are wider and rates are lower, resulting in a ₹36,360 tax liability compared to ₹54,600."
+    }
+  ];
+
+  const [copilotQuery, setCopilotQuery] = useState("How much tax do I save under the New Regime?");
+  const [copilotResponse, setCopilotResponse] = useState(
+    "You save **₹18,240** by filing under the New Regime. This is because under the New Regime, standard deductions of ₹75,000 apply automatically, and your ₹8,50,000 gross salary is taxed under lower rate bands, resulting in a liability of ₹36,360 compared to ₹54,600 under the Old Regime."
+  );
+  const [isTyping, setIsTyping] = useState(false);
+
+  const handleTriggerPrompt = (idx: number) => {
+    if (isTyping) return;
+    playClickSound();
+    const prompt = promptResponses[idx];
+    setCopilotQuery(prompt.q);
+    setIsTyping(true);
+    setCopilotResponse("");
+    
+    let currentText = "";
+    const targetText = prompt.a;
+    let charIndex = 0;
+    
+    const interval = setInterval(() => {
+      if (charIndex < targetText.length) {
+        currentText += targetText.substring(0, charIndex + 2);
+        setCopilotResponse(currentText);
+        charIndex += 2;
+      } else {
+        clearInterval(interval);
+        setIsTyping(false);
+      }
+    }, 15);
+  };
 
   // Scroll Progress Trackers
   const { scrollYProgress } = useScroll();
@@ -214,33 +312,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
     };
   }, []);
 
-  // Animate financial numbers dynamically in Mockup on Mount
-  useEffect(() => {
-    const t1 = setTimeout(() => {
-      let currentVal = 0;
-      const interval = setInterval(() => {
-        currentVal += 912;
-        if (currentVal >= 18240) {
-          clearInterval(interval);
-          setMockSavings(18240);
-        } else {
-          setMockSavings(currentVal);
-        }
-      }, 25);
-      setMockRegime('NEW');
-      setMockBadge('Optimal Found');
-    }, 1200);
-
-    const t2 = setTimeout(() => {
-      setMockProgress(72);
-    }, 2800);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, []);
-
   const handleStartWorkspace = () => {
     playClickSound();
     onStart();
@@ -285,6 +356,26 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-[#020202] text-[#F6F7F8] font-sans antialiased selection:bg-[#16E27A] selection:text-[#050607] overflow-x-hidden relative">
       
+      {/* Inline styles for border beams & background drift keyframe animations */}
+      <style>{`
+        @keyframes border-beam {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animate-border-beam {
+          animation: border-beam 4s linear infinite;
+        }
+        @keyframes drift-particle {
+          0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+          15% { opacity: 0.25; }
+          85% { opacity: 0.25; }
+          100% { transform: translateY(-120px) translateX(15px); opacity: 0; }
+        }
+        .animate-drift {
+          animation: drift-particle 15s infinite ease-in-out;
+        }
+      `}</style>
+
       {/* Viewport Edge Vignette for cinematic layout depth */}
       <div className="pointer-events-none fixed inset-0 z-40 shadow-[inset_0_0_100px_rgba(0,0,0,0.85)]" />
 
@@ -490,6 +581,14 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <span className="text-sm font-black tracking-wider uppercase text-white select-none">
             Tax<span className="text-[#16E27A]">Sense</span>
           </span>
+          {/* Animated network operational latency badge */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/25 text-[8px] font-bold text-emerald-400 uppercase tracking-widest ml-2">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+            </span>
+            <span>24ms API</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -509,6 +608,31 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         onMouseMove={handleHeroMouseMove}
         className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-36 max-w-5xl mx-auto z-10"
       >
+        {/* Floating Ambient Particles Layer (12 drifting elements) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {[...Array(12)].map((_, i) => {
+            const delay = i * 1.5;
+            const size = (i % 3) + 2.5; // 2.5px to 4.5px
+            const left = (i * 9.1) % 100;
+            const duration = 12 + (i % 5) * 2;
+            return (
+              <div
+                key={i}
+                style={{
+                  left: `${left}%`,
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  backgroundColor: i % 2 === 0 ? '#16E27A' : '#3B82F6',
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${duration}s`,
+                  bottom: '20px',
+                }}
+                className="absolute rounded-full animate-drift opacity-0"
+              />
+            );
+          })}
+        </div>
+
         {/* Soft dynamic cursor-following background spotlight behind the mockup container */}
         <motion.div 
           style={{
@@ -576,7 +700,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           >
             <button
               onClick={handleStartWorkspace}
-              className="relative overflow-hidden w-full sm:w-auto px-7 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 hover:shadow-[0_0_25px_rgba(22,226,122,0.3)] active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
+              className="relative overflow-hidden w-full sm:w-auto px-7 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 hover:shadow-[0_0_25px_rgba(22,226,122,0.35)] active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               <span>Start Sandbox Workspace</span>
@@ -658,11 +782,31 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                   </div>
                 </div>
               </div>
+              
               <div className="p-4 bg-white/[0.01] border border-white/[0.04] rounded-2xl flex flex-col justify-between">
+                {/* Interactive Allowance Slider block */}
                 <div className="space-y-2">
-                  <span className="text-[9px] text-slate-550 font-bold uppercase block tracking-wider">AI Optimizer</span>
-                  <div className="p-2 bg-blue-500/5 border border-blue-500/10 rounded-lg text-[10px] text-blue-300">
-                    Claim under 80D is underutilized. Adding ₹10,000 saves ₹1,500.
+                  <span className="text-[9px] text-slate-500 font-bold uppercase block tracking-wider">AI Optimizer</span>
+                  <div className="p-2.5 bg-blue-500/5 border border-blue-500/10 rounded-xl space-y-1.5">
+                    <div className="flex justify-between text-[9px] text-blue-300">
+                      <span>Sec 80D premium:</span>
+                      <span className="font-mono font-bold">₹{sliderDeduction.toLocaleString('en-IN')}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="25000" 
+                      step="1000"
+                      value={sliderDeduction}
+                      onChange={(e) => {
+                        playClickSound();
+                        setSliderDeduction(Number(e.target.value));
+                      }}
+                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#16E27A]"
+                    />
+                    <div className="text-[7.5px] text-slate-550 leading-tight">
+                      Slide to claim medical premiums.
+                    </div>
                   </div>
                 </div>
                 
@@ -670,9 +814,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                   <div className="p-2 border border-white/[0.04] rounded-lg flex items-center justify-between text-[10px]">
                     <span className="text-slate-505">Savings:</span>
                     <span className="font-mono text-[#16E27A] font-bold">
-                      ₹{mockSavings.toLocaleString('en-IN')}
+                      <AnimatedCounter value={computedSavings} prefix="₹" />
                     </span>
                   </div>
+                  
+                  {/* Dynamic Allowance Progress indicator */}
+                  <div className="p-2 border border-white/[0.04] rounded-lg flex items-center gap-2 text-[10px]">
+                    <div className="relative w-4 h-4 flex-shrink-0">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4.5" />
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="#16E27A" strokeWidth="4.5" strokeDasharray={`${computedProgress}, 100`} />
+                      </svg>
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-mono">Deduction: {computedProgress}%</span>
+                  </div>
+
                   <div className="p-2 bg-[#16E27A]/10 border border-[#16E27A]/25 rounded-lg text-center text-[10px] text-[#16E27A] font-black">
                     Recommended: {mockRegime}
                   </div>
@@ -778,7 +934,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               <PremiumCard
                 key={idx}
                 className={`p-6 space-y-4 text-left relative transition-all duration-350 z-15 ${
-                  isStepActive ? 'border-[#16E27A]/30 bg-[#0E131B] -translate-y-1' : 'border-white/[0.04]'
+                  isStepActive ? 'border-[#16E27A]/35 bg-[#0E131B] -translate-y-1 shadow-[0_12px_45px_rgba(22,226,122,0.05)]' : 'border-white/[0.04]'
                 }`}
                 style={{
                   opacity: 0,
@@ -837,7 +993,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">Component 01</span>
                 <h3 className="text-base font-bold text-white">AI Extraction Details</h3>
                 <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                  Real-time parsed metadata displaying primary employer details, ITR-1 suitability metrics, and base salary.
+                  Real-time parsed employer metadata displaying primary entity details, ITR-1 suitability, and base salary.
                 </p>
               </PremiumCard>
 
@@ -846,11 +1002,11 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 onMouseLeave={() => setActiveShowcase(null)}
                 className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
                   activeShowcase === 'regime' 
-                    ? 'border-[#16E27A]/30 bg-[#0E131B] shadow-lg shadow-[#16E27A]/5' 
+                    ? 'border-blue-500/30 bg-[#0E131B] shadow-lg shadow-blue-500/5' 
                     : 'border-white/[0.04] bg-[#0E131B]/40 hover:border-white/[0.08]'
                 }`}
               >
-                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">Component 02</span>
+                <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider block mb-1">Component 02</span>
                 <h3 className="text-base font-bold text-white">Regime Comparison</h3>
                 <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                   Dynamically evaluates the optimal path, showing saving projections between New and Old regimes.
@@ -862,11 +1018,11 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 onMouseLeave={() => setActiveShowcase(null)}
                 className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
                   activeShowcase === 'optimization' 
-                    ? 'border-[#16E27A]/30 bg-[#0E131B] shadow-lg shadow-[#16E27A]/5' 
+                    ? 'border-amber-500/30 bg-[#0E131B] shadow-lg shadow-amber-500/5' 
                     : 'border-white/[0.04] bg-[#0E131B]/40 hover:border-white/[0.08]'
                 }`}
               >
-                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">Component 03</span>
+                <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider block mb-1">Component 03</span>
                 <h3 className="text-base font-bold text-white">Smart Optimization</h3>
                 <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                   Circular optimization percentage mapping standard allowances (80C, 80D, HRA) to underutilized opportunities.
@@ -874,7 +1030,11 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               </PremiumCard>
             </div>
 
-            <div className="lg:col-span-3 p-5 bg-[#0E131B]/60 border border-white/[0.04] rounded-3xl relative overflow-hidden aspect-[4/3] flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
+            <div className={`lg:col-span-3 p-5 bg-[#0E131B]/60 border rounded-3xl relative overflow-hidden aspect-[4/3] flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.55)] transition-all duration-500 ${
+              activeShowcase === 'extraction' ? 'border-[#16E27A]/25 shadow-[#16E27A]/3' : 
+              activeShowcase === 'regime' ? 'border-blue-500/25 shadow-blue-500/3' : 
+              activeShowcase === 'optimization' ? 'border-amber-500/25 shadow-amber-500/3' : 'border-white/[0.04]'
+            }`}>
               {/* Bezel bezel depth layer reflections */}
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-white/[0.025] pointer-events-none z-20" />
               
@@ -910,23 +1070,23 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <div className="col-span-1 space-y-4 flex flex-col justify-between">
                   <div className={`p-4 bg-[#050607]/80 border rounded-2xl transition-all duration-300 flex-1 flex flex-col justify-between ${
                     activeShowcase === 'regime' 
-                      ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
+                      ? 'border-blue-500 shadow-md shadow-blue-500/5 scale-[1.01] bg-[#0E131B]/80' 
                       : activeShowcase === null ? 'border-white/[0.04]' : 'border-white/[0.02] opacity-30'
                   }`}>
                     <div className="space-y-1">
-                      <span className="text-[8px] font-bold text-blue-400 uppercase tracking-widest block">Regime Savings</span>
+                      <span className="text-[8px] font-bold text-blue-450 uppercase tracking-widest block">Regime Savings</span>
                       <h4 className="text-xs font-bold text-white">New Optimal</h4>
                     </div>
                     <div className="space-y-1 text-[9px] font-mono">
                       <div className="flex justify-between"><span className="text-slate-500">Old:</span><span className="text-slate-400">₹54,600</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500">New:</span><span className="text-[#16E27A]">₹36,360</span></div>
-                      <div className="pt-1.5 border-t border-white/[0.04] flex justify-between font-bold"><span className="text-white">Saves:</span><span className="text-[#16E27A]">₹18,240</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">New:</span><span className="text-blue-405">₹36,360</span></div>
+                      <div className="pt-1.5 border-t border-white/[0.04] flex justify-between font-bold"><span className="text-white">Saves:</span><span className="text-blue-405">₹18,240</span></div>
                     </div>
                   </div>
 
                   <div className={`p-4 bg-[#050607]/80 border rounded-2xl transition-all duration-300 flex-1 flex flex-col justify-between ${
                     activeShowcase === 'optimization' 
-                      ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
+                      ? 'border-amber-500 shadow-md shadow-amber-500/5 scale-[1.01] bg-[#0E131B]/80' 
                       : activeShowcase === null ? 'border-white/[0.04]' : 'border-white/[0.02] opacity-30'
                   }`}>
                     <div className="space-y-1">
@@ -936,12 +1096,12 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                     <div className="flex items-center gap-3">
                       <div className="relative w-8 h-8 flex-shrink-0">
                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3.5" />
-                          <circle cx="18" cy="18" r="16" fill="none" stroke="#16E27A" strokeWidth="3.5" strokeDasharray="72, 100" />
+                          <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4.5" />
+                          <circle cx="18" cy="18" r="16" fill="none" stroke="#F59E0B" strokeWidth="4.5" strokeDasharray="72, 100" />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center text-[8px] font-mono font-bold text-white">72%</div>
                       </div>
-                      <span className="text-[9px] text-slate-400 leading-tight">₹1.5L of ₹2L claimed.</span>
+                      <span className="text-[9px] text-slate-450 leading-tight">₹1.5L of ₹2L claimed.</span>
                     </div>
                   </div>
                 </div>
@@ -1040,7 +1200,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* SECTION 6: AI COPILOT SHOWCASE */}
+      {/* SECTION 6: AI COPILOT SHOWCASE (Interactive prompt simulator) */}
       <section id="copilot" className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-4xl mx-auto space-y-20">
           <motion.div 
@@ -1053,9 +1213,22 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-widest">Conversational Assistant</span>
             <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">AI Copilot Showcase</h2>
             <p className="text-xs sm:text-sm text-[#8A96A8] max-w-md mx-auto">
-              Ask tax-related questions to the copilot and get mathematically backed optimizations.
+              Click preset prompt pills to ask the AI assistant tax optimization queries.
             </p>
           </motion.div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-lg mx-auto">
+            {promptResponses.map((p, idx) => (
+              <button
+                key={idx}
+                disabled={isTyping}
+                onClick={() => handleTriggerPrompt(idx)}
+                className="px-3.5 py-1.5 bg-white/[0.02] hover:bg-[#16E27A]/10 border border-white/[0.04] hover:border-[#16E27A]/25 rounded-full text-slate-300 hover:text-[#16E27A] transition-all text-[10px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {p.q}
+              </button>
+            ))}
+          </div>
 
           <PremiumCard className="p-6 bg-[#0E131B] border border-white/[0.05] rounded-3xl space-y-6 text-left max-w-xl mx-auto">
             {/* User Turn */}
@@ -1064,8 +1237,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 U
               </div>
               <div className="flex flex-col items-end max-w-[85%]">
-                <div className="px-4 py-2.5 rounded-2xl bg-blue-600/90 text-white rounded-tr-none text-xs">
-                  How much tax do I save under the New Regime?
+                <div className="px-4 py-2.5 rounded-2xl bg-blue-600/90 text-white rounded-tr-none text-xs font-medium">
+                  {copilotQuery}
                 </div>
               </div>
             </div>
@@ -1076,8 +1249,11 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 AI
               </div>
               <div className="flex flex-col items-start max-w-[85%] space-y-2">
-                <div className="px-4 py-2.5 rounded-2xl bg-[#050607] border border-white/[0.06] text-slate-300 rounded-tl-none text-xs leading-relaxed">
-                  You save **₹18,240** by filing under the New Regime. This is because under the New Regime, standard deductions of ₹75,000 apply automatically, and your ₹8,50,000 gross salary is taxed under lower rate bands, resulting in a liability of ₹36,360 compared to ₹54,600 under the Old Regime.
+                <div className="px-4 py-2.5 rounded-2xl bg-[#050607] border border-white/[0.06] text-slate-300 rounded-tl-none text-xs leading-relaxed min-h-[50px]">
+                  {copilotResponse}
+                  {isTyping && (
+                    <span className="inline-block w-1.5 h-3 bg-[#16E27A] ml-1 animate-pulse" />
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[8px] bg-[#16E27A]/10 text-[#16E27A] border border-[#16E27A]/20 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
