@@ -13,6 +13,7 @@ import { useTaxStore } from '../store/useTaxStore';
 import { calculateTax, formatINR } from '../utils/taxCalculator';
 import { TaxData } from '../types';
 import { TAX_CONFIG } from '../config';
+import { ExportService } from '../services/ExportService';
 
 export default function ExportControl() {
   const [copied, setCopied] = useState(false);
@@ -125,184 +126,10 @@ export default function ExportControl() {
 
   // Generate dynamic, beautiful PDF download
   const handleDownloadSummary = () => {
-    try {
-      const doc = new jsPDF();
-      
-      // Page styling & layout helper
-      const margin = 15;
-      let y = 20;
-      
-      const addLine = (yPos: number) => {
-        doc.setDrawColor(226, 232, 240);
-        doc.line(margin, yPos, 210 - margin, yPos);
-      };
-      
-      const formatVal = (val: number) => {
-        return 'Rs. ' + Math.abs(val).toLocaleString('en-IN');
-      };
-
-      // Header block
-      doc.setFillColor(30, 41, 59); // Slate-800
-      doc.rect(margin, y, 210 - 2 * margin, 24, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      doc.text('TAX-SENSE: TAX FILING SUMMARY', margin + 6, y + 10);
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text(`Assessment Year: ${TAX_CONFIG.assessmentYear}  |  Financial Year: ${TAX_CONFIG.financialYear}  |  Form: ${formType}`, margin + 6, y + 17);
-      
-      y += 34;
-
-      // Recommended Regime Box
-      doc.setFillColor(241, 245, 249); // Slate-100
-      doc.rect(margin, y, 210 - 2 * margin, 18, 'F');
-      
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(16, 185, 129); // Emerald-500
-      doc.text('RECOMMENDATION:', margin + 6, y + 7);
-      
-      doc.setTextColor(30, 41, 59); // Slate-800
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Filing under the ${recommendedRegime === 'NEW' ? 'NEW TAX REGIME' : 'OLD TAX REGIME'} is optimal. Savings of ${formatVal(savings)} relative to alternate.`, margin + 6, y + 13);
-      
-      y += 28;
-
-      // Column 1: Item details
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(15, 23, 42);
-      doc.text('Income Profile Summary', margin, y);
-      y += 6;
-      addLine(y);
-      y += 6;
-
-      const items = [
-        ['Gross Annual Salary', formatVal(taxData.grossSalary)],
-        ['Standard Deduction', formatVal(currentStandardDeduction)],
-        ['HRA Exemption', formatVal(currentHraExemption)],
-        ['Net Salary Income', formatVal(currentNetSalary)],
-        ['Other Sources Income', formatVal(taxData.otherIncome)],
-      ];
-
-      if (formType === 'ITR-2') {
-        items.push(['Short-Term Cap Gains (STCG)', formatVal(taxData.stcg)]);
-        items.push(['Long-Term Cap Gains (LTCG)', formatVal(taxData.ltcg)]);
-      }
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.setTextColor(51, 65, 85);
-      
-      for (const item of items) {
-        doc.text(item[0], margin + 2, y);
-        doc.setFont('helvetica', 'bold');
-        doc.text(item[1], 150, y);
-        doc.setFont('helvetica', 'normal');
-        y += 7;
-      }
-
-      y += 5;
-
-      // Section 2: Deductions
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(15, 23, 42);
-      doc.text('Chapter VI-A Deductions Claimed', margin, y);
-      y += 6;
-      addLine(y);
-      y += 6;
-
-      const deductions = [
-        ['Section 80C (PPF, EPF, LIC, ELSS, principal loan)', formatVal(filingPayload.deductionsChapterVIA.section80C || 0)],
-        ['Section 80D (Health Insurance Premium)', formatVal(filingPayload.deductionsChapterVIA.section80D || 0)],
-        ['Section 10(13A) HRA Exemption', formatVal(filingPayload.deductionsChapterVIA.sectionHRA || 0)],
-        ['Section 80CCD(1B) Standalone Employee NPS', formatVal(filingPayload.deductionsChapterVIA.section80CCD1B || 0)],
-        ['Section 80CCD(2) Employer NPS Contribution', formatVal(filingPayload.deductionsChapterVIA.section80CCD2 || 0)],
-        ['Section 80GG (Rent Paid)', formatVal(filingPayload.deductionsChapterVIA.section80GG || 0)],
-        ['Section 80E (Education Loan Interest)', formatVal(filingPayload.deductionsChapterVIA.section80E || 0)],
-      ];
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.setTextColor(51, 65, 85);
-
-      for (const item of deductions) {
-        if (parseFloat(item[1].replace(/[^0-9]/g, '')) > 0) {
-          doc.text(item[0], margin + 2, y);
-          doc.setFont('helvetica', 'bold');
-          doc.text(item[1], 150, y);
-          doc.setFont('helvetica', 'normal');
-          y += 7;
-        }
-      }
-
-      y += 5;
-
-      // Section 3: Tax Payable / Refund
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(15, 23, 42);
-      doc.text('Tax Computation & Reconciliation', margin, y);
-      y += 6;
-      addLine(y);
-      y += 6;
-
-      const comp = [
-        ['Total Taxable Income', formatVal(currentRegimeBreakdown.taxableIncome)],
-        ['Calculated Base Tax', formatVal(currentRegimeBreakdown.baseTax)],
-        ['Section 87A Rebate', formatVal(currentRegimeBreakdown.rebate87A)],
-        ['Health & Cess (4%)', formatVal(currentRegimeBreakdown.cess)],
-        ['Total Tax Liability', formatVal(currentRegimeBreakdown.totalTaxPayable)],
-        ['TDS Deposited / Paid', formatVal(taxData.tdsDeducted)],
-      ];
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.setTextColor(51, 65, 85);
-
-      for (const item of comp) {
-        doc.text(item[0], margin + 2, y);
-        doc.setFont('helvetica', 'bold');
-        doc.text(item[1], 150, y);
-        doc.setFont('helvetica', 'normal');
-        y += 7;
-      }
-
-      y += 3;
-      addLine(y);
-      y += 6;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      
-      const balanceValue = currentRegimeBreakdown.refundOrOwed;
-      if (balanceValue <= 0) {
-        doc.setTextColor(16, 185, 129); // Green
-        doc.text('FINAL STATUS: REFUND DUE', margin + 2, y);
-        doc.text(formatVal(balanceValue), 150, y);
-      } else {
-        doc.setTextColor(220, 38, 38); // Red
-        doc.text('FINAL STATUS: TAX PAYABLE / OWED', margin + 2, y);
-        doc.text(formatVal(balanceValue), 150, y);
-      }
-
-      y += 15;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(148, 163, 184); // Slate-400
-      doc.text(`Report generated via TaxSense ITR Copilot on ${new Date().toLocaleString()}`, margin, y);
-      doc.text('Disclaimer: This is a smart tax filing projection based on user inputs. Verify all schedules before final submission.', margin, y + 4);
-
-      doc.save(`TaxSense_${formType}_Summary_${taxData.grossSalary}.pdf`);
+    const success = ExportService.downloadPDF(taxData, formType);
+    if (success) {
       setDownloaded(true);
       setTimeout(() => setDownloaded(false), 2000);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
-      alert('Could not generate PDF. Please try again.');
     }
   };
 
@@ -434,28 +261,40 @@ _Generated via TaxSense ITR Copilot_`;
             </button>
           </div>
 
-          {/* Copy Button */}
-          <button
-            id="btn-copy-itr1-json"
-            onClick={handleCopyJSON}
-            className={`w-full h-8 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer select-none active:scale-95 border ${
-              copied
-                ? 'bg-emerald-600 text-white border-emerald-500'
-                : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-950'
-            }`}
-          >
-            {copied ? (
-              <>
-                <Check className="h-3 w-3 text-white animate-pulse" />
-                <span>Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-3 w-3 text-slate-400" />
-                <span>Copy JSON</span>
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-1.5">
+            {/* Copy Button */}
+            <button
+              id="btn-copy-itr1-json"
+              onClick={handleCopyJSON}
+              className={`w-full h-8 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer select-none active:scale-95 border ${
+                copied
+                  ? 'bg-emerald-600 text-white border-emerald-500'
+                  : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-950'
+              }`}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3 w-3 text-white animate-pulse" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3 w-3 text-slate-400" />
+                  <span>Copy JSON</span>
+                </>
+              )}
+            </button>
+
+            {/* Download Button */}
+            <button
+              id="btn-download-json-direct"
+              onClick={() => ExportService.downloadJSON(taxData, formType)}
+              className="w-full h-8 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer select-none active:scale-95"
+            >
+              <Download className="h-3 w-3 text-slate-400" />
+              <span>Download JSON</span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -21,6 +21,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
   
   // Streaming state
   const [streamingMessage, setStreamingMessage] = useState('');
+  const isSubmittingRef = useRef(false);
   
   const suggestedQuestions = [
     "How can I save more tax?",
@@ -40,10 +41,15 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
   }, [chatHistory, streamingMessage]);
 
   const handleSubmit = async (text: string) => {
-    if (!text.trim() || isChatLoading) return;
+    if (!text.trim() || isChatLoading || isSubmittingRef.current) return;
     
     const userMsg = text.trim();
+    isSubmittingRef.current = true;
     setQuery('');
+    
+    // Read the synchronous snapshot of history before appending
+    const historySnapshot = useTaxStore.getState().chatHistory || [];
+    
     addChatMessage({ role: 'user', content: userMsg });
     setIsChatLoading(true);
     setStreamingMessage('');
@@ -54,7 +60,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
       const systemPrompt = PromptBuilder.buildSystemPrompt(context);
       
       const payload = {
-        messages: ConversationMemory.formatForAPI([...chatHistory, { role: 'user', content: userMsg }]),
+        messages: ConversationMemory.formatForAPI([...historySnapshot, { role: 'user', content: userMsg }]),
         systemPrompt
       };
 
@@ -64,12 +70,10 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
         (chunk) => {
           setStreamingMessage(chunk);
         },
-        () => {
-          // Complete
-          setStreamingMessage((finalText) => {
-            addChatMessage({ role: 'assistant', content: finalText });
-            return '';
-          });
+        (finalText) => {
+          // Complete: Append the final accumulated model message safely
+          addChatMessage({ role: 'assistant', content: finalText || "No response received from model." });
+          setStreamingMessage('');
           setIsChatLoading(false);
         },
         (err) => {
@@ -82,6 +86,8 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
     } catch (err) {
       console.error(err);
       setIsChatLoading(false);
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 
@@ -152,10 +158,10 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
               >
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
+                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
                   msg.role === 'user' 
                     ? 'bg-slate-800 border-slate-700 text-slate-300' 
-                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                    : 'bg-[#16E27A]/10 border-[#16E27A]/25 text-[#16E27A]'
                 }`}>
                   {msg.role === 'user' ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
                 </div>
@@ -163,8 +169,8 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
                 <div className={`flex flex-col max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div className={`px-4 py-3 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
                     msg.role === 'user' 
-                      ? 'bg-blue-600 text-white rounded-tr-none' 
-                      : 'bg-slate-900 border border-slate-800 text-slate-300 rounded-tl-none prose prose-invert prose-p:my-1 prose-a:text-blue-400 prose-strong:text-slate-100 prose-strong:font-extrabold prose-ul:my-1 prose-li:my-0'
+                      ? 'bg-blue-600/90 text-white rounded-tr-none border border-blue-500/20' 
+                      : 'bg-[#0E131B] border border-white/[0.06] text-slate-300 rounded-tl-none prose prose-invert prose-p:my-1 prose-a:text-[#16E27A] prose-strong:text-[#F6F7F8] prose-strong:font-extrabold prose-ul:my-1 prose-li:my-0'
                   }`}>
                     {msg.role === 'user' ? (
                       msg.content
@@ -188,18 +194,18 @@ export const AICopilot: React.FC<AICopilotProps> = ({ isOpen, onClose }) => {
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="flex gap-3 flex-row"
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-[#16E27A]/10 border border-[#16E27A]/25 text-[#16E27A]">
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
                   <div className="flex flex-col max-w-[85%] items-start">
-                    <div className="px-4 py-3 rounded-2xl text-[13px] leading-relaxed bg-slate-900 border border-slate-800 text-slate-300 rounded-tl-none prose prose-invert min-w-[60px]">
+                    <div className="px-4 py-3 rounded-2xl text-[13px] leading-relaxed bg-[#0E131B] border border-white/[0.06] text-slate-300 rounded-tl-none prose prose-invert min-w-[60px]">
                       {streamingMessage ? (
                         <ReactMarkdown>{streamingMessage}</ReactMarkdown>
                       ) : (
                         <div className="flex items-center gap-1 h-5">
-                          <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                          <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                          <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" />
+                          <span className="w-1.5 h-1.5 bg-[#16E27A]/80 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                          <span className="w-1.5 h-1.5 bg-[#16E27A]/80 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                          <span className="w-1.5 h-1.5 bg-[#16E27A]/80 rounded-full animate-bounce" />
                         </div>
                       )}
                     </div>

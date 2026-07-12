@@ -12,6 +12,7 @@ const DocumentVault = lazy(() => import('./components/DocumentVault'));
 const AICopilot = lazy(() => import('./components/copilot/AICopilot').then(m => ({ default: m.AICopilot })));
 import { useTaxStore, useTaxStoreHydrated } from './store/useTaxStore';
 import LandingPage from './components/LandingPage';
+import { ExportService } from './services/ExportService';
 
 import { 
   Lock, 
@@ -80,7 +81,8 @@ const ParamInfo: React.FC<{ text: string }> = ({ text }) => {
 export default function App() {
   const hydrated = useTaxStoreHydrated();
   const [isFilingGuideOpen, setIsFilingGuideOpen] = useState(false);
-  const [activeStep, setActiveStep] = useState(2); // Start at Authentication (Stage 2)
+  const activeStep = useTaxStore((state) => state.activeStep);
+  const setActiveStep = useTaxStore((state) => state.setActiveStep);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [authEmail, setAuthEmail] = useState('guest@taxsense.in');
   const [authPassword, setAuthPassword] = useState('••••••••••••');
@@ -306,10 +308,55 @@ export default function App() {
       totalDeductions: taxData.deduction80C + taxData.deduction80D + taxData.hraExemption + taxData.section24b,
       netTaxPaid: netTax,
       recommendedRegime: taxSummary.recommendedRegime,
-      formType: formType
+      formType: formType,
+      taxData: { ...taxData }
     });
     
     setShowCelebration(true);
+  };
+
+  const handleDownloadHistoryJSON = (item: FilingHistoryItem) => {
+    let dataToExport = item.taxData;
+    if (!dataToExport) {
+      dataToExport = {
+        assessmentYear: TAX_CONFIG.assessmentYear,
+        grossSalary: item.grossSalary,
+        hraExemption: 0,
+        ltaExemption: 0,
+        standardDeductionOld: TAX_CONFIG.standardDeductionOld,
+        standardDeductionNew: TAX_CONFIG.standardDeductionNew,
+        otherIncome: 0,
+        deduction80C: item.recommendedRegime === 'OLD' ? Math.min(item.totalDeductions, 150000) : 0,
+        deduction80D: item.recommendedRegime === 'OLD' ? Math.max(0, Math.min(item.totalDeductions - 150000, 25000)) : 0,
+        deduction80TTA: 0,
+        deduction80G: 0,
+        section24b: 0,
+        tdsDeducted: 0,
+      };
+    }
+    ExportService.downloadJSON(dataToExport, item.formType);
+  };
+
+  const handleDownloadHistoryPDF = (item: FilingHistoryItem) => {
+    let dataToExport = item.taxData;
+    if (!dataToExport) {
+      dataToExport = {
+        assessmentYear: TAX_CONFIG.assessmentYear,
+        grossSalary: item.grossSalary,
+        hraExemption: 0,
+        ltaExemption: 0,
+        standardDeductionOld: TAX_CONFIG.standardDeductionOld,
+        standardDeductionNew: TAX_CONFIG.standardDeductionNew,
+        otherIncome: 0,
+        deduction80C: item.recommendedRegime === 'OLD' ? Math.min(item.totalDeductions, 150000) : 0,
+        deduction80D: item.recommendedRegime === 'OLD' ? Math.max(0, Math.min(item.totalDeductions - 150000, 25000)) : 0,
+        deduction80TTA: 0,
+        deduction80G: 0,
+        section24b: 0,
+        tdsDeducted: 0,
+      };
+    }
+    ExportService.downloadPDF(dataToExport, item.formType);
   };
 
   // Get dynamic greeting greeting message based on time of day
@@ -324,11 +371,11 @@ export default function App() {
 
   // Show the landing page immediately to avoid initial loading block/spinner
   if (currentStep === 'HOME' || !hydrated) {
-    return <LandingPage onStart={() => { if (hydrated) { setStep('LANDING'); setActiveStep(2); } }} />;
+    return <LandingPage onStart={() => { if (hydrated) { setActiveStep(2); } }} />;
   }
 
   return (
-    <div id="taxsense-app" className="min-h-screen bg-[#040608] text-white dark:text-slate-100 flex font-sans select-none antialiased relative overflow-hidden">
+    <div id="taxsense-app" className="min-h-screen bg-[#050607] text-white dark:text-slate-100 flex font-sans select-none antialiased relative overflow-hidden">
       
       {/* Pinned fixed cinematic noise texture across the viewport */}
       <div className="cinematic-noise" />
@@ -437,21 +484,21 @@ export default function App() {
                       setActiveStep(11); // Proceed to Dashboard Welcome Hub (Stage 11)
                     }, 800);
                   }}
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md shadow-blue-500/10 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-[#16E27A]/10 hover:shadow-[#16E27A]/20 cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isAuthenticating ? (
                     <>
                       <div className="flex gap-1 items-center shrink-0">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
+                        <div className="w-1.5 h-1.5 bg-[#050607] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-1.5 h-1.5 bg-[#050607] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-1.5 h-1.5 bg-[#050607] rounded-full animate-bounce" />
                       </div>
                       <span>Initializing Demonstration Workspace...</span>
                     </>
                   ) : (
                     <>
                       <span>Enter Sandbox Workspace</span>
-                      <ArrowRight className="w-4 h-4 text-white" />
+                      <ArrowRight className="w-4 h-4 text-[#050607]" />
                     </>
                   )}
                 </button>
@@ -529,19 +576,19 @@ export default function App() {
                           isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'
                         } py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer group active:scale-98 ${
                           isActive 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                            : 'text-slate-400 hover:bg-white/[0.03] hover:text-white border border-transparent'
+                            ? 'bg-[#16E27A]/10 text-[#16E27A] border border-[#16E27A]/20' 
+                            : 'text-[#8A96A8] hover:bg-white/[0.03] hover:text-[#F6F7F8] border border-transparent'
                         }`}
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <IconComp className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-emerald-400 animate-pulse' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                          <IconComp className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#16E27A] animate-pulse' : 'text-slate-400 group-hover:text-slate-200'}`} />
                           {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
                         </div>
                         {!isSidebarCollapsed && (
                           <div className="flex items-center gap-1">
-                            {item.completed && <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                            {item.completed && <CheckCircle className="w-3.5 h-3.5 text-[#16E27A] shrink-0" />}
                             {item.badge && <span className="text-[8px] bg-blue-600/30 text-blue-400 px-1 py-0.5 rounded font-black tracking-wider uppercase shrink-0">{item.badge}</span>}
-                            {item.savings && <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-1 py-0.5 rounded font-black shrink-0">₹{taxCalculationResult.savings}</span>}
+                            {item.savings && <span className="text-[8px] bg-[#16E27A]/10 text-[#16E27A] px-1 py-0.5 rounded font-black shrink-0">₹{taxCalculationResult.savings}</span>}
                           </div>
                         )}
                       </button>
@@ -555,25 +602,25 @@ export default function App() {
                 {/* Background Ingestion Status indicator */}
                 {ingestionState !== 'IDLE' && (
                   <div 
-                    title={`${backgroundStatusMessage} (${backgroundProgress}%)`}
-                    className={`p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1 ${
-                      isSidebarCollapsed ? 'flex justify-center items-center' : ''
-                    }`}
+                     title={`${backgroundStatusMessage} (${backgroundProgress}%)`}
+                     className={`p-2 bg-[#16E27A]/10 border border-[#16E27A]/20 rounded-xl space-y-1 ${
+                       isSidebarCollapsed ? 'flex justify-center items-center' : ''
+                     }`}
                   >
                     {isSidebarCollapsed ? (
                       <div className="relative">
                         {ingestionState === 'COMPLETED' ? (
-                          <CheckCircle className="w-4.5 h-4.5 text-emerald-450" />
+                          <CheckCircle className="w-4.5 h-4.5 text-[#16E27A]" />
                         ) : (
                           <>
-                            <Cpu className="w-4.5 h-4.5 text-emerald-450 animate-spin" />
-                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-450 rounded-full animate-ping" />
+                            <Cpu className="w-4.5 h-4.5 text-[#16E27A] animate-spin" />
+                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#16E27A] rounded-full animate-ping" />
                           </>
                         )}
                       </div>
                     ) : (
                       <div className="space-y-1 text-left">
-                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-emerald-450">
+                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-[#16E27A]">
                           <span className="flex items-center gap-1">
                             {ingestionState === 'COMPLETED' ? (
                               <CheckCircle className="w-3.5 h-3.5 text-emerald-450" />
@@ -1488,12 +1535,18 @@ export default function App() {
                                   </div>
 
                                   <div className="flex items-center gap-3.5 text-[10px] text-slate-400 font-bold pt-1">
-                                    <button className="flex items-center gap-1 hover:text-blue-400 cursor-pointer select-none transition-colors">
+                                    <button 
+                                      onClick={() => handleDownloadHistoryJSON(item)}
+                                      className="flex items-center gap-1 hover:text-blue-400 cursor-pointer select-none transition-colors"
+                                    >
                                       <Download className="w-3.5 h-3.5" />
                                       <span>Download JSON return</span>
                                     </button>
                                     <span>•</span>
-                                    <button className="flex items-center gap-1 hover:text-blue-400 cursor-pointer select-none transition-colors">
+                                    <button 
+                                      onClick={() => handleDownloadHistoryPDF(item)}
+                                      className="flex items-center gap-1 hover:text-blue-400 cursor-pointer select-none transition-colors"
+                                    >
                                       <Printer className="w-3.5 h-3.5" />
                                       <span>Print Summary PDF</span>
                                     </button>

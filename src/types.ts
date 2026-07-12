@@ -73,4 +73,5 @@ export interface FilingHistoryItem {
   netTaxPaid: number;
   recommendedRegime: 'NEW' | 'OLD';
   formType: 'ITR-1' | 'ITR-2';
+  taxData?: TaxData;
 }

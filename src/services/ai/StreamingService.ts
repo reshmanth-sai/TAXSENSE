@@ -7,7 +7,7 @@ export class StreamingService {
     url: string, 
     body: any, 
     onChunk: (text: string) => void,
-    onComplete: () => void,
+    onComplete: (fullText: string) => void,
     onError: (err: Error) => void
   ) {
     try {
@@ -30,38 +30,52 @@ export class StreamingService {
 
       let done = false;
       let fullText = '';
+      let buffer = '';
 
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
         
         if (value) {
-          const chunk = decoder.decode(value, { stream: true });
+          buffer += decoder.decode(value, { stream: true });
           
-          // Assuming the backend sends Server-Sent Events (SSE) format: 'data: "text"\n\n'
-          const lines = chunk.split('\\n');
+          // Split by actual newline characters (carriage return optional)
+          const lines = buffer.split(/\r?\n/);
+          
+          // Keep the last partial line in the buffer
+          buffer = lines.pop() || '';
+          
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
+            const trimmed = line.trim();
+            if (trimmed.startsWith('data: ')) {
+              const data = trimmed.slice(6);
               if (data === '[DONE]') {
                 done = true;
                 break;
               }
+              
               try {
                 const parsed = JSON.parse(data);
+                if (parsed.error) {
+                  throw new Error(parsed.error);
+                }
                 if (parsed.text) {
                   fullText += parsed.text;
                   onChunk(fullText);
                 }
-              } catch (e) {
-                // If it's not valid JSON, it might be raw text chunks. Handle gracefully.
+              } catch (e: any) {
+                // If it is a parsed backend error, propagate it
+                if (data.includes('"error"')) {
+                  throw e;
+                }
+                // Otherwise ignore parsing errors (e.g. for incomplete JSON lines)
               }
             }
           }
         }
       }
       
-      onComplete();
+      onComplete(fullText);
     } catch (err: any) {
       onError(err);
     }

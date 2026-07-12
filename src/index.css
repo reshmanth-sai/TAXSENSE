@@ -11,14 +11,14 @@
 /* Base enhancements */
 body {
   font-family: var(--font-sans);
-  background-color: #F8FAFC; /* Slate 50 */
-  color: #0F172A; /* Slate 900 */
-  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .dark body {
-  background-color: #0F172A; /* Slate 900 */
-  color: #F8FAFC; /* Slate 50 */
+  background-color: #050607;
+  color: #F6F7F8;
 }
 
 /* Accessibility Focus States */
@@ -27,7 +27,7 @@ input:focus-visible,
 select:focus-visible, 
 textarea:focus-visible, 
 a:focus-visible {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid #16E27A;
   outline-offset: 2px;
 }
 
@@ -36,7 +36,7 @@ a:focus-visible {
 .dark select:focus-visible, 
 .dark textarea:focus-visible, 
 .dark a:focus-visible {
-  outline: 2px solid #60A5FA;
+  outline: 2px solid #5BEAA5;
 }
 
 /* Custom Scrollbars */
@@ -48,20 +48,20 @@ a:focus-visible {
   background: #F8FAFC;
 }
 .dark ::-webkit-scrollbar-track {
-  background: #0F172A;
+  background: #050607;
 }
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: rgba(255, 255, 255, 0.08);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* Shifting Shimmer Keyframes and Utilities */
@@ -81,7 +81,7 @@ a:focus-visible {
 }
 
 .animate-shimmer-dark {
-  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background: linear-gradient(90deg, #0E131B 25%, rgba(255,255,255,0.06) 50%, #0E131B 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite linear;
 }
@@ -94,9 +94,11 @@ a:focus-visible {
 .dark #extraction-confirm-card,
 .dark #filing-guide-modal,
 .dark #portfolio-sync-widget {
-  background-color: #1e293b !important; /* bg-slate-800 */
-  border-color: #334155 !important; /* border-slate-700 */
-  color: #cbd5e1 !important; /* text-slate-300 */
+  background-color: #0E131B !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #F6F7F8 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.02) !important;
+  border-radius: 16px !important;
 }
 
 /* Background overrides for subregions */
@@ -119,9 +121,9 @@ a:focus-visible {
 .dark #portfolio-sync-widget .bg-slate-50,
 .dark #portfolio-sync-widget .bg-neutral-950,
 .dark #portfolio-sync-widget .bg-neutral-900 {
-  background-color: #0f172a !important; /* bg-slate-900 */
-  border-color: #334155 !important;
-  color: #e2e8f0 !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #F6F7F8 !important;
 }
 
 /* Title and typography colors */
@@ -137,7 +139,7 @@ a:focus-visible {
 .dark #filing-guide-modal h3,
 .dark #portfolio-sync-widget h3,
 .dark #portfolio-sync-widget h4 {
-  color: #ffffff !important;
+  color: #F6F7F8 !important;
 }
 
 /* Body / label text adjustments */
@@ -151,7 +153,7 @@ a:focus-visible {
 .dark #filing-guide-modal label,
 .dark #portfolio-sync-widget p,
 .dark #portfolio-sync-widget label {
-  color: #94a3b8 !important;
+  color: #8A96A8 !important;
 }
 
 /* Text inputs styling */
@@ -160,21 +162,21 @@ a:focus-visible {
 .dark #extraction-confirm-card input[type="text"],
 .dark #extraction-confirm-card input[type="number"],
 .dark #portfolio-sync-widget input[type="text"] {
-  background-color: #0f172a !important;
-  color: #ffffff !important;
-  border-color: #334155 !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: #F6F7F8 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .dark #deductions-card input[type="text"]:focus,
 .dark #extraction-confirm-card input[type="text"]:focus,
 .dark #portfolio-sync-widget input[type="text"]:focus {
-  border-color: #3b82f6 !important;
+  border-color: #16E27A !important;
   outline: none !important;
 }
 
 /* Range input accent adjustments */
 .dark #deductions-card input[type="range"] {
-  background-color: #334155 !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Button variants styling */
@@ -182,36 +184,37 @@ a:focus-visible {
 .dark #export-hub-container button.bg-white,
 .dark #filing-guide-modal button.bg-white,
 .dark #portfolio-sync-widget button.bg-white {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #8A96A8 !important;
 }
 
 .dark #deductions-card button.bg-white:hover,
 .dark #export-hub-container button.bg-white:hover,
 .dark #filing-guide-modal button.bg-white:hover {
-  background-color: #334155 !important;
-  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: #F6F7F8 !important;
 }
 
 .dark #deductions-card button.bg-neutral-900,
 .dark #export-hub-container button.bg-neutral-900,
 .dark #filing-guide-modal button.bg-neutral-900,
 .dark #portfolio-sync-widget button.bg-neutral-900 {
-  background-color: #3b82f6 !important; /* Accent blue */
-  color: #ffffff !important;
+  background-color: #16E27A !important;
+  color: #050607 !important;
+  font-weight: 700 !important;
 }
 
 .dark #deductions-card button.bg-neutral-900:hover,
 .dark #export-hub-container button.bg-neutral-900:hover,
 .dark #filing-guide-modal button.bg-neutral-900:hover {
-  background-color: #2563eb !important;
+  background-color: #5BEAA5 !important;
 }
 
 /* Skeletons */
 .dark #deductions-card-skeleton .bg-slate-200,
 .dark #deductions-card-skeleton .bg-slate-300 {
-  background-color: #334155 !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Borders overrides */
@@ -228,48 +231,49 @@ a:focus-visible {
 .dark #filing-guide-modal .border-slate-200,
 .dark #portfolio-sync-widget .border-neutral-800,
 .dark #portfolio-sync-widget .border-neutral-700 {
-  border-color: #334155 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Specific details */
 .dark #export-hub-container #preview-json-payload {
-  background-color: #0f172a !important;
-  border-color: #334155 !important;
-  color: #38bdf8 !important; /* Sky blue text for JSON payload */
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #5BEAA5 !important;
 }
 
 .dark #extraction-confirm-card table thead tr {
-  background-color: #0f172a !important;
-  color: #94a3b8 !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  color: #8A96A8 !important;
 }
 
 .dark #extraction-confirm-card table tbody tr {
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #F6F7F8 !important;
 }
 
 .dark #extraction-confirm-card table tbody tr:hover {
-  background-color: rgba(51, 65, 85, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
 /* Dark Mode Utility Class Tweaks to match premium dark style */
 .dark .text-slate-900,
 .dark .text-slate-800,
 .dark .text-slate-700 {
-  color: #f1f5f9 !important; /* light text */
+  color: #F6F7F8 !important;
 }
 
 .dark .text-slate-600,
+.dark .text-slate-505,
 .dark .text-slate-500 {
-  color: #94a3b8 !important; /* muted text */
+  color: #8A96A8 !important;
 }
 
 .dark .text-slate-405,
 .dark .text-slate-400 {
-  color: #64748b !important; /* secondary muted */
+  color: #8A96A8 !important;
 }
 
-/* Specific pastel background transformations for dark mode */
+/* Specific background transformations for dark mode */
 .dark .bg-blue-50,
 .dark .bg-blue-50\/50,
 .dark .bg-blue-50\/60,
@@ -278,16 +282,16 @@ a:focus-visible {
 .dark .bg-blue-100,
 .dark .bg-indigo-50,
 .dark .bg-indigo-100 {
-  background-color: rgba(59, 130, 246, 0.08) !important; /* glassmorphic dark blue */
-  border-color: rgba(59, 130, 246, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 .dark .bg-emerald-50,
 .dark .bg-emerald-50\/20,
 .dark .bg-emerald-50\/50,
 .dark .bg-emerald-100 {
-  background-color: rgba(16, 185, 129, 0.08) !important; /* glassmorphic dark emerald */
-  border-color: rgba(16, 185, 129, 0.2) !important;
+  background-color: rgba(22, 226, 122, 0.04) !important;
+  border-color: rgba(22, 226, 122, 0.15) !important;
 }
 
 .dark .bg-amber-50,
@@ -296,8 +300,8 @@ a:focus-visible {
 .dark .bg-amber-50\/60,
 .dark .bg-amber-100,
 .dark .bg-amber-950\/30 {
-  background-color: rgba(245, 158, 11, 0.08) !important; /* glassmorphic dark amber */
-  border-color: rgba(245, 158, 11, 0.2) !important;
+  background-color: rgba(245, 158, 11, 0.04) !important;
+  border-color: rgba(245, 158, 11, 0.15) !important;
 }
 
 .dark .bg-rose-50,
@@ -306,8 +310,8 @@ a:focus-visible {
 .dark .bg-rose-100,
 .dark .bg-red-55,
 .dark .bg-red-950\/20 {
-  background-color: rgba(239, 68, 68, 0.08) !important; /* glassmorphic dark red */
-  border-color: rgba(239, 68, 68, 0.2) !important;
+  background-color: rgba(239, 68, 68, 0.04) !important;
+  border-color: rgba(239, 68, 68, 0.15) !important;
 }
 
 /* Specific text color transformations for dark mode */
@@ -315,20 +319,21 @@ a:focus-visible {
 .dark .text-blue-700,
 .dark .text-blue-600,
 .dark .text-blue-500 {
-  color: #60a5fa !important; /* light blue */
+  color: #F6F7F8 !important;
 }
 
 .dark .text-emerald-800,
+.dark .text-emerald-750,
 .dark .text-emerald-700,
 .dark .text-emerald-600 {
-  color: #34d399 !important; /* light emerald */
+  color: #16E27A !important;
 }
 
 .dark .text-amber-850,
 .dark .text-amber-800,
 .dark .text-amber-700,
 .dark .text-amber-600 {
-  color: #fbbd23 !important; /* light amber */
+  color: #F59E0B !important;
 }
 
 .dark .text-rose-800,
@@ -336,7 +341,7 @@ a:focus-visible {
 .dark .text-rose-600,
 .dark .text-red-700,
 .dark .text-red-600 {
-  color: #f87171 !important; /* light red */
+  color: #EF4444 !important;
 }
 
 /* Specific border transformations for dark mode */
@@ -354,23 +359,40 @@ a:focus-visible {
 .dark .border-rose-200,
 .dark .border-red-200,
 .dark .border-red-900\/50 {
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Switcher button hover borders in dark mode */
 .dark button.border-slate-200:hover,
 .dark label.border-slate-200:hover {
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 /* Input range thumb colors for premium dark mode aesthetics */
 .dark input[type="range"]::-webkit-slider-runnable-track {
-  background: #1e293b !important;
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
 .dark input[type="range"]::-webkit-slider-thumb {
-  background: #3b82f6 !important;
-  border: 2px solid #ffffff !important;
+  background: #16E27A !important;
+  border: 2px solid #050607 !important;
+}
+
+/* Premium card and border utility overrides for dark mode */
+.dark .bg-slate-900,
+.dark .bg-slate-900\/60,
+.dark .bg-slate-900\/40,
+.dark .bg-slate-950,
+.dark .bg-slate-900\/35,
+.dark .bg-slate-900\/10 {
+  background-color: rgba(14, 19, 27, 0.45) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+}
+
+.dark .border-slate-800,
+.dark .border-slate-800\/50,
+.dark .border-slate-700 {
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Custom keyframes for premium landing page */

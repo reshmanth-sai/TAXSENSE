@@ -49,6 +49,7 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
   const addUploadedFile = useTaxStore((state) => state.addUploadedFile);
   const removeUploadedFile = useTaxStore((state) => state.removeUploadedFile);
   const clearUploadedFiles = useTaxStore((state) => state.clearUploadedFiles);
+  const setRawForm16Text = useTaxStore((state) => state.setRawForm16Text);
 
   const [dragActive, setDragActive] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -181,6 +182,7 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
       confidence: Math.round((repaired.confidence || 0.98) * 100)
     });
 
+    setRawForm16Text(rawText);
     onFileUpload(rawText);
   };
 

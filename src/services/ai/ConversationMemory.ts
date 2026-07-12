@@ -5,7 +5,14 @@ export class ConversationMemory {
    * Formats the local chat history into the structure expected by the Gemini API
    */
   static formatForAPI(history: ChatMessageItem[]): Array<{ role: string; content: string }> {
-    return history.map(msg => ({
+    // Filter out the initial welcome message or any leading assistant messages
+    // to ensure the conversation history sent to Gemini starts with a user turn.
+    let startIndex = 0;
+    while (startIndex < history.length && history[startIndex].role === 'assistant') {
+      startIndex++;
+    }
+
+    return history.slice(startIndex).map(msg => ({
       role: msg.role === 'assistant' ? 'assistant' : 'user',
       content: msg.content
     }));

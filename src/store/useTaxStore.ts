@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { useState, useEffect } from 'react';
+import { TaxData } from '../types';
 
 const secureStorage: StateStorage = {
   getItem: (name) => {
@@ -113,6 +114,7 @@ export interface FilingHistoryItem {
   netTaxPaid: number;
   recommendedRegime: 'NEW' | 'OLD';
   formType: 'ITR-1' | 'ITR-2';
+  taxData?: TaxData;
 }
 
 export type CurrentStep = 'HOME' | 'LANDING' | 'CONFIRM_EXTRACTION' | 'CHAT_QA' | 'FINAL_EXPORT';
@@ -162,6 +164,10 @@ export interface TaxStoreState {
   setBackgroundProcessing: (val: boolean) => void;
   setBackgroundStatusMessage: (msg: string) => void;
   setBackgroundProgress: (pct: number) => void;
+  rawForm16Text?: string;
+  setRawForm16Text: (text: string) => void;
+  activeStep: number;
+  setActiveStep: (step: number) => void;
 }
 
 const defaultIncomeProfile: IncomeProfile = isDev ? {
@@ -253,6 +259,22 @@ export const useTaxStore = create<TaxStoreState>()(
       ingestionState: 'IDLE',
       incognito: typeof window !== 'undefined' ? sessionStorage.getItem('taxsense_incognito') === 'true' : false,
       isFloatingAIChatOpen: false,
+      rawForm16Text: '',
+      setRawForm16Text: (text) => set({ rawForm16Text: text }),
+      activeStep: 2,
+      setActiveStep: (step) => {
+        const stepMap: Record<number, CurrentStep> = {
+          2: 'LANDING',
+          3: 'LANDING',
+          4: 'CONFIRM_EXTRACTION',
+          5: 'CHAT_QA',
+          6: 'FINAL_EXPORT',
+          10: 'FINAL_EXPORT',
+          11: 'LANDING'
+        };
+        const currentStep = stepMap[step] || 'LANDING';
+        set({ activeStep: step, currentStep });
+      },
 
       setIncomeProfile: (profile) =>
         set((state) => {
@@ -397,6 +419,7 @@ export const useTaxStore = create<TaxStoreState>()(
           confirmedDeductions: defaultConfirmedDeductions,
           chatHistory: defaultChatHistory,
           currentStep: 'HOME',
+          activeStep: 2,
           isExtracting: false,
           isChatLoading: false,
           formType: 'ITR-1',
@@ -410,6 +433,7 @@ export const useTaxStore = create<TaxStoreState>()(
           backgroundStatusMessage: '',
           incognito: false,
           isFloatingAIChatOpen: false,
+          rawForm16Text: '',
         }));
       },
 
@@ -424,6 +448,7 @@ export const useTaxStore = create<TaxStoreState>()(
           confirmedDeductions: defaultConfirmedDeductions,
           chatHistory: defaultChatHistory,
           currentStep: 'HOME',
+          activeStep: 2,
           isExtracting: false,
           isChatLoading: false,
           formType: 'ITR-1',
@@ -433,6 +458,7 @@ export const useTaxStore = create<TaxStoreState>()(
           uploadedFiles: [],
           ingestionState: 'IDLE',
           isFloatingAIChatOpen: false,
+          rawForm16Text: '',
         }));
       },
     }),
@@ -447,6 +473,7 @@ export const useTaxStore = create<TaxStoreState>()(
         incomeProfile: state.incomeProfile,
         confirmedDeductions: state.confirmedDeductions,
         currentStep: state.currentStep,
+        activeStep: state.activeStep,
         formType: state.formType,
         multiHouse: state.multiHouse,
         foreignAssets: state.foreignAssets,
@@ -454,6 +481,8 @@ export const useTaxStore = create<TaxStoreState>()(
         filingHistory: state.filingHistory,
         uploadedFiles: state.uploadedFiles,
         ingestionState: state.ingestionState,
+        chatHistory: state.chatHistory,
+        rawForm16Text: state.rawForm16Text,
       }),
     }
   )

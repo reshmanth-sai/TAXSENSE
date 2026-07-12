@@ -24,7 +24,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   }, []);
 
   return (
-    <div className="min-h-screen h-screen bg-[#020508] text-white font-sans antialiased selection:bg-green-500 selection:text-slate-950 flex flex-col justify-between overflow-hidden relative">
+    <div className="min-h-screen h-screen bg-[#050607] text-white font-sans antialiased selection:bg-[#16E27A] selection:text-[#050607] flex flex-col justify-between overflow-hidden relative">
       
       {/* Pinned fixed cinematic noise texture across the viewport */}
       <div className="cinematic-noise" />
@@ -38,21 +38,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       >
         {/* Soft radial emerald focal spotlight behind heading with breathing pulse */}
         <div 
-          style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(22, 226, 122, 0.08) 0%, transparent 70%)' }}
           className="absolute top-[32%] left-[50%] w-[750px] h-[400px] pointer-events-none animate-spotlight-pulse" 
         />
         
         {/* Subtle auroral curtain glows (radial gradients instead of expensive blur filters) */}
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.04) 0%, rgba(5, 150, 105, 0.01) 50%, transparent 80%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(22, 226, 122, 0.04) 0%, rgba(5, 150, 105, 0.01) 50%, transparent 80%)' }}
           className="absolute -top-[10%] left-[5%] w-[800px] h-[600px] animate-aurora-1" 
         />
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.03) 0%, rgba(16, 185, 129, 0.01) 45%, transparent 75%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.03) 0%, rgba(22, 226, 122, 0.01) 45%, transparent 75%)' }}
           className="absolute top-[35%] -right-[10%] w-[900px] h-[700px] animate-aurora-2" 
         />
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.03) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(22, 226, 122, 0.03) 0%, transparent 70%)' }}
           className="absolute bottom-[10%] left-[10%] w-[700px] h-[600px] animate-aurora-1" 
         />
       </motion.div>
@@ -75,7 +75,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               animationDelay: `${p.delay}s`,
               animationDuration: `${p.duration}s`,
             }}
-            className="absolute bg-emerald-400/10 rounded-full animate-particle-twinkle"
+            className="absolute bg-[#16E27A]/10 rounded-full animate-particle-twinkle"
           />
         ))}
       </motion.div>
@@ -85,11 +85,11 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b bg-[#040608]/40 border-white/[0.04] backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] transition-all duration-300"
+        className="sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b bg-[#050607]/40 border-white/[0.04] backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] transition-all duration-300"
       >
         {/* Brand logo */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-green-500/20">
+          <div className="w-8 h-8 rounded-lg bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-[#16E27A]/20">
             <svg className="w-4.5 h-4.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="9" y1="9" x2="15" y2="9"></line>
@@ -98,7 +98,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </svg>
           </div>
           <span className="text-lg font-black tracking-tight text-white select-none">
-            Tax<span className="text-green-500">Sense</span>
+            Tax<span className="text-[#16E27A]">Sense</span>
           </span>
         </div>
 
@@ -108,7 +108,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             onClick={onStart}
             whileHover={{ scale: 1.025 }}
             whileTap={{ scale: 0.97 }}
-            className="px-4 py-1.5 bg-green-500 hover:bg-green-400 text-slate-950 font-extrabold text-xs rounded-full transition-all cursor-pointer shadow-md shadow-green-500/10 active:scale-95"
+            className="px-4 py-1.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs rounded-full transition-all cursor-pointer shadow-md shadow-[#16E27A]/10 active:scale-95"
           >
             Get started
           </motion.button>
@@ -139,7 +139,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               className="animate-float-card-1 cursor-pointer pointer-events-auto select-none"
             >
               <div className="p-5 glass-card-premium">
-                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 border border-[#16E27A]/25 text-[#16E27A] flex items-center justify-center mb-3.5">
                   <FileText className="w-4.5 h-4.5" />
                 </div>
                 <h3 className="font-bold text-white text-sm">Upload Form 16</h3>
@@ -163,7 +163,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               className="animate-float-card-2 cursor-pointer pointer-events-auto select-none"
             >
               <div className="p-5 glass-card-premium">
-                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 border border-[#16E27A]/25 text-[#16E27A] flex items-center justify-center mb-3.5">
                   <ShieldCheck className="w-4.5 h-4.5" />
                 </div>
                 <h3 className="font-bold text-white text-sm">100% Secure</h3>
@@ -179,7 +179,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-[23%] right-[5%] w-[250px]"
+            className="absolute top-[16%] right-[5%] w-[240px]"
           >
             <motion.div 
               whileHover={{ y: -4, scale: 1.015, rotate: 0 }}
@@ -187,10 +187,10 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               className="animate-float-card-3 cursor-pointer pointer-events-auto select-none"
             >
               <div className="p-5 glass-card-premium">
-                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 border border-[#16E27A]/25 text-[#16E27A] flex items-center justify-center mb-3.5">
                   <Sparkles className="w-4.5 h-4.5" />
                 </div>
-                <h3 className="font-bold text-white text-sm">Find missed deductions</h3>
+                <h3 className="font-bold text-white text-sm">Find deductions</h3>
                 <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                   AI scans 80D, NPS, HRA, home loan & more to find what you can claim.
                 </p>
@@ -211,7 +211,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               className="animate-float-card-4 cursor-pointer pointer-events-auto select-none"
             >
               <div className="p-5 glass-card-premium">
-                <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center mb-3.5">
+                <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 border border-[#16E27A]/25 text-[#16E27A] flex items-center justify-center mb-3.5">
                   <TrendingUp className="w-4.5 h-4.5" />
                 </div>
                 <h3 className="font-bold text-white text-sm">Compare regimes</h3>
@@ -231,7 +231,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold tracking-wider uppercase"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#16E27A]/10 border border-[#16E27A]/25 text-[#16E27A] text-[10px] font-bold tracking-wider uppercase"
           >
             <Sparkles className="w-3 h-3" />
             <span>Built for AY 2026-27</span>
@@ -245,7 +245,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             className="text-4xl sm:text-5xl md:text-[64px] font-black tracking-[-0.03em] text-white leading-[1.08] sm:leading-[1.06] max-w-2xl text-center"
           >
             File your ITR <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#16E27A] to-[#5BEAA5]">
               without the confusion
             </span>
           </motion.h1>
@@ -272,10 +272,10 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               whileHover={{ scale: 1.03, y: -1.5 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-              className="group flex items-center gap-2.5 px-8 py-3.5 bg-green-500 hover:bg-green-400 text-slate-950 font-black text-xs rounded-xl tracking-wide uppercase cursor-pointer shadow-lg shadow-green-500/20 hover:shadow-green-500/40 animate-cta-pulse"
+              className="group flex items-center gap-2.5 px-8 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs rounded-xl tracking-wide uppercase cursor-pointer shadow-lg shadow-[#16E27A]/15 hover:shadow-[#16E27A]/30 animate-cta-pulse"
             >
               <span>Get started</span>
-              <ArrowRight className="w-4 h-4 transition-transform duration-300 ease-out group-hover:translate-x-1.5" />
+              <ArrowRight className="w-4 h-4 transition-transform duration-300 ease-out group-hover:translate-x-1.5 text-[#050607]" />
             </motion.button>
 
             {/* Verification badging */}
@@ -291,7 +291,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           {/* MOBILE BACKUP GRID: Displayed under hero text on small screens */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-8 md:hidden pointer-events-auto">
             <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-lg">
-              <div className="w-9 h-9 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center mb-3">
+              <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 text-[#16E27A] flex items-center justify-center mb-3">
                 <FileText className="w-4.5 h-4.5" />
               </div>
               <h3 className="font-bold text-white text-xs uppercase tracking-wider">Upload Form 16</h3>
@@ -301,7 +301,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </div>
 
             <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-lg">
-              <div className="w-9 h-9 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center mb-3">
+              <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 text-[#16E27A] flex items-center justify-center mb-3">
                 <Sparkles className="w-4.5 h-4.5" />
               </div>
               <h3 className="font-bold text-white text-xs uppercase tracking-wider">Find missed deductions</h3>
@@ -311,7 +311,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </div>
 
             <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-lg">
-              <div className="w-9 h-9 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center mb-3">
+              <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 text-[#16E27A] flex items-center justify-center mb-3">
                 <TrendingUp className="w-4.5 h-4.5" />
               </div>
               <h3 className="font-bold text-white text-xs uppercase tracking-wider">Compare regimes</h3>
@@ -321,7 +321,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </div>
 
             <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-lg">
-              <div className="w-9 h-9 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center mb-3">
+              <div className="w-9 h-9 rounded-lg bg-[#16E27A]/10 text-[#16E27A] flex items-center justify-center mb-3">
                 <ShieldCheck className="w-4.5 h-4.5" />
               </div>
               <h3 className="font-bold text-white text-xs uppercase tracking-wider">100% Secure</h3>
@@ -340,7 +340,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
         <div className="flex gap-4">
           <span className="flex items-center gap-1.5 text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-green-500" />
+            <ShieldCheck className="w-4 h-4 text-[#16E27A]" />
             100% Secure & Private
           </span>
         </div>
