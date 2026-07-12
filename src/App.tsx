@@ -142,6 +142,7 @@ export default function App() {
   const [authCardCoords, setAuthCardCoords] = useState({ x: 0, y: 0 });
   const [authCardHovered, setAuthCardHovered] = useState(false);
   const [authCardTilt, setAuthCardTilt] = useState({ x: 0, y: 0 });
+  const [googleGsiState, setGoogleGsiState] = useState<'loading' | 'loaded' | 'failed'>('loading');
 
   const handleAuthCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -230,16 +231,24 @@ export default function App() {
     }, 600);
   };
 
-  // Google GSI script loader and initialization
+  // Google GSI script loader and initialization with skeleton/fallback checks
   useEffect(() => {
     if (activeStep === 2) {
+      setGoogleGsiState('loading');
+      
+      const timer = setTimeout(() => {
+        setGoogleGsiState(prev => prev === 'loading' ? 'failed' : prev);
+      }, 5500); // 5.5 seconds graceful timeout
+
       AuthService.loadGoogleGIS().then(() => {
         try {
           const google = (window as any).google;
-          if (google) {
+          if (google && google.accounts?.id) {
             const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
             if (!clientId) {
               console.error("Google Client ID missing");
+              clearTimeout(timer);
+              setGoogleGsiState('failed');
               return;
             }
 
@@ -261,16 +270,34 @@ export default function App() {
               }
             });
             
-            google.accounts.id.renderButton(
-              document.getElementById('google-signin-btn-container'),
-              { theme: 'outline', size: 'medium', text: 'signin_with', width: 220 }
-            );
+            // Wait for DOM to render the container target
+            setTimeout(() => {
+              const container = document.getElementById('google-signin-btn-container');
+              if (container) {
+                google.accounts.id.renderButton(
+                  container,
+                  { theme: 'outline', size: 'large', text: 'signin_with', width: 240, shape: 'pill' }
+                );
+                clearTimeout(timer);
+                setGoogleGsiState('loaded');
+              } else {
+                clearTimeout(timer);
+                setGoogleGsiState('failed');
+              }
+            }, 50);
+          } else {
+            clearTimeout(timer);
+            setGoogleGsiState('failed');
           }
         } catch (e) {
           console.error("Error initializing Google GIS:", e);
+          clearTimeout(timer);
+          setGoogleGsiState('failed');
         }
       }).catch((err) => {
+        clearTimeout(timer);
         console.error("Failed to load GIS script:", err);
+        setGoogleGsiState('failed');
       });
     }
   }, [activeStep]);
@@ -591,19 +618,19 @@ export default function App() {
             visible: {
               opacity: 1,
               transition: {
-                staggerChildren: 0.08,
-                delayChildren: 0.15
+                staggerChildren: 0.1,
+                delayChildren: 0.2
               }
             }
           } as const;
 
           const childVariants = {
-            hidden: { opacity: 0, y: 15, filter: "blur(2px)" },
+            hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
             visible: { 
               opacity: 1, 
               y: 0, 
               filter: "blur(0px)",
-              transition: { type: "spring" as const, stiffness: 120, damping: 22 }
+              transition: { type: "spring" as const, stiffness: 100, damping: 20 }
             }
           } as const;
 
@@ -691,7 +718,7 @@ export default function App() {
                 </div>
               </motion.div>
 
-              {/* Main Interactive Entrance Card Container */}
+              {/* Main Interactive Entrance Card Container with 24px corner radius */}
               <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.98, filter: "blur(8px)" }}
                 animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -706,13 +733,13 @@ export default function App() {
                   transform: authCardHovered ? `perspective(1000px) rotateX(${authCardTilt.x}deg) rotateY(${authCardTilt.y}deg)` : 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
                   transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
-                className="max-w-[720px] w-full relative z-10 p-[1.5px] rounded-[22px] overflow-hidden transition-all duration-300"
+                className="max-w-[720px] w-full relative z-10 p-[1.5px] rounded-[24px] overflow-hidden transition-all duration-300"
               >
                 {/* Subtle inner border sweep */}
                 <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam pointer-events-none" />
 
-                {/* Surface Card with layered glassmorphism */}
-                <div className="relative w-full h-full bg-[#0F1216]/72 border border-white/[0.06] rounded-[22px] p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_80px_rgba(0,0,0,0.7)] backdrop-blur-[40px] space-y-8 overflow-hidden">
+                {/* Surface Card with layered glassmorphism and increased padding (p-12) */}
+                <div className="relative w-full h-full bg-[#0F1216]/72 border border-white/[0.06] rounded-[24px] p-12 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_80px_rgba(0,0,0,0.7)] backdrop-blur-[40px] space-y-10 overflow-hidden">
                   
                   {/* Radial interactive spotlight following cursor */}
                   <div 
@@ -729,10 +756,10 @@ export default function App() {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="space-y-8"
+                    className="space-y-10"
                   >
-                    {/* Header elements block */}
-                    <motion.div variants={childVariants} className="text-center space-y-4 relative z-10">
+                    {/* Header elements block with increased padding space */}
+                    <motion.div variants={childVariants} className="text-center space-y-5 relative z-10">
                       {/* Secure Shield emblem with breathing pulse and rotating halo animation */}
                       <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/15 to-[#16E27A]/5 text-[#16E27A] rounded-[16px] flex items-center justify-center mx-auto border border-[#16E27A]/20 shadow-[0_0_20px_rgba(22,226,122,0.15)] relative">
                         {/* Rotating dashed lock halo */}
@@ -747,9 +774,9 @@ export default function App() {
                       </div>
                       
                       <div className="space-y-2">
-                        <h2 className="text-2xl font-black tracking-tight text-white">Welcome to your secure TaxSense workspace</h2>
+                        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">Welcome to TaxSense</h2>
                         <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto font-semibold">
-                          Choose how you'd like to continue.
+                          Securely continue to your workspace.
                         </p>
                       </div>
                     </motion.div>
@@ -757,8 +784,8 @@ export default function App() {
                     {/* Staggered choice cards wrapper */}
                     <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 relative z-10">
                       
-                      {/* Guest Access Card (Sandbox Mode - Minimal, Dark, Neutral) */}
-                      <div className="p-6 rounded-2xl bg-white/[0.015] border border-white/[0.04] hover:border-white/[0.08] hover:-translate-y-1 hover:bg-white/[0.025] hover:scale-[1.01] transition-all duration-355 flex flex-col justify-between space-y-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group">
+                      {/* Guest Access Card (Sandbox Mode - Minimal, Dark, Neutral, Glass Hover Elevation) */}
+                      <div className="p-6 rounded-2xl bg-white/[0.015] border border-white/[0.04] hover:border-[#16E27A]/25 hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-355 flex flex-col justify-between space-y-6 group">
                         <div className="space-y-4 text-left">
                           <div className="space-y-1">
                             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Mode</h3>
@@ -767,11 +794,19 @@ export default function App() {
                             </p>
                           </div>
                           
-                          <ul className="space-y-1.5 text-[10px] font-semibold leading-relaxed">
-                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> Instant access</li>
-                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> Local temporary session</li>
-                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> Auto deletes after inactivity</li>
-                            <li className="flex items-center gap-1.5 text-slate-350"><span className="text-[#16E27A]/80">✓</span> No documents stored permanently</li>
+                          <ul className="space-y-2 text-[10px] font-semibold leading-relaxed">
+                            <li className="flex items-center gap-2 text-slate-350">
+                              <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[8px] text-[#16E27A]">✓</span>
+                              <span>Instant sandbox access</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-slate-350">
+                              <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[8px] text-[#16E27A]">✓</span>
+                              <span>Local temporary session</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-slate-350">
+                              <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[8px] text-[#16E27A]">✓</span>
+                              <span>Auto deletes after inactivity</span>
+                            </li>
                           </ul>
                         </div>
                         
@@ -787,15 +822,15 @@ export default function App() {
                               setActiveStep(redirectStep);
                             }, 600);
                           }}
-                          className="w-full py-3 bg-[#1C2026] hover:bg-[#252A33] hover:text-white text-slate-300 hover:shadow-[0_0_12px_rgba(255,255,255,0.03)] font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.04] hover:border-white/[0.08]"
+                          className="w-full py-3 bg-[#1C2026] hover:bg-[#252A33] hover:text-white text-slate-300 font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.04] hover:border-white/[0.08]"
                         >
                           {isAuthenticating ? 'Initializing...' : 'Launch Sandbox'}
                           {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
                         </button>
                       </div>
 
-                      {/* Google Access Card (Google Workspace - Recommended) */}
-                      <div className="p-6 rounded-2xl bg-[#0E131B]/40 border border-[#16E27A]/15 hover:border-[#16E27A]/30 hover:bg-[#0E131B]/60 hover:-translate-y-1 hover:scale-[1.01] transition-all duration-355 flex flex-col justify-between space-y-6 shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_15px_rgba(22,226,122,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(22,226,122,0.06)] relative group">
+                      {/* Google Access Card (Google Workspace - Soft hover glow, 50% border intensity) */}
+                      <div className="p-6 rounded-2xl bg-[#0E131B]/40 border border-[#16E27A]/08 hover:border-[#16E27A]/25 hover:bg-[#0E131B]/60 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(22,226,122,0.06)] relative transition-all duration-355 flex flex-col justify-between space-y-6 group">
                         
                         {/* Dynamic recommended badge with pulsing ring */}
                         <div className="absolute top-3 right-3 bg-emerald-500/10 border border-emerald-500/20 text-[#16E27A] px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(22,226,122,0.1)]">
@@ -814,37 +849,66 @@ export default function App() {
                             </p>
                           </div>
                           
-                          <ul className="space-y-1.5 text-[10px] font-semibold leading-relaxed">
-                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> Save filing progress</li>
-                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> Cloud document vault</li>
-                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> AI Copilot history</li>
-                            <li className="flex items-center gap-1.5 text-slate-300"><span className="text-[#16E27A]">✓</span> Multi-device sync</li>
+                          {/* Feature benefits with dedicated visual indicators/icons */}
+                          <ul className="space-y-2 text-[10px] font-semibold leading-relaxed">
+                            <li className="flex items-center gap-2 text-slate-300">
+                              <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="Cloud Sync">☁</span>
+                              <span>Save filing progress (Cloud Sync)</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-slate-300">
+                              <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="Document Vault">🔒</span>
+                              <span>Secure Document Vault</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-slate-300">
+                              <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="AI History">💬</span>
+                              <span>AI Copilot chat history</span>
+                            </li>
                           </ul>
                         </div>
                         
-                        <div className="space-y-2.5">
-                          {/* Google GSI Native button container */}
-                          <div id="google-signin-btn-container" className="flex justify-center w-full min-h-[36px]" />
+                        {/* Premium Glass Container for Google Sign-In with 14px corners & Skeleton Loaders */}
+                        <div className="relative min-h-[58px] w-full flex items-center justify-center p-2.5 bg-white/[0.015] border border-white/[0.04] rounded-[14px] overflow-hidden">
                           
-                          {/* Fallback/Simulated secure button */}
-                          <button
-                            onClick={() => {
-                              const mockProfile: UserProfile = {
-                                uid: 'google-908231',
-                                name: 'Mohit Kumar',
-                                email: 'mohit.kumar@gmail.com',
-                                photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&fit=crop&q=80',
-                                providerId: 'google.com',
-                                createdAt: new Date().toISOString()
-                              };
-                              handleGoogleLoginSuccess(mockProfile);
-                            }}
-                            className="relative overflow-hidden w-full py-3 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(22,226,122,0.15)] hover:shadow-[0_4px_20px_rgba(22,226,122,0.3)] border border-transparent group"
-                          >
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-                            <span>Simulate Google Login</span>
-                          </button>
+                          {/* Loading Skeleton */}
+                          {googleGsiState === 'loading' && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/[0.01] animate-pulse">
+                              <div className="flex items-center gap-2">
+                                <svg className="w-3.5 h-3.5 animate-spin text-emerald-450" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                  <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8" />
+                                </svg>
+                                <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider">Connecting to Google...</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* The Official Google sign-in container (displays block when loaded) */}
+                          <div 
+                            id="google-signin-btn-container" 
+                            style={{ display: googleGsiState === 'loaded' ? 'block' : 'none' }}
+                            className="transition-opacity duration-500 opacity-100 flex justify-center w-full" 
+                          />
+
+                          {/* Fallback Simulated button if failed or timed out */}
+                          {googleGsiState === 'failed' && (
+                            <button
+                              onClick={() => {
+                                const mockProfile: UserProfile = {
+                                  uid: 'google-908231',
+                                  name: 'Mohit Kumar',
+                                  email: 'mohit.kumar@gmail.com',
+                                  photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&fit=crop&q=80',
+                                  providerId: 'google.com',
+                                  createdAt: new Date().toISOString()
+                                };
+                                handleGoogleLoginSuccess(mockProfile);
+                              }}
+                              className="relative overflow-hidden w-full py-2 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(22,226,122,0.15)] border border-transparent"
+                            >
+                              <span>Simulate Google Sign-In</span>
+                            </button>
+                          )}
                         </div>
+
                       </div>
                     </motion.div>
 
