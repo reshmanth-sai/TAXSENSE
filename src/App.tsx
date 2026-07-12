@@ -269,7 +269,7 @@ export default function App() {
         return GoogleAuthService.renderButton('google-signin-btn-container', {
           theme: 'outline',
           size: 'large',
-          width: 240
+          width: 220
         });
       })
       .then(() => {
@@ -649,7 +649,7 @@ export default function App() {
                 {/* Fading technical grid overlay (gently pulses in and out) */}
                 <div 
                   style={{ 
-                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.007) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.007) 1px, transparent 1px)', 
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.002) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.002) 1px, transparent 1px)', 
                     backgroundSize: '120px 120px'
                   }} 
                   className="absolute inset-0 z-0 pointer-events-none animate-grid-pulse" 
@@ -710,24 +710,27 @@ export default function App() {
                   initial={{ opacity: 0, y: -15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[1200px] z-50 flex items-center justify-between px-6 py-3.5 bg-[#0E131B]/40 border border-white/[0.04] rounded-full backdrop-blur-md shadow-lg shadow-black/20"
+                  className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[1200px] z-50 flex items-center justify-between px-6 py-3 bg-[#0E131B]/40 border border-white/[0.04] rounded-full backdrop-blur-md shadow-lg shadow-black/20"
                 >
                   <div 
                     onClick={() => setStep('HOME')}
-                    className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
                   >
-                    <div className="w-6 h-6 rounded bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold text-xs">
+                    <div className="w-6 h-6 rounded bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold text-xs animate-logo-pulse">
                       T
                     </div>
-                    <span className="text-xs font-black tracking-wider uppercase text-white">TaxSense</span>
+                    <span className="text-xs font-bold tracking-wider uppercase text-white font-geist">TaxSense</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#16E27A] animate-ping" />
-                    <span className="text-[9px] text-slate-450 uppercase font-bold tracking-wider">Public Beta Active</span>
+                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/[0.015] border border-white/[0.04]">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#16E27A]"></span>
+                    </span>
+                    <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Public Beta Active</span>
                   </div>
                 </motion.div>
 
-                {/* Main Interactive Entrance Card Container scaled to max-w-[820px] */}
+                {/* Main Interactive Entrance Card Container scaled to max-w-[720px] */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.98, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -740,15 +743,15 @@ export default function App() {
                   }}
                   style={{
                     transform: authCardHovered ? `perspective(1000px) rotateX(${authCardTilt.x}deg) rotateY(${authCardTilt.y}deg)` : 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
-                    transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                  transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                   }}
                   className="max-w-[820px] w-full relative z-10 p-[1px] rounded-[24px] overflow-hidden transition-all duration-300"
                 >
                   {/* Subtle inner border sweep */}
-                  <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam pointer-events-none" />
+                  <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam" />
 
-                  {/* Surface Card with layered glassmorphism and increased padding (p-16) */}
-                  <div className="relative w-full h-full rounded-[24px] p-16 space-y-12 overflow-hidden glass-panel-surface">
+                  {/* Surface Card with layered glassmorphism and compact padding (p-12) */}
+                  <div className="relative w-full h-full rounded-[24px] p-12 space-y-10 overflow-hidden glass-panel-surface">
                     
                     {/* Radial interactive spotlight following cursor */}
                     <div 
@@ -765,49 +768,68 @@ export default function App() {
                       variants={containerVariants}
                       initial="hidden"
                       animate="visible"
-                      className="space-y-12"
+                      className="space-y-10"
                     >
-                      {/* Header elements block with increased vertical spacing */}
+                      {/* Header elements block with refined vertical spacing */}
                       <motion.div variants={childVariants} className="text-center relative z-10 flex flex-col items-center">
                         {/* Secure Shield emblem with rotating halo animation */}
-                        <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/8 to-[#16E27A]/2 text-[#16E27A] rounded-[16px] flex items-center justify-center border border-[#16E27A]/12 shadow-[0_0_8px_rgba(22,226,122,0.04)] relative mb-8">
-                          {/* Rotating dashed lock halo */}
-                          <div className="absolute inset-[-6px] rounded-full border border-[#16E27A]/10 border-dashed animate-spin [animation-duration:30s] pointer-events-none" />
-                          <ShieldCheck className="w-6.5 h-6.5 text-[#16E27A] z-10" />
+                        <div className="relative mb-6 flex items-center justify-center">
+                          {/* Rotating outer dashed ring (24-second spin loop) */}
+                          <div className="absolute w-20 h-20 rounded-full border border-dashed border-[#16E27A]/15 animate-spin-dashed pointer-events-none" />
+                          
+                          {/* Frosted glass circle badge with inner highlight and breath pulse */}
+                          <div className="w-14 h-14 rounded-full flex items-center justify-center bg-emerald-500/[0.03] border border-[#16E27A]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_0_20px_rgba(22,226,122,0.06)] animate-shield-pulse relative z-10">
+                            <div className="absolute inset-0.5 rounded-full bg-slate-950/20 backdrop-blur-md" />
+                            <ShieldCheck className="w-6.5 h-6.5 text-[#16E27A] relative z-10 filter drop-shadow-[0_0_6px_rgba(22,226,122,0.35)]" />
+                          </div>
                         </div>
                         
-                        <div className="space-y-3">
-                          <h2 className="text-2xl sm:text-3.5xl font-black tracking-tight text-white leading-tight font-geist">Welcome to TaxSense</h2>
-                          <p className="text-xs text-slate-400/60 leading-relaxed max-w-md mx-auto font-semibold tracking-wide">
+                        <div className="space-y-2 mt-2">
+                          <h2 className="text-2xl sm:text-[32px] font-bold tracking-tight text-white leading-none font-geist">Welcome to TaxSense</h2>
+                          <p className="text-[11.5px] text-slate-450 leading-relaxed max-w-md mx-auto font-medium tracking-wide mt-1 select-none">
                             Securely continue to your workspace.
                           </p>
                         </div>
                       </motion.div>
 
                       {/* Staggered choice cards wrapper */}
-                      <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2 relative z-10">
+                      <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 relative z-10">
                         
                         {/* Guest Access Card (Sandbox Mode - Balanced) */}
                         <div className="p-8 rounded-[20px] flex flex-col justify-between group glass-option-card-sandbox">
                           <div className="space-y-4 text-left">
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Mode</h3>
-                              <p className="text-[10px] text-slate-450 leading-tight font-semibold">
+                              <p className="text-[10px] text-slate-400/75 leading-relaxed font-semibold">
                                 Start instantly without creating an account.
                               </p>
                             </div>
                             
-                            <ul className="space-y-2 text-[10px] font-semibold leading-relaxed">
-                              <li className="flex items-center gap-2 text-slate-350">
-                                <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[8px] text-[#16E27A]">✓</span>
+                            <ul className="space-y-2.5 text-[10px] font-semibold leading-normal mt-4">
+                              <li className="flex items-center gap-2.5 text-slate-350 py-0.5">
+                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                </div>
                                 <span>Instant sandbox access</span>
                               </li>
-                              <li className="flex items-center gap-2 text-slate-350">
-                                <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[8px] text-[#16E27A]">✓</span>
+                              <li className="flex items-center gap-2.5 text-slate-350 py-0.5">
+                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                  </svg>
+                                </div>
                                 <span>Local temporary session</span>
                               </li>
-                              <li className="flex items-center gap-2 text-slate-350">
-                                <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[8px] text-[#16E27A]">✓</span>
+                              <li className="flex items-center gap-2.5 text-slate-350 py-0.5">
+                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                </div>
                                 <span>Auto deletes after inactivity</span>
                               </li>
                             </ul>
@@ -836,34 +858,47 @@ export default function App() {
                         <div className="p-8 rounded-[20px] relative flex flex-col justify-between group glass-option-card-google">
                           
                           {/* Dynamic recommended badge with pulsing ring */}
-                          <div className="absolute top-3 right-3 bg-emerald-500/10 border border-emerald-500/20 text-[#16E27A] px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(22,226,122,0.1)]">
+                           <div className="absolute top-3 right-3 bg-emerald-500/8 border border-emerald-500/15 text-[#16E27A] px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_6px_rgba(22,226,122,0.05)]">
                             <span className="relative flex h-1 w-1">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-1 w-1 bg-[#16E27A]"></span>
                             </span>
-                            <span>⭐ Recommended</span>
+                            <span>Recommended</span>
                           </div>
                           
                           <div className="space-y-4 text-left">
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Google Workspace</h3>
-                              <p className="text-[10px] text-slate-450 leading-tight font-semibold">
+                              <p className="text-[10px] text-slate-400/75 leading-relaxed font-semibold">
                                 Secure cloud sync with synchronized history.
                               </p>
                             </div>
                             
                             {/* Feature benefits with dedicated visual indicators/icons */}
-                            <ul className="space-y-2 text-[10px] font-semibold leading-relaxed">
-                              <li className="flex items-center gap-2 text-slate-300">
-                                <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="Cloud Sync">☁</span>
+                            <ul className="space-y-2.5 text-[10px] font-semibold leading-normal mt-4">
+                              <li className="flex items-center gap-2.5 text-slate-300 py-0.5">
+                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.02-1.42-2.5-3-3A5 5 0 0 0 4 11.5c0 2.21 1.79 4 4 4h9.5" />
+                                  </svg>
+                                </div>
                                 <span>Save progress (Cloud Sync)</span>
                               </li>
-                              <li className="flex items-center gap-2 text-slate-300">
-                                <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="Document Vault">🔒</span>
+                              <li className="flex items-center gap-2.5 text-slate-300 py-0.5">
+                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                  </svg>
+                                </div>
                                 <span>Secure Document Vault</span>
                               </li>
-                              <li className="flex items-center gap-2 text-slate-300">
-                                <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="AI History">💬</span>
+                              <li className="flex items-center gap-2.5 text-slate-300 py-0.5">
+                                <div className="w-5 h-5 rounded-md bg-white/[0.015] border border-white/[0.04] flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                                  <svg className="w-3.0 h-3.0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                  </svg>
+                                </div>
                                 <span>AI Copilot chat history</span>
                               </li>
                             </ul>
@@ -871,12 +906,12 @@ export default function App() {
                           
                           {/* GSI Container / Fallback simulated button wrapper */}
                           <div className="mt-8 flex flex-col justify-center">
-                            <div className="relative h-[44px] w-[240px] mx-auto flex items-center justify-center overflow-hidden">
+                            <div className="relative h-[44px] w-[220px] mx-auto flex items-center justify-center overflow-hidden">
                               
                               {/* Loading Skeleton reserving exact button space */}
                               {googleGsiState === 'loading' && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-white/[0.01] animate-pulse z-10">
-                                  <div className="flex items-center gap-2 h-[44px] w-[240px] bg-white/[0.02] border border-white/[0.04] rounded-full justify-center">
+                                  <div className="flex items-center gap-2 h-[44px] w-[220px] bg-white/[0.02] border border-white/[0.04] rounded-full justify-center">
                                     <svg className="w-3.5 h-3.5 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                                       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeDasharray="32" strokeDashoffset="8" />
                                     </svg>
@@ -888,7 +923,7 @@ export default function App() {
                               {/* The Official Google sign-in container */}
                               <div 
                                 id="google-signin-btn-container" 
-                                className={`transition-opacity duration-500 flex justify-center w-[240px] h-[44px] mx-auto absolute inset-0 z-20 ${
+                                className={`transition-opacity duration-500 flex justify-center w-[220px] h-[44px] mx-auto absolute inset-0 z-20 ${
                                   googleGsiState === 'loaded' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                                 }`} 
                               />
@@ -907,7 +942,7 @@ export default function App() {
                                     };
                                     handleGoogleLoginSuccess(mockProfile);
                                   }}
-                                  className="relative overflow-hidden w-[240px] h-[44px] bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-full text-xs cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-2.5 border border-slate-200 shadow-sm mx-auto z-30"
+                                  className="relative overflow-hidden w-[220px] h-[44px] bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-full text-xs cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-2.5 border border-slate-200 shadow-sm mx-auto z-30"
                                 >
                                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -951,22 +986,22 @@ export default function App() {
 
                       {/* Trust Footer Badges with glassmorphism details */}
                       <motion.div variants={childVariants} className="flex flex-wrap items-center justify-center gap-3.5 my-8">
-                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
-                          <span>🔒</span> End-to-End Encryption
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-95">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">🔒</span> End-to-End Encryption
                         </div>
-                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
-                          <span>⚡</span> Local Processing
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-85">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">⚡</span> Local Processing
                         </div>
-                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
-                          <span>🗑</span> Auto Delete
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-75">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">🗑</span> Auto Delete
                         </div>
-                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
-                          <span>☁</span> Cloud Sync
+                        <div className="px-3.5 py-1 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium opacity-65">
+                          <span className="filter drop-shadow-[0_0_2px_rgba(255,255,255,0.15)]">☁</span> Cloud Sync
                         </div>
                       </motion.div>
 
                       {/* Understated Trust Row Section */}
-                      <motion.div variants={childVariants} className="text-[8px] text-slate-500/35 font-bold uppercase tracking-[0.12em] text-center pt-2 select-none">
+                      <motion.div variants={childVariants} className="text-[8.5px] text-slate-450/45 font-bold uppercase tracking-[0.08em] text-center pt-2 select-none font-geist">
                         Powered by Google Identity ✦ Gemini AI ✦ AES-256 Encryption ✦ ISO 27001 ✦ Vercel Infrastructure
                       </motion.div>
                     </motion.div>

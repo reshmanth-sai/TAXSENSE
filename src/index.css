@@ -729,4 +729,44 @@ a:focus-visible {
     0 4px 12px rgba(255, 255, 255, 0.02) !important;
 }
 
+/* Logo breath animation */
+@keyframes logo-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(22,226,122,0.15), inset 0 1px 1px rgba(255,255,255,0.05);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(22,226,122,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+    transform: scale(1.02);
+  }
+}
+.animate-logo-pulse {
+  animation: logo-glow-pulse 6s infinite ease-in-out;
+  will-change: transform, box-shadow;
+}
+
+/* Shield badge rotation */
+@keyframes spin-dashed {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-spin-dashed {
+  animation: spin-dashed 24s linear infinite;
+}
+
+/* Shield badge pulse */
+@keyframes shield-glow-pulse {
+  0%, 100% {
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 0 20px rgba(22,226,122,0.04);
+    border-color: rgba(22, 226, 122, 0.18);
+  }
+  50% {
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 0 32px rgba(22,226,122,0.12);
+    border-color: rgba(22, 226, 122, 0.35);
+  }
+}
+.animate-shield-pulse {
+  animation: shield-glow-pulse 8s infinite ease-in-out;
+}
+
 
