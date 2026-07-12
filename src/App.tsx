@@ -742,7 +742,7 @@ export default function App() {
                   </div>
                 </motion.div>
 
-                {/* Main Interactive Entrance Card Container with 24px corner radius */}
+                {/* Main Interactive Entrance Card Container scaled to max-w-[800px] */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.98, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -757,13 +757,13 @@ export default function App() {
                     transform: authCardHovered ? `perspective(1000px) rotateX(${authCardTilt.x}deg) rotateY(${authCardTilt.y}deg)` : 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
                     transition: authCardHovered ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                   }}
-                  className="max-w-[720px] w-full relative z-10 p-[1.5px] rounded-[24px] overflow-hidden transition-all duration-300"
+                  className="max-w-[800px] w-full relative z-10 p-[1.5px] rounded-[24px] overflow-hidden transition-all duration-300"
                 >
                   {/* Subtle inner border sweep */}
                   <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam pointer-events-none" />
 
-                  {/* Surface Card with layered glassmorphism and increased padding (p-12) */}
-                  <div className="relative w-full h-full bg-[#0F1216]/72 border border-white/[0.06] rounded-[24px] p-12 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_80px_rgba(0,0,0,0.7)] backdrop-blur-[40px] space-y-10 overflow-hidden">
+                  {/* Surface Card with layered glassmorphism and increased padding (p-14) */}
+                  <div className="relative w-full h-full bg-[#0F1216]/72 border border-white/[0.06] rounded-[24px] p-14 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_80px_rgba(0,0,0,0.7)] backdrop-blur-[40px] space-y-12 overflow-hidden">
                     
                     {/* Radial interactive spotlight following cursor */}
                     <div 
@@ -780,26 +780,26 @@ export default function App() {
                       variants={containerVariants}
                       initial="hidden"
                       animate="visible"
-                      className="space-y-10"
+                      className="space-y-12"
                     >
-                      {/* Header elements block with increased padding space */}
-                      <motion.div variants={childVariants} className="text-center space-y-5 relative z-10">
-                        {/* Secure Shield emblem with breathing pulse and rotating halo animation */}
-                        <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/15 to-[#16E27A]/5 text-[#16E27A] rounded-[16px] flex items-center justify-center mx-auto border border-[#16E27A]/20 shadow-[0_0_20px_rgba(22,226,122,0.15)] relative">
+                      {/* Header elements block with increased vertical spacing */}
+                      <motion.div variants={childVariants} className="text-center space-y-6 relative z-10">
+                        {/* Secure Shield emblem with subtle glow and rotating halo animation */}
+                        <div className="w-14 h-14 bg-gradient-to-b from-[#16E27A]/12 to-[#16E27A]/4 text-[#16E27A] rounded-[16px] flex items-center justify-center mx-auto border border-[#16E27A]/15 shadow-[0_0_12px_rgba(22,226,122,0.08)] relative">
                           {/* Rotating dashed lock halo */}
-                          <div className="absolute inset-[-6px] rounded-full border border-[#16E27A]/20 border-dashed animate-spin [animation-duration:20s] pointer-events-none" />
+                          <div className="absolute inset-[-6px] rounded-full border border-[#16E27A]/15 border-dashed animate-spin [animation-duration:20s] pointer-events-none" />
                           
                           <motion.div 
-                            animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.95, 1.05, 0.95] }}
+                            animate={{ opacity: [0.2, 0.5, 0.2], scale: [0.97, 1.03, 0.97] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute inset-0 bg-[#16E27A]/10 rounded-[16px] blur-md pointer-events-none"
+                            className="absolute inset-0 bg-[#16E27A]/8 rounded-[16px] blur-md pointer-events-none"
                           />
                           <ShieldCheck className="w-7 h-7 text-[#16E27A] z-10" />
                         </div>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-2.5">
                           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">Welcome to TaxSense</h2>
-                          <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto font-semibold">
+                          <p className="text-xs text-slate-400/70 leading-relaxed max-w-md mx-auto font-semibold tracking-wide">
                             Securely continue to your workspace.
                           </p>
                         </div>
@@ -808,8 +808,8 @@ export default function App() {
                       {/* Staggered choice cards wrapper */}
                       <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 relative z-10">
                         
-                        {/* Guest Access Card (Sandbox Mode - Minimal, Dark, Neutral, Glass Hover Elevation) */}
-                        <div className="p-6 rounded-2xl bg-white/[0.015] border border-white/[0.04] hover:border-[#16E27A]/25 hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-355 flex flex-col justify-between space-y-6 group">
+                        {/* Guest Access Card (Sandbox Mode - Balanced) */}
+                        <div className="p-8 rounded-[20px] bg-white/[0.015] border border-white/[0.04] hover:border-[#16E27A]/25 hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-355 flex flex-col justify-between min-h-[350px] group">
                           <div className="space-y-4 text-left">
                             <div className="space-y-1">
                               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Mode</h3>
@@ -846,15 +846,15 @@ export default function App() {
                                 setActiveStep(redirectStep);
                               }, 600);
                             }}
-                            className="w-full py-3 bg-[#1C2026] hover:bg-[#252A33] hover:text-white text-slate-300 font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.04] hover:border-white/[0.08]"
+                            className="w-full py-3 bg-slate-800/80 hover:bg-slate-700/90 text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.08] hover:border-[#16E27A]/20 backdrop-blur-[8px]"
                           >
                             {isAuthenticating ? 'Initializing...' : 'Launch Sandbox'}
                             {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
                           </button>
                         </div>
 
-                        {/* Google Access Card (Google Workspace - Soft hover glow, 50% border intensity) */}
-                        <div className="p-6 rounded-2xl bg-[#0E131B]/40 border border-[#16E27A]/08 hover:border-[#16E27A]/25 hover:bg-[#0E131B]/60 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(22,226,122,0.06)] relative transition-all duration-355 flex flex-col justify-between space-y-6 group">
+                        {/* Google Access Card (Google Workspace - Balanced & Clean border style) */}
+                        <div className="p-8 rounded-[20px] bg-[#0E131B]/40 border border-[#16E27A]/12 hover:border-[#16E27A]/25 hover:bg-[#0E131B]/60 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(22,226,122,0.06)] relative transition-all duration-355 flex flex-col justify-between min-h-[350px] group">
                           
                           {/* Dynamic recommended badge with pulsing ring */}
                           <div className="absolute top-3 right-3 bg-emerald-500/10 border border-emerald-500/20 text-[#16E27A] px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(22,226,122,0.1)]">
@@ -877,7 +877,7 @@ export default function App() {
                             <ul className="space-y-2 text-[10px] font-semibold leading-relaxed">
                               <li className="flex items-center gap-2 text-slate-300">
                                 <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="Cloud Sync">☁</span>
-                                <span>Save filing progress (Cloud Sync)</span>
+                                <span>Save progress (Cloud Sync)</span>
                               </li>
                               <li className="flex items-center gap-2 text-slate-300">
                                 <span className="w-5 h-5 rounded bg-white/[0.015] border border-white/[0.04] flex items-center justify-center text-[10px]" title="Document Vault">🔒</span>
@@ -890,17 +890,17 @@ export default function App() {
                             </ul>
                           </div>
                           
-                          {/* Premium Glass Container for Google Sign-In with 14px corners & Skeleton Loaders */}
-                          <div className="relative min-h-[58px] w-full flex items-center justify-center p-2.5 bg-white/[0.015] border border-white/[0.04] rounded-[14px] overflow-hidden">
+                          {/* Premium Glass Container for Google Sign-In (14-16px corners, mt-auto layout) */}
+                          <div className="relative min-h-[64px] w-full flex items-center justify-center p-2.5 bg-white/[0.015] border border-white/[0.04] rounded-[16px] overflow-hidden mt-auto">
                             
-                            {/* Loading Skeleton */}
+                            {/* Loading Skeleton reserving exact button space */}
                             {googleGsiState === 'loading' && (
                               <div className="absolute inset-0 flex items-center justify-center bg-white/[0.01] animate-pulse">
-                                <div className="flex items-center gap-2">
-                                  <svg className="w-3.5 h-3.5 animate-spin text-emerald-450" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <div className="flex items-center gap-2 h-[44px] w-[240px] bg-white/[0.02] border border-white/[0.04] rounded-full justify-center">
+                                  <svg className="w-3 h-3 animate-spin text-emerald-450" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                                     <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8" />
                                   </svg>
-                                  <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider">Connecting to Google...</span>
+                                  <span className="text-[8.5px] text-slate-450 font-bold uppercase tracking-wider">Connecting...</span>
                                 </div>
                               </div>
                             )}
@@ -909,7 +909,7 @@ export default function App() {
                             <div 
                               id="google-signin-btn-container" 
                               style={{ display: googleGsiState === 'loaded' ? 'block' : 'none' }}
-                              className="transition-opacity duration-500 opacity-100 flex justify-center w-full" 
+                              className="transition-opacity duration-500 opacity-100 flex justify-center w-[240px] h-[44px] mx-auto" 
                             />
 
                             {/* Fallback Simulated button if failed or timed out */}
@@ -926,7 +926,7 @@ export default function App() {
                                   };
                                   handleGoogleLoginSuccess(mockProfile);
                                 }}
-                                className="relative overflow-hidden w-full py-2 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(22,226,122,0.15)] border border-transparent"
+                                className="relative overflow-hidden w-[240px] h-[44px] bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(22,226,122,0.15)] border border-transparent mx-auto"
                               >
                                 <span>Simulate Google Sign-In</span>
                               </button>
@@ -941,24 +941,24 @@ export default function App() {
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-[1px] bg-[#16E27A]/30 blur-[1px]" />
                       </motion.div>
 
-                      {/* Trust Footer Badges */}
+                      {/* Trust Footer Badges with glassmorphism details */}
                       <motion.div variants={childVariants} className="flex flex-wrap items-center justify-center gap-2.5 pt-1.5">
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>🔒</span> End-to-End Encryption
                         </div>
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>⚡</span> Local Processing
                         </div>
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>🗑</span> Auto Delete
                         </div>
-                        <div className="px-3 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08] hover:shadow-[0_0_10px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] backdrop-blur-[6px] hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
                           <span>☁</span> Cloud Sync
                         </div>
                       </motion.div>
 
-                      {/* Trust Row Section */}
-                      <motion.div variants={childVariants} className="text-[8.5px] text-slate-500 font-bold uppercase tracking-widest text-center opacity-45 pt-1">
+                      {/* Understated Trust Row Section */}
+                      <motion.div variants={childVariants} className="text-[8.5px] text-slate-500/35 font-bold uppercase tracking-widest text-center pt-2 select-none">
                         Powered by Google Identity • Gemini AI • AES-256 Encryption • ISO 27001 • Vercel Infrastructure
                       </motion.div>
                     </motion.div>
