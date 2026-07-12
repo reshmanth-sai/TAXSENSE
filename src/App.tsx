@@ -992,26 +992,6 @@ export default function App() {
                                 </>
                               )}
                             </button>
-
-                            {/* Dev Simulation Override link for local developer reviews */}
-                            {import.meta.env.DEV && (
-                              <button
-                                onClick={() => {
-                                  const mockProfile: UserProfile = {
-                                    uid: 'google-908231',
-                                    name: 'Mohit Kumar',
-                                    email: 'mohit.kumar@gmail.com',
-                                    photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&fit=crop&q=80',
-                                    providerId: 'google.com',
-                                    createdAt: new Date().toISOString()
-                                  };
-                                  handleGoogleLoginSuccess(mockProfile);
-                                }}
-                                className="text-[9.5px] text-slate-500 hover:text-[#16E27A] transition-colors uppercase tracking-widest font-black block mx-auto mt-4 select-none z-30"
-                              >
-                                ⚡ Dev Override Simulation
-                              </button>
-                            )}
                           </div>
                         </div>
                       </motion.div>
