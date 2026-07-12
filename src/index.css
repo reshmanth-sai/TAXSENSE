@@ -589,3 +589,22 @@ a:focus-visible {
   }
 }
 
+@keyframes border-beam {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-border-beam {
+  animation: border-beam 4s linear infinite;
+}
+
+@keyframes drift-particle {
+  0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+  15% { opacity: 0.25; }
+  85% { opacity: 0.25; }
+  100% { transform: translateY(-120px) translateX(15px); opacity: 0; }
+}
+.animate-drift {
+  animation: drift-particle 15s infinite ease-in-out;
+}
+
+
