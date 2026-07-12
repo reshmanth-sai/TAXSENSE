@@ -1,8 +1,9 @@
 export class GoogleAuthService {
   private static isScriptLoaded = false;
-  private static isInitialized = false;
-  private static loginListener: ((response: any) => void) | null = null;
   private static scriptPromise: Promise<void> | null = null;
+  private static tokenClient: any = null;
+  private static signInPromiseResolve: ((profile: any) => void) | null = null;
+  private static signInPromiseReject: ((err: any) => void) | null = null;
 
   /**
    * Loads the Google Identity Services SDK script once.
@@ -19,7 +20,7 @@ export class GoogleAuthService {
       }
 
       // Check if script element or global google namespace already exists
-      if (this.isScriptLoaded || document.getElementById('google-gsi-client') || (window as any).google?.accounts?.id) {
+      if (this.isScriptLoaded || document.getElementById('google-gsi-client') || (window as any).google?.accounts?.oauth2) {
         console.log('[GIS] Script already present or SDK loaded.');
         this.isScriptLoaded = true;
         resolve();
@@ -36,18 +37,18 @@ export class GoogleAuthService {
       script.onload = () => {
         console.log('[GIS] Script Loaded');
         
-        // Wait until window.google.accounts.id namespace is fully populated
+        // Wait until window.google.accounts.oauth2 namespace is fully populated
         let checks = 0;
         const checkInterval = setInterval(() => {
           checks++;
-          if ((window as any).google?.accounts?.id) {
+          if ((window as any).google?.accounts?.oauth2) {
             clearInterval(checkInterval);
             console.log('[GIS] Google Object Ready');
             this.isScriptLoaded = true;
             resolve();
           } else if (checks > 50) { // 5.0 seconds timeout
             clearInterval(checkInterval);
-            console.error('[GIS] Script loaded but window.google.accounts.id not found');
+            console.error('[GIS] Script loaded but window.google.accounts.oauth2 not found');
             reject(new Error('Google Identity SDK failed to initialize.'));
           }
         }, 100);
@@ -65,143 +66,97 @@ export class GoogleAuthService {
   }
 
   /**
-   * Initializes the Google Identity client exactly once.
+   * Triggers the Google OAuth 2.0 Sign-In flow programmatically via the Token Client popup.
+   * Returns a promise that resolves with the user's mapped profile or rejects on failure/cancel.
    */
-  static async initialize(clientId: string, callback: (response: any) => void): Promise<void> {
+  static async signIn(clientId: string): Promise<any> {
     await this.loadScript();
 
-    // Register or update the credential callback listener dynamically
-    this.loginListener = callback;
+    return new Promise((resolve, reject) => {
+      this.signInPromiseResolve = resolve;
+      this.signInPromiseReject = reject;
 
-    if (this.isInitialized) {
-      console.log('[GIS] Already Initialized');
-      return;
-    }
-
-    console.log('[GIS] Initializing');
-    const google = (window as any).google;
-    if (!google?.accounts?.id) {
-      throw new Error('Google Identity SDK namespace is missing.');
-    }
-
-    google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (response: any) => {
-        console.log('[GIS] Credential callback triggered');
-        if (this.loginListener) {
-          this.loginListener(response);
+      try {
+        const google = (window as any).google;
+        if (!google?.accounts?.oauth2) {
+          throw new Error('Google OAuth2 namespace is missing.');
         }
-      }
-    });
 
-    this.isInitialized = true;
-    console.log('[GIS] Initialized Successfully');
-  }
-
-  /**
-   * Safely renders the Google button in the container with retry back-off loops and DOM painted frame checks.
-   */
-  static async renderButton(
-    containerId: string, 
-    options: { theme?: 'outline' | 'filled_blue' | 'filled_black'; size?: 'small' | 'medium' | 'large'; width?: number } = {}
-  ): Promise<void> {
-    let retries = 0;
-    const maxRetries = 5;
-    const intervals = [100, 250, 500, 1000, 2000];
-
-    const tryRender = (): Promise<void> => {
-      return new Promise<void>((resolve, reject) => {
-        // Wait two full animation frame paint cycles to guarantee DOM is rendered and visible
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const container = document.getElementById(containerId);
-            if (!container) {
-              console.warn(`[GIS] Container #${containerId} not found. Retry ${retries + 1}/${maxRetries}`);
-              reject(new Error('Container element not found'));
-              return;
-            }
-
-            console.log('[GIS] Container Found');
-            const google = (window as any).google;
-            if (!google?.accounts?.id || !this.isInitialized) {
-              console.warn(`[GIS] Google SDK not initialized. Retry ${retries + 1}/${maxRetries}`);
-              reject(new Error('Google SDK not initialized'));
-              return;
-            }
-
-            try {
-              console.log('[GIS] Rendering Button');
-              // Clear container to prevent duplicate iframes
-              container.innerHTML = '';
+        if (!this.tokenClient) {
+          console.log('[GIS] Initializing Token Client');
+          this.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'email profile',
+            callback: async (tokenResponse: any) => {
+              console.log('[GIS] Token response received:', tokenResponse);
               
-              google.accounts.id.renderButton(
-                container,
-                {
-                  theme: options.theme || 'outline',
-                  size: options.size || 'large',
-                  width: options.width || 240,
-                  shape: 'pill',
-                  text: 'signin_with'
+              // Check for user cancellation or errors
+              if (tokenResponse.error) {
+                console.error('[GIS] OAuth Error:', tokenResponse.error);
+                let errMsg = tokenResponse.error_description || tokenResponse.error;
+                if (tokenResponse.error === 'access_denied') {
+                  errMsg = 'popup_closed_by_user';
                 }
-              );
-              
-              console.log('[GIS] Button Rendered');
-              resolve();
-            } catch (err) {
-              console.error('[GIS] Exception during renderButton:', err);
-              reject(err);
+                if (this.signInPromiseReject) {
+                  this.signInPromiseReject(new Error(errMsg));
+                }
+                return;
+              }
+
+              if (tokenResponse.access_token) {
+                try {
+                  console.log('[GIS] Fetching userinfo from Google API');
+                  const userInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`);
+                  if (!userInfoResponse.ok) {
+                    throw new Error('Failed to retrieve user profile information.');
+                  }
+                  
+                  const userInfo = await userInfoResponse.json();
+                  console.log('[GIS] Userinfo fetched successfully:', userInfo);
+
+                  const profile = {
+                    uid: userInfo.sub,
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    photoURL: userInfo.picture,
+                    providerId: 'google.com',
+                    createdAt: new Date().toISOString()
+                  };
+
+                  if (this.signInPromiseResolve) {
+                    this.signInPromiseResolve(profile);
+                  }
+                } catch (fetchErr) {
+                  console.error('[GIS] UserInfo fetch error:', fetchErr);
+                  if (this.signInPromiseReject) {
+                    this.signInPromiseReject(fetchErr);
+                  }
+                }
+              } else {
+                if (this.signInPromiseReject) {
+                  this.signInPromiseReject(new Error('No access token returned.'));
+                }
+              }
             }
           });
-        });
-      });
-    };
-
-    const attempt = async () => {
-      try {
-        await tryRender();
-      } catch (err) {
-        if (retries < maxRetries) {
-          const delay = intervals[retries];
-          retries++;
-          await new Promise(r => setTimeout(r, delay));
-          await attempt();
-        } else {
-          console.error('[GIS] Render button failed after max retries.');
-          throw new Error('Google Sign-In button rendering failed');
         }
+
+        console.log('[GIS] Triggering popup requestAccessToken');
+        this.tokenClient.requestAccessToken();
+      } catch (err) {
+        console.error('[GIS] Exception during signIn:', err);
+        reject(err);
       }
-    };
-
-    await attempt();
+    });
   }
 
   /**
-   * Helper to decode JWT payloads locally in a safe manner.
-   */
-  static decodeJwt(token: string): any {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      console.error('[GIS] Error decoding JWT:', e);
-      return null;
-    }
-  }
-
-  /**
-   * Disables auto-select on Google Sign-In during logout.
+   * Revokes the active session settings.
    */
   static revokeSession(): void {
-    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+    if (typeof window !== 'undefined' && (window as any).google?.accounts?.oauth2) {
       try {
-        (window as any).google.accounts.id.disableAutoSelect();
+        // Clear active tokens if possible, or disable automatic selections
         console.log('[GIS] Revoked session');
       } catch (e) {
         console.error('[GIS] Error revoking session:', e);
