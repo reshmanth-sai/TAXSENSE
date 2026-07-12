@@ -104,6 +104,10 @@ const PremiumCard: React.FC<PremiumCardProps> = ({ children, className = '', ...
 
       {/* Surface wrapper */}
       <div className={`relative w-full h-full bg-gradient-to-br from-white/[0.025] to-white/[0.005] border border-white/[0.05] border-t-white/[0.12] rounded-2xl backdrop-blur-[12px] ${paddingClass}`}>
+        
+        {/* Subtle diagonal gloss reflection sheet */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.005] to-white/[0.015] pointer-events-none" />
+
         {/* Subtle radial cursor follow glow */}
         <div 
           style={{
@@ -386,6 +390,15 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           backgroundSize: '100px 100px'
         }} 
         className="absolute inset-0 z-0 pointer-events-none" 
+      />
+
+      {/* Engineering Dot Matrix Grid Overlay (24px spacing, 1% opacity) */}
+      <div 
+        style={{ 
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.08) 1.2px, transparent 0)', 
+          backgroundSize: '24px 24px',
+        }} 
+        className="absolute inset-0 z-0 pointer-events-none opacity-20" 
       />
 
       {/* LEFT SCROLL JOURNEY RAIL (Desktop only) */}
@@ -747,6 +760,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <div className="absolute inset-0 bg-gradient-to-tr from-[#16E27A]/5 to-blue-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
           <div className="w-full bg-[#050607] border border-white/[0.05] rounded-2xl overflow-hidden aspect-[16/9] flex flex-col relative">
+            {/* CRT/OLED subpixel and scanlines overlay (3% opacity) */}
+            <div className="absolute inset-0 pointer-events-none z-30 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,_rgba(0,0,0,0.25)_50%),_linear-gradient(90deg,_rgba(255,0,0,0.06),_rgba(0,255,0,0.02),_rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]" />
             <div className="h-8 border-b border-white/[0.04] bg-[#050607] px-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500/30" />
