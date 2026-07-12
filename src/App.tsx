@@ -817,8 +817,8 @@ export default function App() {
                         </div>
                         
                         <div className="space-y-2 mt-2">
-                          <h2 className="text-2xl sm:text-[30px] font-bold tracking-tight text-white leading-none font-geist">Continue securely</h2>
-                          <p className="text-[11.5px] text-slate-450 leading-relaxed max-w-md mx-auto font-medium tracking-wide mt-2 select-none">
+                          <h2 className="text-3xl sm:text-[40px] font-normal italic tracking-tight text-white leading-none font-serif">Continue securely</h2>
+                          <p className="text-[11.5px] text-slate-450 leading-relaxed max-w-md mx-auto font-medium tracking-[0.03em] mt-2 select-none font-sans">
                             Choose how you'd like to access your TaxSense workspace.
                           </p>
                         </div>
@@ -886,7 +886,7 @@ export default function App() {
                                 setActiveStep(redirectStep);
                               }, 600);
                             }}
-                            className="w-full py-3 text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer flex items-center justify-center gap-1.5 mt-8 btn-tactile-sandbox"
+                            className="w-full py-3 text-white font-semibold rounded-xl text-xs tracking-[0.05em] uppercase font-geist cursor-pointer flex items-center justify-center gap-1.5 mt-8 btn-tactile-sandbox"
                           >
                             {isAuthenticating ? 'Initializing...' : 'Launch Sandbox'}
                             {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
@@ -954,7 +954,7 @@ export default function App() {
                               disabled={googleGsiState === 'loading' || googleGsiState === 'success'}
                               onClick={handleGoogleSignIn}
                               aria-label="Continue with Google"
-                              className={`w-[220px] h-[44px] rounded-full text-xs tracking-wide cursor-pointer flex items-center justify-between px-5 transition-all duration-200 font-semibold border z-20 relative select-none btn-tactile-google ${
+                              className={`w-[220px] h-[44px] rounded-full text-xs tracking-[0.05em] uppercase font-geist cursor-pointer flex items-center justify-between px-5 transition-all duration-200 font-semibold border z-20 relative select-none btn-tactile-google ${
                                 googleGsiState === 'success'
                                   ? 'bg-[#16E27A]/10 border-[#16E27A]/25 text-[#16E27A] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_0_15px_rgba(22,226,122,0.15)]'
                                   : googleGsiState === 'loading'
@@ -987,7 +987,7 @@ export default function App() {
                                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                                   </svg>
-                                  <span className="text-[10px] font-bold tracking-normal uppercase font-geist">Continue with Google</span>
+                                  <span className="text-[10px] font-bold tracking-[0.05em] uppercase font-geist">Continue with Google</span>
                                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                                 </>
                               )}
