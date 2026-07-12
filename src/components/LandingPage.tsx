@@ -91,7 +91,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
     { id: 'get-started', label: 'Get Started' }
   ];
 
-  // Hero section target refs for scroll and cursor perspective
+  // Hero target refs for scroll & cursor perspective
   const heroRef = useRef<HTMLDivElement>(null);
   const [heroCoords, setHeroCoords] = useState({ x: 0, y: 0 });
 
@@ -103,13 +103,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
     setHeroCoords({ x, y });
   };
 
+  // Journey target ref for scroll-linked connecting line
+  const journeyRef = useRef<HTMLDivElement>(null);
+  const [journeyProgress, setJourneyProgress] = useState(0);
+
   // Dynamic values for Dashboard Mockup animation
   const [mockSavings, setMockSavings] = useState(0);
   const [mockRegime, setMockRegime] = useState('OLD');
   const [mockProgress, setMockProgress] = useState(45);
   const [mockBadge, setMockBadge] = useState('Sandbox Active');
 
-  // Scroll Progress Tracker
+  // Scroll Progress Trackers
   const { scrollYProgress } = useScroll();
   const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
@@ -121,6 +125,20 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
   const mockupScale = useTransform(heroScrollProgress, [0, 1], [0.98, 1.02]);
   const mockupRotateX = useTransform(heroScrollProgress, [0, 1], [4, 0]);
+
+  // Journey scroll-linked connecting line tracker
+  const { scrollYProgress: journeyScrollProgress } = useScroll({
+    target: journeyRef,
+    offset: ["start end", "end end"]
+  });
+  const journeyLineScaleX = useSpring(journeyScrollProgress, { stiffness: 80, damping: 25, restDelta: 0.001 });
+
+  // Monitor journeyScrollProgress changes to activate step indicators
+  useEffect(() => {
+    return journeyScrollProgress.onChange((val) => {
+      setJourneyProgress(val);
+    });
+  }, [journeyScrollProgress]);
 
   // Web Audio UI click synthesizer
   const playClickSound = () => {
@@ -255,8 +273,20 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050607] text-[#F6F7F8] font-sans antialiased selection:bg-[#16E27A] selection:text-[#050607] overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#020202] text-[#F6F7F8] font-sans antialiased selection:bg-[#16E27A] selection:text-[#050607] overflow-x-hidden relative">
       
+      {/* Viewport Edge Vignette for cinematic layout depth */}
+      <div className="pointer-events-none fixed inset-0 z-40 shadow-[inset_0_0_100px_rgba(0,0,0,0.85)]" />
+
+      {/* Ultra-Faint Technical Grid Background Overlay (~1% opacity, 100px grid size) */}
+      <div 
+        style={{ 
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.007) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.007) 1px, transparent 1px)', 
+          backgroundSize: '100px 100px' 
+        }} 
+        className="absolute inset-0 z-0 pointer-events-none" 
+      />
+
       {/* LEFT SCROLL JOURNEY RAIL (Desktop only) */}
       <div className="fixed left-12 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-center gap-4 select-none">
         <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">
@@ -288,7 +318,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                       ? 'w-2.5 h-2.5 bg-[#16E27A] shadow-[0_0_8px_rgba(22,226,122,0.6)] border border-slate-950 z-20' 
                       : isCompleted 
                         ? 'w-2 h-2 bg-[#16E27A] z-20' 
-                        : 'w-2 h-2 bg-slate-750 hover:bg-slate-500 z-20'
+                        : 'w-2 h-2 bg-slate-755 hover:bg-slate-500 z-20'
                   }`}
                   animate={isActive ? { opacity: [0.7, 1, 0.7] } : {}}
                   transition={isActive ? { repeat: Infinity, duration: 3.5, ease: "easeInOut" } : {}}
@@ -329,7 +359,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       {/* 2% Opacity Film Grain Overlay */}
       <div className="cinematic-noise pointer-events-none fixed inset-0 z-50 opacity-[0.02] mix-blend-overlay" />
 
-      {/* Cinematic Scroll System: cross-fading light channels */}
+      {/* Cinematic Scroll System: cross-fading light channels (Looping slowly over 80-100s) */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         
         {/* CHANNEL 1: GREEN GLOWS (Hero / Journey / Final CTA) */}
@@ -344,7 +374,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               y: [0, -80, 50, 0],
               scale: [1, 1.15, 0.9, 1]
             }}
-            transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 90, repeat: Infinity, ease: "easeInOut" }}
             style={{ background: 'radial-gradient(circle, rgba(22, 226, 122, 0.07) 0%, transparent 70%)' }}
             className="absolute top-[25%] left-[45%] w-[850px] h-[450px]" 
           />
@@ -354,7 +384,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               y: [0, 60, -60, 0],
               scale: [1, 0.9, 1.1, 1]
             }}
-            transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 80, repeat: Infinity, ease: "easeInOut" }}
             style={{ background: 'radial-gradient(ellipse at center, rgba(22, 226, 122, 0.03) 0%, rgba(5, 150, 105, 0.01) 50%, transparent 80%)' }}
             className="absolute -top-[12%] left-[8%] w-[900px] h-[650px]" 
           />
@@ -364,7 +394,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               y: [0, -50, 30, 0],
               scale: [1, 1.05, 0.95, 1]
             }}
-            transition={{ duration: 32, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 95, repeat: Infinity, ease: "easeInOut" }}
             style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.04) 0%, rgba(22, 226, 122, 0.01) 45%, transparent 75%)' }}
             className="absolute top-[40%] -right-[15%] w-[950px] h-[750px]" 
           />
@@ -382,7 +412,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               y: [0, 60, -40, 0],
               scale: [1, 1.1, 0.9, 1]
             }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 85, repeat: Infinity, ease: "easeInOut" }}
             style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%)' }}
             className="absolute top-[35%] left-[30%] w-[900px] h-[500px]" 
           />
@@ -392,7 +422,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               y: [0, -50, 30, 0],
               scale: [1, 0.95, 1.05, 1]
             }}
-            transition={{ duration: 27, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 80, repeat: Infinity, ease: "easeInOut" }}
             style={{ background: 'radial-gradient(ellipse at center, rgba(29, 78, 216, 0.04) 0%, transparent 70%)' }}
             className="absolute top-[50%] right-[10%] w-[850px] h-[600px]" 
           />
@@ -409,7 +439,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               x: [0, 30, -30, 0],
               y: [0, -30, 30, 0]
             }}
-            transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 100, repeat: Infinity, ease: "easeInOut" }}
             style={{ background: 'radial-gradient(circle, rgba(255, 255, 255, 0.015) 0%, transparent 70%)' }}
             className="absolute top-[20%] left-[20%] w-[700px] h-[500px]" 
           />
@@ -607,7 +637,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               </div>
               <div className="p-4 bg-white/[0.01] border border-white/[0.04] rounded-2xl flex flex-col justify-between">
                 <div className="space-y-2">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase block tracking-wider">AI Optimizer</span>
+                  <span className="text-[9px] text-slate-505 font-bold uppercase block tracking-wider">AI Optimizer</span>
                   <div className="p-2 bg-blue-500/5 border border-blue-500/10 rounded-lg text-[10px] text-blue-300">
                     Claim under 80D is underutilized. Adding ₹10,000 saves ₹1,500.
                   </div>
@@ -666,8 +696,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </motion.section>
 
-      {/* SECTION 3: HOW IT WORKS */}
-      <section id="journey" className="py-44 px-6 max-w-6xl mx-auto space-y-20">
+      {/* SECTION 3: HOW IT WORKS (Connected to continuous scroll progress line) */}
+      <section ref={journeyRef} id="journey" className="py-44 px-6 max-w-6xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -683,64 +713,73 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </motion.div>
 
         <div className="relative grid grid-cols-1 sm:grid-cols-4 gap-8">
+          
+          {/* Subtle line background track */}
+          <div className="absolute top-10 left-[12%] right-[12%] h-[1.5px] bg-white/[0.04] hidden sm:block z-0 pointer-events-none" />
+
+          {/* Continuous filling line linked directly to target container scroll */}
           <motion.div 
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1.6, ease: "easeInOut", delay: 0.1 }}
-            className="absolute top-10 left-[12%] right-[12%] h-[1.5px] bg-[#16E27A]/25 origin-left hidden sm:block z-0"
+            style={{ scaleX: journeyLineScaleX }} 
+            className="absolute top-10 left-[12%] right-[12%] h-[1.5px] bg-[#16E27A] origin-left hidden sm:block z-10 pointer-events-none" 
           />
 
           {[
             {
               step: "01",
               title: "Upload Document",
-              desc: "Drag and drop your Form 16 PDF securely. Everything processes inside a transient local memory workspace."
+              desc: "Drag and drop your Form 16 PDF securely. Everything processes inside a transient local memory workspace.",
+              trigger: 0
             },
             {
               step: "02",
               title: "AI Extraction",
-              desc: "Gemini automatically reads and verifies salary components, standard deductions, and tax computed numbers."
+              desc: "Gemini automatically reads and verifies salary components, standard deductions, and tax computed numbers.",
+              trigger: 0.25
             },
             {
               step: "03",
               title: "Recommendations",
-              desc: "Compare old vs new tax regime liability. Adjust values using interactive sliders to claim missed exemptions."
+              desc: "Compare old vs new tax regime liability. Adjust values using interactive sliders to claim missed exemptions.",
+              trigger: 0.55
             },
             {
               step: "04",
               title: "File Return",
-              desc: "Check and audit final figures. Download your customized filing report and submit with single-tap accuracy."
+              desc: "Check and audit final figures. Download your customized filing report and submit with single-tap accuracy.",
+              trigger: 0.85
             }
-          ].map((item, idx) => (
-            <PremiumCard
-              key={idx}
-              className="p-6 space-y-4 text-left relative transition-all duration-355 z-10"
-              style={{
-                opacity: 0,
-                transform: 'translateY(30px)'
-              }}
-              whileInView={{
-                opacity: 1,
-                transform: 'translateY(0px)'
-              }}
-              viewport={{ once: true, margin: "-80px" }}
-            >
-              <div className="absolute -top-3.5 left-6 w-3 h-3 rounded-full bg-[#050607] border border-[#16E27A]/50 flex items-center justify-center hidden sm:flex">
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.25 + 0.3 }}
-                  className="w-1.5 h-1.5 rounded-full bg-[#16E27A]" 
-                />
-              </div>
+          ].map((item, idx) => {
+            const isStepActive = journeyProgress >= item.trigger;
+            
+            return (
+              <PremiumCard
+                key={idx}
+                className={`p-6 space-y-4 text-left relative transition-all duration-350 z-15 ${
+                  isStepActive ? 'border-[#16E27A]/30 bg-[#0E131B] -translate-y-1' : 'border-white/[0.04]'
+                }`}
+                style={{
+                  opacity: 0,
+                  transform: 'translateY(30px)'
+                }}
+                whileInView={{
+                  opacity: 1,
+                  transform: 'translateY(0px)'
+                }}
+                viewport={{ once: true, margin: "-80px" }}
+              >
+                {/* Visual node indicator */}
+                <div className="absolute -top-3.5 left-6 w-3 h-3 rounded-full bg-[#050607] border border-white/[0.1] flex items-center justify-center hidden sm:flex">
+                  <motion.div 
+                    className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${isStepActive ? 'bg-[#16E27A]' : 'bg-slate-700'}`}
+                  />
+                </div>
 
-              <span className="text-2xl font-black font-mono text-[#16E27A]/20 block">{item.step}</span>
-              <h3 className="text-sm font-bold text-white">{item.title}</h3>
-              <p className="text-[11px] text-[#8A96A8] leading-relaxed">{item.desc}</p>
-            </PremiumCard>
-          ))}
+                <span className="text-2xl font-black font-mono text-[#16E27A]/20 block">{item.step}</span>
+                <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                <p className="text-[11px] text-[#8A96A8] leading-relaxed">{item.desc}</p>
+              </PremiumCard>
+            );
+          })}
         </div>
       </section>
 
@@ -903,7 +942,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Column 1: Traditional Filing */}
           <PremiumCard 
             className="p-8 bg-white/[0.01] border border-white/[0.03] space-y-6 text-left opacity-70"
             style={{
@@ -937,7 +975,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </div>
           </PremiumCard>
 
-          {/* Column 2: TaxSense */}
           <PremiumCard 
             className="p-8 bg-[#0E131B] border border-[#16E27A]/15 space-y-6 text-left shadow-lg shadow-[#16E27A]/3 relative overflow-hidden"
             style={{
@@ -1104,7 +1141,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* SECTION 8: TESTIMONIALS (Staggered offsets layout for organic visual flow) */}
+      {/* SECTION 8: TESTIMONIALS */}
       <section id="testimonials" className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-5xl mx-auto space-y-20">
           <motion.div 
@@ -1135,14 +1172,14 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 initials: "AS",
                 name: "Anjali Sharma",
                 role: "Product Manager, Mumbai",
-                offsetY: "sm:translate-y-4" // Organic stagger offset
+                offsetY: "sm:translate-y-4"
               },
               {
                 text: "\"The AI Copilot answered my specific questions about Section 80D with confidence and backed the calculations with actual math. Unbelievably good.\"",
                 initials: "RV",
                 name: "Rohan Verma",
                 role: "UX Researcher, Delhi",
-                offsetY: "sm:-translate-y-2" // Organic stagger offset
+                offsetY: "sm:-translate-y-2"
               }
             ].map((test, index) => (
               <PremiumCard 
@@ -1176,7 +1213,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* SECTION 9: FAQ (Expandable Premium Cards similar to Linear docs) */}
+      {/* SECTION 9: FAQ */}
       <section id="faq" className="py-44 px-6 max-w-3xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0 }}
@@ -1258,8 +1295,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* FOOTER ROW (Upgraded Vercel-style minimal columns) */}
-      <footer className="border-t border-white/[0.04] bg-[#050607] pt-16 pb-12 px-6 md:px-12 text-left text-xs text-slate-500 transition-all duration-300">
+      {/* FOOTER ROW */}
+      <footer className="border-t border-white/[0.04] bg-[#050607] pt-16 pb-12 px-6 md:px-12 text-left text-xs text-slate-550 transition-all duration-300">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 pb-12 border-b border-white/[0.04]">
           <div className="space-y-3">
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Product</h4>
@@ -1273,26 +1310,26 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <div className="space-y-3">
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Security</h4>
             <ul className="space-y-2 text-[11px] text-slate-500 font-semibold">
-              <li><span className="text-slate-600">AES-256 Vault Encryption</span></li>
-              <li><span className="text-slate-600">Local-First Processing</span></li>
-              <li><span className="text-slate-600">Private API Isolation</span></li>
-              <li><span className="text-slate-600">OWASP Compliance Standards</span></li>
+              <li><span className="text-slate-655">AES-256 Vault Encryption</span></li>
+              <li><span className="text-slate-655">Local-First Processing</span></li>
+              <li><span className="text-slate-655">Private API Isolation</span></li>
+              <li><span className="text-slate-655">OWASP Compliance Standards</span></li>
             </ul>
           </div>
           <div className="space-y-3">
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Developers</h4>
             <ul className="space-y-2 text-[11px] text-slate-500 font-semibold">
-              <li><span className="text-slate-600">API Documentation</span></li>
-              <li><span className="text-slate-600">GitHub Open Ingest</span></li>
-              <li><span className="text-slate-600">Vercel Serverless Status</span></li>
+              <li><span className="text-slate-655">API Documentation</span></li>
+              <li><span className="text-slate-655">GitHub Open Ingest</span></li>
+              <li><span className="text-slate-655">Vercel Serverless Status</span></li>
             </ul>
           </div>
           <div className="space-y-3">
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Company</h4>
             <ul className="space-y-2 text-[11px] text-slate-500 font-semibold">
-              <li><span className="text-slate-600">About TaxSense</span></li>
-              <li><span className="text-slate-600">Privacy & Data Policy</span></li>
-              <li><span className="text-slate-600">Terms of Service</span></li>
+              <li><span className="text-slate-655">About TaxSense</span></li>
+              <li><span className="text-slate-655">Privacy & Data Policy</span></li>
+              <li><span className="text-slate-655">Terms of Service</span></li>
               <li><span className="text-[#16E27A] bg-[#16E27A]/10 px-1.5 py-0.5 rounded text-[9px] font-bold">Public Beta</span></li>
             </ul>
           </div>
@@ -1300,10 +1337,10 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
         <div className="max-w-6xl mx-auto pt-8 flex flex-col sm:flex-row sm:justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
           <div>
-            TaxSense <span className="text-slate-800 font-normal">•</span> Built for Indian taxpayers <span className="text-slate-850 font-normal">•</span> FY 2025-26
+            TaxSense <span className="text-slate-850 font-normal">•</span> Built for Indian taxpayers <span className="text-slate-850 font-normal">•</span> FY 2025-26
           </div>
           <div className="flex gap-4">
-            <span className="flex items-center gap-2 text-slate-500">
+            <span className="flex items-center gap-2 text-slate-550">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16E27A]"></span>
