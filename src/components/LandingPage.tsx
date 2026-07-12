@@ -229,6 +229,12 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   const activeIndex = sections.findIndex(s => s.id === activeSection);
   const activeStepText = activeIndex >= 0 ? `${activeIndex + 1} / ${sections.length}` : `1 / ${sections.length}`;
 
+  // Cinematic Scroll System: background opacity triggers
+  const greenOpacity = activeSection === 'hero' ? 0.8 : activeSection === 'journey' ? 0.35 : activeSection === 'get-started' ? 1.0 : 0;
+  const blueOpacity = activeSection === 'copilot' ? 0.85 : 0;
+  const graphiteOpacity = (activeSection === 'interactive-showcase' || activeSection === 'comparison' || activeSection === 'testimonials' || activeSection === 'faq') ? 0.75 : 0.25;
+  const securityOpacity = activeSection === 'security' ? 0.45 : 0;
+
   const faqs = [
     {
       q: "Is my financial data safe with TaxSense?",
@@ -323,45 +329,103 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       {/* 2% Opacity Film Grain Overlay */}
       <div className="cinematic-noise pointer-events-none fixed inset-0 z-50 opacity-[0.02] mix-blend-overlay" />
 
-      {/* 30-Second Infinite Dynamic Aurora Glows */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.6, 0.8, 0.5, 0.6] }}
-        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
-      >
-        <motion.div 
-          animate={{
-            x: [0, 60, -40, 0],
-            y: [0, -80, 50, 0],
-            scale: [1, 1.15, 0.9, 1]
-          }}
-          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-          style={{ background: 'radial-gradient(circle, rgba(22, 226, 122, 0.06) 0%, transparent 70%)' }}
-          className="absolute top-[25%] left-[45%] w-[850px] h-[450px]" 
-        />
+      {/* Cinematic Scroll System: cross-fading light channels */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         
-        <motion.div 
-          animate={{
-            x: [0, -50, 40, 0],
-            y: [0, 60, -60, 0],
-            scale: [1, 0.9, 1.1, 1]
-          }}
-          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-          style={{ background: 'radial-gradient(ellipse at center, rgba(22, 226, 122, 0.03) 0%, rgba(5, 150, 105, 0.01) 50%, transparent 80%)' }}
-          className="absolute -top-[12%] left-[8%] w-[900px] h-[650px]" 
+        {/* CHANNEL 1: GREEN GLOWS (Hero / Journey / Final CTA) */}
+        <motion.div
+          animate={{ opacity: greenOpacity }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className="absolute inset-0 pointer-events-none"
+        >
+          <motion.div 
+            animate={{
+              x: [0, 60, -40, 0],
+              y: [0, -80, 50, 0],
+              scale: [1, 1.15, 0.9, 1]
+            }}
+            transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+            style={{ background: 'radial-gradient(circle, rgba(22, 226, 122, 0.07) 0%, transparent 70%)' }}
+            className="absolute top-[25%] left-[45%] w-[850px] h-[450px]" 
+          />
+          <motion.div 
+            animate={{
+              x: [0, -50, 40, 0],
+              y: [0, 60, -60, 0],
+              scale: [1, 0.9, 1.1, 1]
+            }}
+            transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+            style={{ background: 'radial-gradient(ellipse at center, rgba(22, 226, 122, 0.03) 0%, rgba(5, 150, 105, 0.01) 50%, transparent 80%)' }}
+            className="absolute -top-[12%] left-[8%] w-[900px] h-[650px]" 
+          />
+          <motion.div 
+            animate={{
+              x: [0, 40, -30, 0],
+              y: [0, -50, 30, 0],
+              scale: [1, 1.05, 0.95, 1]
+            }}
+            transition={{ duration: 32, repeat: Infinity, ease: "easeInOut" }}
+            style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.04) 0%, rgba(22, 226, 122, 0.01) 45%, transparent 75%)' }}
+            className="absolute top-[40%] -right-[15%] w-[950px] h-[750px]" 
+          />
+        </motion.div>
+
+        {/* CHANNEL 2: COOL BLUE GLOWS (Copilot context) */}
+        <motion.div
+          animate={{ opacity: blueOpacity }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className="absolute inset-0 pointer-events-none"
+        >
+          <motion.div 
+            animate={{
+              x: [0, -30, 50, 0],
+              y: [0, 60, -40, 0],
+              scale: [1, 1.1, 0.9, 1]
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+            style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%)' }}
+            className="absolute top-[35%] left-[30%] w-[900px] h-[500px]" 
+          />
+          <motion.div 
+            animate={{
+              x: [0, 40, -20, 0],
+              y: [0, -50, 30, 0],
+              scale: [1, 0.95, 1.05, 1]
+            }}
+            transition={{ duration: 27, repeat: Infinity, ease: "easeInOut" }}
+            style={{ background: 'radial-gradient(ellipse at center, rgba(29, 78, 216, 0.04) 0%, transparent 70%)' }}
+            className="absolute top-[50%] right-[10%] w-[850px] h-[600px]" 
+          />
+        </motion.div>
+
+        {/* CHANNEL 3: GRAPHITE / SURFACE MONOCHROME GLOWS (Showcase / Comparison) */}
+        <motion.div
+          animate={{ opacity: graphiteOpacity }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className="absolute inset-0 pointer-events-none"
+        >
+          <motion.div 
+            animate={{
+              x: [0, 30, -30, 0],
+              y: [0, -30, 30, 0]
+            }}
+            transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
+            style={{ background: 'radial-gradient(circle, rgba(255, 255, 255, 0.015) 0%, transparent 70%)' }}
+            className="absolute top-[20%] left-[20%] w-[700px] h-[500px]" 
+          />
+          <motion.div 
+            style={{ background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.01) 0%, transparent 60%)' }}
+            className="absolute top-[60%] right-[25%] w-[800px] h-[550px]" 
+          />
+        </motion.div>
+
+        {/* CHANNEL 4: SECURITY DEEP CALM VEIL */}
+        <motion.div
+          animate={{ opacity: securityOpacity }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className="absolute inset-0 bg-[#050607]/45 pointer-events-none z-[1]"
         />
-        <motion.div 
-          animate={{
-            x: [0, 40, -30, 0],
-            y: [0, -50, 30, 0],
-            scale: [1, 1.05, 0.95, 1]
-          }}
-          transition={{ duration: 32, repeat: Infinity, ease: "easeInOut" }}
-          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.04) 0%, rgba(22, 226, 122, 0.01) 45%, transparent 75%)' }}
-          className="absolute top-[40%] -right-[15%] w-[950px] h-[750px]" 
-        />
-      </motion.div>
+      </div>
 
       {/* HEADER NAVBAR */}
       <motion.header 
