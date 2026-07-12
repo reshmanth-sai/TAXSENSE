@@ -22,6 +22,9 @@ body {
   background-color: #F8FAFC;
   color: #0F172A;
   transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .dark body {
@@ -619,6 +622,111 @@ a:focus-visible {
 }
 .animate-grid-pulse {
   animation: grid-pulse 28s infinite ease-in-out;
+}
+
+/* Centerpiece Glass Surface Panel */
+.glass-panel-surface {
+  background: rgba(15, 18, 22, 0.55) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 60px rgba(22, 226, 122, 0.02) !important;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+/* Option Choice Cards - Sandbox */
+.glass-option-card-sandbox {
+  background: rgba(255, 255, 255, 0.015) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.03),
+    0 8px 30px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, border-color, box-shadow;
+}
+
+.glass-option-card-sandbox:hover {
+  transform: translateY(-2px) scale(1.005) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.06),
+    0 12px 35px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Option Choice Cards - Google */
+.glass-option-card-google {
+  background: rgba(255, 255, 255, 0.015) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.03),
+    0 8px 30px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, border-color, box-shadow;
+}
+
+.glass-option-card-google:hover {
+  transform: translateY(-2px) scale(1.005) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  border-color: rgba(22, 226, 122, 0.25) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.06),
+    0 12px 35px rgba(0, 0, 0, 0.5),
+    0 0 25px rgba(22, 226, 122, 0.04) !important;
+}
+
+/* Sandbox Tactile Button */
+.btn-tactile-sandbox {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, box-shadow;
+}
+
+.btn-tactile-sandbox:hover {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 6px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+.btn-tactile-sandbox:active {
+  transform: translateY(0) scale(0.985) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Premium Glass Badges */
+.glass-badge-premium {
+  background: rgba(255, 255, 255, 0.015) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, border-color, box-shadow;
+}
+
+.glass-badge-premium:hover {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 12px rgba(255, 255, 255, 0.02) !important;
 }
 
 

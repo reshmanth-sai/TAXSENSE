@@ -516,10 +516,13 @@ export default function App() {
   }
 
   return (
-    <div id="taxsense-app" className="min-h-screen bg-[#050607] text-white dark:text-slate-100 flex font-sans select-none antialiased relative overflow-hidden">
+    <div id="taxsense-app" className="min-h-screen bg-[#060708] text-white dark:text-slate-100 flex font-sans select-none antialiased relative overflow-hidden" style={{ WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
       
-      {/* Pinned fixed cinematic noise texture across the viewport */}
-      <div className="cinematic-noise" />
+      {/* Layer 5: Pinned fixed cinematic noise texture across the viewport (GPU-accelerated) */}
+      <div 
+        className="cinematic-noise" 
+        style={{ transform: 'translate3d(0, 0, 0)', opacity: 0.012 }}
+      />
 
       {/* BACKGROUND FLOATING EFFECTS: Aurora & Glows */}
       <motion.div 
@@ -532,26 +535,42 @@ export default function App() {
         }}
         className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
       >
-        {/* Soft radial emerald focal spotlight behind heading with breathing pulse */}
+        {/* Layer 2: Soft radial emerald focal spotlight behind heading with breathing pulse */}
         <div 
-          style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, transparent 70%)' }}
-          className="absolute top-[32%] left-[50%] w-[750px] h-[400px] pointer-events-none animate-spotlight-pulse" 
+          style={{ 
+            background: 'radial-gradient(circle at 50% 30%, rgba(22, 226, 122, 0.07) 0%, rgba(22, 226, 122, 0.01) 50%, transparent 80%)' 
+          }}
+          className="absolute top-[20%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] pointer-events-none animate-spotlight-pulse" 
         />
         
-        {/* Subtle auroral curtain glows */}
+        {/* Layer 3: Subtle auroral curtain glows */}
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 50%, transparent 80%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.06) 0%, rgba(5, 150, 105, 0.02) 50%, transparent 80%)' }}
           className="absolute -top-[10%] left-[5%] w-[800px] h-[600px] animate-aurora-1" 
         />
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.06) 0%, rgba(16, 185, 129, 0.02) 45%, transparent 75%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(5, 150, 105, 0.04) 0%, rgba(16, 185, 129, 0.01) 45%, transparent 75%)' }}
           className="absolute top-[35%] -right-[10%] w-[900px] h-[700px] animate-aurora-2" 
         />
         <div 
-          style={{ background: 'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.04) 0%, rgba(59, 130, 246, 0.005) 50%, transparent 75%)' }}
           className="absolute bottom-[10%] left-[10%] w-[700px] h-[600px] animate-aurora-1" 
         />
       </motion.div>
+
+      {/* Layer 4: Screen Edges Vignette */}
+      <div className="absolute inset-0 z-0 pointer-events-none shadow-[inset_0_0_120px_rgba(0,0,0,0.85)]" />
+
+      {/* Layer 6: Soft background grid texture faded toward edges */}
+      <div 
+        style={{ 
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.004) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.004) 1px, transparent 1px)', 
+          backgroundSize: '100px 100px',
+          WebkitMaskImage: 'radial-gradient(circle at 50% 50%, black 30%, transparent 80%)',
+          maskImage: 'radial-gradient(circle at 50% 50%, black 30%, transparent 80%)'
+        }} 
+        className="absolute inset-0 z-0 pointer-events-none" 
+      />
 
       {/* TWINKLING PARTICLE FIELD */}
       <motion.div
@@ -622,7 +641,7 @@ export default function App() {
             } as const;
 
             return (
-              <div className="relative z-10 flex-1 flex flex-col min-h-screen bg-[#070809] overflow-hidden justify-center items-center py-20 px-8">
+              <div className="relative z-10 flex-1 flex flex-col min-h-screen bg-transparent overflow-hidden justify-center items-center py-20 px-8">
                 
                 {/* Viewport Edge Vignette for Stage 2 */}
                 <div className="pointer-events-none absolute inset-0 z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]" />
@@ -729,7 +748,7 @@ export default function App() {
                   <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.06),transparent_50%)] animate-border-beam pointer-events-none" />
 
                   {/* Surface Card with layered glassmorphism and increased padding (p-16) */}
-                  <div className="relative w-full h-full bg-[#0F1216]/75 border border-white/[0.05] rounded-[24px] p-16 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-[32px] space-y-12 overflow-hidden">
+                  <div className="relative w-full h-full rounded-[24px] p-16 space-y-12 overflow-hidden glass-panel-surface">
                     
                     {/* Radial interactive spotlight following cursor */}
                     <div 
@@ -769,7 +788,7 @@ export default function App() {
                       <motion.div variants={childVariants} className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2 relative z-10">
                         
                         {/* Guest Access Card (Sandbox Mode - Balanced) */}
-                        <div className="p-8 rounded-[20px] bg-white/[0.015] border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-355 flex flex-col justify-between group">
+                        <div className="p-8 rounded-[20px] flex flex-col justify-between group glass-option-card-sandbox">
                           <div className="space-y-4 text-left">
                             <div className="space-y-1">
                               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Mode</h3>
@@ -806,7 +825,7 @@ export default function App() {
                                 setActiveStep(redirectStep);
                               }, 600);
                             }}
-                            className="w-full py-3 bg-slate-800/90 hover:bg-slate-750 text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/[0.1] hover:border-white/[0.18] hover:shadow-[0_4px_15px_rgba(0,0,0,0.25)] backdrop-blur-[8px] mt-8"
+                            className="w-full py-3 text-white font-bold rounded-xl text-xs tracking-wide cursor-pointer flex items-center justify-center gap-1.5 mt-8 btn-tactile-sandbox"
                           >
                             {isAuthenticating ? 'Initializing...' : 'Launch Sandbox'}
                             {!isAuthenticating && <ArrowRight className="w-3.5 h-3.5 text-slate-350" />}
@@ -814,7 +833,7 @@ export default function App() {
                         </div>
 
                         {/* Google Access Card (Google Workspace - Balanced & Clean border style) */}
-                        <div className="p-8 rounded-[20px] bg-white/[0.015] border border-white/[0.04] hover:border-[#16E27A]/25 hover:bg-white/[0.025] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4),0_0_20px_rgba(22,226,122,0.03)] relative transition-all duration-355 flex flex-col justify-between group">
+                        <div className="p-8 rounded-[20px] relative flex flex-col justify-between group glass-option-card-google">
                           
                           {/* Dynamic recommended badge with pulsing ring */}
                           <div className="absolute top-3 right-3 bg-emerald-500/10 border border-emerald-500/20 text-[#16E27A] px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(22,226,122,0.1)]">
@@ -932,16 +951,16 @@ export default function App() {
 
                       {/* Trust Footer Badges with glassmorphism details */}
                       <motion.div variants={childVariants} className="flex flex-wrap items-center justify-center gap-3.5 my-8">
-                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
                           <span>🔒</span> End-to-End Encryption
                         </div>
-                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
                           <span>⚡</span> Local Processing
                         </div>
-                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
                           <span>🗑</span> Auto Delete
                         </div>
-                        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.015] border border-white/[0.04] backdrop-blur-[6px] hover:bg-white/[0.035] hover:border-white/[0.08] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,255,255,0.02)] transition-all duration-300 text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default">
+                        <div className="px-3.5 py-1.5 rounded-full text-[9px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-default glass-badge-premium">
                           <span>☁</span> Cloud Sync
                         </div>
                       </motion.div>
