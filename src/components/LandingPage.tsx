@@ -53,7 +53,7 @@ const PremiumCard: React.FC<PremiumCardProps> = ({ children, className = '', ...
         setIsHovered(false);
         if (props.onMouseLeave) props.onMouseLeave(e);
       }}
-      className={`relative overflow-hidden bg-gradient-to-br from-white/[0.015] to-white/[0.002] border border-white/[0.04] border-t-white/[0.08] rounded-2xl transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.65)] ${className}`}
+      className={`relative overflow-hidden bg-gradient-to-br from-white/[0.025] to-white/[0.005] border border-white/[0.05] border-t-white/[0.12] rounded-2xl backdrop-blur-[12px] transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.05)] ${className}`}
       {...props}
     >
       {/* Subtle radial cursor follow glow (clipped inside, under 4% opacity) */}
@@ -126,12 +126,25 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   const mockupScale = useTransform(heroScrollProgress, [0, 1], [0.98, 1.02]);
   const mockupRotateX = useTransform(heroScrollProgress, [0, 1], [4, 0]);
 
+  // Navbar dynamic scroll transparency state
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Journey scroll-linked connecting line tracker
   const { scrollYProgress: journeyScrollProgress } = useScroll({
     target: journeyRef,
     offset: ["start end", "end end"]
   });
   const journeyLineScaleX = useSpring(journeyScrollProgress, { stiffness: 80, damping: 25, restDelta: 0.001 });
+
+  // Dynamic background blueprint grid scroll translation offset
+  const gridY = useTransform(scrollYProgress, [0, 1], ["0px", "60px"]);
 
   // Monitor journeyScrollProgress changes to activate step indicators
   useEffect(() => {
@@ -278,11 +291,12 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       {/* Viewport Edge Vignette for cinematic layout depth */}
       <div className="pointer-events-none fixed inset-0 z-40 shadow-[inset_0_0_100px_rgba(0,0,0,0.85)]" />
 
-      {/* Ultra-Faint Technical Grid Background Overlay (~1% opacity, 100px grid size) */}
-      <div 
+      {/* Dynamic Scroll-Linked Grid Background Overlay (~1% opacity, 100px grid size) */}
+      <motion.div 
         style={{ 
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.007) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.007) 1px, transparent 1px)', 
-          backgroundSize: '100px 100px' 
+          backgroundSize: '100px 100px',
+          y: gridY
         }} 
         className="absolute inset-0 z-0 pointer-events-none" 
       />
@@ -457,12 +471,16 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         />
       </div>
 
-      {/* HEADER NAVBAR */}
+      {/* HEADER NAVBAR (Dynamic transparency and blur based on scroll offset) */}
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="sticky top-0 z-50 px-6 md:px-12 py-4 flex items-center justify-between border-b bg-[#050607]/45 border-white/[0.04] backdrop-blur-md transition-all duration-300"
+        className={`sticky top-0 z-50 px-6 md:px-12 py-4 flex items-center justify-between border-b transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-[#020202]/75 border-white/[0.06] backdrop-blur-xl shadow-lg shadow-black/20' 
+            : 'bg-[#020202]/30 border-white/[0.03] backdrop-blur-md'
+        }`}
       >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-[#16E27A]/15">
@@ -562,7 +580,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           >
             <button
               onClick={handleStartWorkspace}
-              className="relative overflow-hidden w-full sm:w-auto px-7 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
+              className="relative overflow-hidden w-full sm:w-auto px-7 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 hover:shadow-[0_0_25px_rgba(22,226,122,0.3)] active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               <span>Start Sandbox Workspace</span>
@@ -579,7 +597,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           </motion.div>
         </motion.div>
 
-        {/* HERO MOCKUP (Scroll-linked 3D perspective and scale, combined with subtle floating animation) */}
+        {/* HERO MOCKUP (OLED Style Dashboard Preview with reflections and bezel depth highlights) */}
         <motion.div
           initial={{ opacity: 0, y: 35, scale: 0.97 }}
           animate={{ 
@@ -598,8 +616,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           }}
           className="mt-20 w-full max-w-4xl border border-white/[0.05] bg-[#0E131B]/80 backdrop-blur-md rounded-3xl p-3 md:p-4 shadow-[0_24px_80px_rgba(0,0,0,0.65)] relative group z-10"
         >
+          {/* Reflective glass sweep reflection layer (sweeps every 30s) */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.015] to-white/[0.03] rounded-3xl pointer-events-none z-20" />
+          <motion.div 
+            animate={{ x: ['-100%', '200%'] }}
+            transition={{ duration: 6, repeat: Infinity, repeatDelay: 24, ease: "easeInOut" }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -skew-x-12 pointer-events-none z-20"
+          />
+
           <div className="absolute inset-0 bg-gradient-to-tr from-[#16E27A]/5 to-blue-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-          <div className="w-full bg-[#050607] border border-white/[0.05] rounded-2xl overflow-hidden aspect-[16/9] flex flex-col">
+          
+          <div className="w-full bg-[#050607] border border-white/[0.05] rounded-2xl overflow-hidden aspect-[16/9] flex flex-col relative">
             <div className="h-8 border-b border-white/[0.04] bg-[#050607] px-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500/30" />
@@ -637,7 +664,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               </div>
               <div className="p-4 bg-white/[0.01] border border-white/[0.04] rounded-2xl flex flex-col justify-between">
                 <div className="space-y-2">
-                  <span className="text-[9px] text-slate-505 font-bold uppercase block tracking-wider">AI Optimizer</span>
+                  <span className="text-[9px] text-slate-550 font-bold uppercase block tracking-wider">AI Optimizer</span>
                   <div className="p-2 bg-blue-500/5 border border-blue-500/10 rounded-lg text-[10px] text-blue-300">
                     Claim under 80D is underutilized. Adding ₹10,000 saves ₹1,500.
                   </div>
@@ -852,6 +879,9 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </div>
 
             <div className="lg:col-span-3 p-5 bg-[#0E131B]/60 border border-white/[0.04] rounded-3xl relative overflow-hidden aspect-[4/3] flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
+              {/* Bezel bezel depth layer reflections */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-white/[0.025] pointer-events-none z-20" />
+              
               <div className="h-6 border-b border-white/[0.04] flex items-center justify-between shrink-0 mb-4 px-2">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-500/30" />
@@ -1096,7 +1126,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           >
             <Shield className="w-5 h-5 text-[#16E27A]" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Encrypted Documents</h3>
-            <p className="text-[11px] text-slate-450 leading-relaxed">
+            <p className="text-[11px] text-slate-455 leading-relaxed">
               All uploaded Form 16 documents are encrypted client-side using industry-standard AES-256 local keys.
             </p>
           </PremiumCard>
@@ -1115,7 +1145,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           >
             <Eye className="w-5 h-5 text-[#16E27A]" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Private Local Processing</h3>
-            <p className="text-[11px] text-slate-450 leading-relaxed">
+            <p className="text-[11px] text-slate-455 leading-relaxed">
               Your session is parsed locally in-memory, making guest workspaces entirely transient and secure.
             </p>
           </PremiumCard>
@@ -1285,7 +1315,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
             <button
               onClick={handleStartWorkspace}
-              className="relative overflow-hidden w-full sm:w-auto px-8 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
+              className="relative overflow-hidden w-full sm:w-auto px-8 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 hover:shadow-[0_0_25px_rgba(22,226,122,0.3)] active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               <span>Get started instantly</span>
@@ -1340,7 +1370,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             TaxSense <span className="text-slate-850 font-normal">•</span> Built for Indian taxpayers <span className="text-slate-850 font-normal">•</span> FY 2025-26
           </div>
           <div className="flex gap-4">
-            <span className="flex items-center gap-2 text-slate-550">
+            <span className="flex items-center gap-2 text-slate-555">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16E27A]"></span>
