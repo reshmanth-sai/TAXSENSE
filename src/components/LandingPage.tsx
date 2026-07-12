@@ -73,6 +73,24 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [activeShowcase, setActiveShowcase] = useState<'extraction' | 'regime' | 'optimization' | null>(null);
 
+  // Scroll Rail Navigation Data & State
+  const [activeSection, setActiveSection] = useState('hero');
+  const [hoveredDot, setHoveredDot] = useState<string | null>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const sections = [
+    { id: 'hero', label: 'Hero' },
+    { id: 'journey', label: 'Tax Journey' },
+    { id: 'interactive-showcase', label: 'Dashboard Showcase' },
+    { id: 'comparison', label: 'Regime Comparison' },
+    { id: 'copilot', label: 'AI Copilot' },
+    { id: 'security', label: 'Security' },
+    { id: 'testimonials', label: 'Testimonials' },
+    { id: 'faq', label: 'FAQ' },
+    { id: 'get-started', label: 'Get Started' }
+  ];
+
   // Hero section target ref for scroll perspective linkage
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +103,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   // Scroll Progress Bar Tracker
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   // Hero scroll-linked target tracking
   const { scrollYProgress: heroScrollProgress } = useScroll({
@@ -120,6 +139,44 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       console.warn('Audio play block:', e);
     }
   };
+
+  // Track active section via IntersectionObserver (60 FPS, no reflows)
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    }, {
+      rootMargin: "-45% 0px -45% 0px",
+      threshold: 0.05
+    });
+
+    sections.forEach((s) => {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Track scroll activities to hide top progress indicator on mobile when idle
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolling(true);
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      scrollTimeout.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 1500);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    };
+  }, []);
 
   // Animate financial numbers dynamically in Mockup on Mount
   useEffect(() => {
@@ -175,6 +232,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
     }
   };
 
+  const handleScrollTo = (id: string) => {
+    playClickSound();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const activeIndex = sections.findIndex(s => s.id === activeSection);
+  const progressPercent = Math.round((Math.max(0, activeIndex) / (sections.length - 1)) * 100);
+
   const faqs = [
     {
       q: "Is my financial data safe with TaxSense?",
@@ -197,11 +265,77 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-[#050607] text-[#F6F7F8] font-sans antialiased selection:bg-[#16E27A] selection:text-[#050607] overflow-x-hidden relative">
       
-      {/* 2px Premium Scroll Progress Indicator */}
+      {/* Scroll Progress Indicator (Top on Mobile, hidden unless scrolling; Always visible on Desktop) */}
       <motion.div 
         style={{ scaleX }} 
-        className="fixed top-0 left-0 right-0 h-[2px] bg-[#16E27A] origin-left z-[100] pointer-events-none" 
+        className={`fixed top-0 left-0 right-0 h-[2.5px] bg-[#16E27A] origin-left z-[100] pointer-events-none transition-opacity duration-300 ${
+          isScrolling ? 'opacity-100' : 'opacity-0 lg:opacity-100'
+        }`} 
       />
+
+      {/* LEFT SCROLL JOURNEY RAIL (Desktop only) */}
+      <div className="fixed left-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-center gap-4 select-none">
+        <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">
+          {progressPercent}%
+        </span>
+        
+        <div className="h-[280px] w-[1.5px] bg-white/[0.04] relative flex flex-col justify-between items-center py-2">
+          {/* Dynamic Fill line */}
+          <motion.div 
+            style={{ scaleY }} 
+            className="absolute top-0 left-0 right-0 bg-[#16E27A] origin-top h-full w-full" 
+          />
+          
+          {sections.map((s, idx) => {
+            const isCompleted = idx < activeIndex;
+            const isActive = idx === activeIndex;
+            
+            return (
+              <div 
+                key={s.id}
+                onMouseEnter={() => setHoveredDot(s.id)}
+                onMouseLeave={() => setHoveredDot(null)}
+                onClick={() => handleScrollTo(s.id)}
+                className="relative flex items-center justify-center w-6 h-6 cursor-pointer"
+              >
+                <motion.div 
+                  className={`rounded-full transition-all duration-300 ${
+                    isActive 
+                      ? 'w-3 h-3 bg-[#16E27A] shadow-md shadow-[#16E27A]/40 border border-slate-950 z-20' 
+                      : isCompleted 
+                        ? 'w-2 h-2 bg-[#16E27A] z-20' 
+                        : 'w-2 h-2 bg-slate-750 hover:bg-slate-500 z-20'
+                  }`}
+                  animate={isActive ? { scale: [1, 1.15, 1] } : {}}
+                  transition={isActive ? { repeat: Infinity, duration: 2, ease: "easeInOut" } : {}}
+                />
+
+                {isActive && (
+                  <span className="absolute inset-0 rounded-full border border-[#16E27A]/30 animate-ping pointer-events-none" />
+                )}
+
+                <AnimatePresence>
+                  {hoveredDot === s.id && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute left-8 px-2.5 py-1 bg-[#0E131B] border border-white/[0.06] text-white text-[9px] font-bold uppercase tracking-wider rounded-md whitespace-nowrap shadow-xl"
+                    >
+                      {s.label}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+        
+        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+          Filing Journey
+        </span>
+      </div>
 
       {/* 2% Opacity Film Grain Overlay */}
       <div className="cinematic-noise pointer-events-none fixed inset-0 z-50 opacity-[0.02] mix-blend-overlay" />
@@ -286,7 +420,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </motion.header>
 
       {/* SECTION 1: HERO */}
-      <section ref={heroRef} className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-36 max-w-5xl mx-auto z-10">
+      <section ref={heroRef} id="hero" className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-36 max-w-5xl mx-auto z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.98, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -402,7 +536,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl text-center">
                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Old Regime Tax</span>
-                    <span className="font-mono text-slate-350 font-bold">₹54,600</span>
+                    <span className="font-mono text-slate-355 font-bold">₹54,600</span>
                   </div>
                   <div className="p-3 bg-white/[0.01] border border-[#16E27A]/15 rounded-xl text-center relative overflow-hidden">
                     <span className="text-[9px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">New Regime Tax</span>
@@ -420,7 +554,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 
                 <div className="space-y-2">
                   <div className="p-2 border border-white/[0.04] rounded-lg flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500">Savings:</span>
+                    <span className="text-slate-505">Savings:</span>
                     <span className="font-mono text-[#16E27A] font-bold">
                       ₹{mockSavings.toLocaleString('en-IN')}
                     </span>
@@ -472,7 +606,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </motion.section>
 
       {/* SECTION 3: HOW IT WORKS */}
-      <section className="py-44 px-6 max-w-6xl mx-auto space-y-20">
+      <section id="journey" className="py-44 px-6 max-w-6xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -530,7 +664,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 transform: 'translateY(0px)'
               }}
               viewport={{ once: true, margin: "-80px" }}
-              // Custom Framer Motion manual transition config
               onClick={playClickSound}
             >
               <div className="absolute -top-3.5 left-6 w-3 h-3 rounded-full bg-[#050607] border border-[#16E27A]/50 flex items-center justify-center hidden sm:flex">
@@ -551,7 +684,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* SECTION 4: INTERACTIVE PRODUCT SHOWCASE (Slide Left Reveal + Highlights) */}
+      {/* SECTION 4: INTERACTIVE PRODUCT SHOWCASE */}
       <section id="interactive-showcase" className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-6xl mx-auto space-y-20">
           <motion.div 
@@ -569,7 +702,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center">
-            {/* Left side: Interactive Card triggers */}
             <div className="lg:col-span-2 space-y-4">
               <PremiumCard
                 onMouseEnter={() => {
@@ -629,10 +761,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               </PremiumCard>
             </div>
 
-            {/* Right side: Responding Dashboard Mockup */}
             <div className="lg:col-span-3 p-5 bg-[#0E131B]/60 border border-white/[0.04] rounded-3xl relative overflow-hidden aspect-[4/3] flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
-              
-              {/* Window Header */}
               <div className="h-6 border-b border-white/[0.04] flex items-center justify-between shrink-0 mb-4 px-2">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-500/30" />
@@ -643,9 +772,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <span className="w-8" />
               </div>
 
-              {/* Mock Dashboard Grid */}
               <div className="flex-1 grid grid-cols-3 gap-4 text-left">
-                {/* 1. Extraction Panel */}
                 <div className={`col-span-2 p-4 bg-[#050607]/80 border rounded-2xl flex flex-col justify-between transition-all duration-300 ${
                   activeShowcase === 'extraction' 
                     ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
@@ -664,9 +791,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                   </div>
                 </div>
 
-                {/* Right stack col */}
                 <div className="col-span-1 space-y-4 flex flex-col justify-between">
-                  {/* 2. Regime Comparison Panel */}
                   <div className={`p-4 bg-[#050607]/80 border rounded-2xl transition-all duration-300 flex-1 flex flex-col justify-between ${
                     activeShowcase === 'regime' 
                       ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
@@ -683,7 +808,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                     </div>
                   </div>
 
-                  {/* 3. Optimization Panel */}
                   <div className={`p-4 bg-[#050607]/80 border rounded-2xl transition-all duration-300 flex-1 flex flex-col justify-between ${
                     activeShowcase === 'optimization' 
                       ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
@@ -712,7 +836,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* SECTION 5: WHY TAXSENSE */}
-      <section className="py-44 px-6 max-w-5xl mx-auto space-y-20">
+      <section id="comparison" className="py-44 px-6 max-w-5xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0, x: 30 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -728,7 +852,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Column 1: Traditional Filing */}
           <PremiumCard 
             className="p-8 bg-white/[0.01] border border-white/[0.03] space-y-6 text-left opacity-70"
             style={{
@@ -749,20 +872,19 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             <div className="space-y-4">
               <div className="border-b border-white/[0.04] pb-3 space-y-1">
                 <span className="text-slate-200 font-semibold block text-xs">Hours of manual paperwork</span>
-                <span className="text-[11px] text-slate-500">Cross-referencing spreadsheets and form sections manually.</span>
+                <span className="text-[11px] text-slate-505">Cross-referencing spreadsheets and form sections manually.</span>
               </div>
               <div className="border-b border-white/[0.04] pb-3 space-y-1">
                 <span className="text-slate-200 font-semibold block text-xs">Complex calculations</span>
-                <span className="text-[11px] text-slate-500">Manual computations for HRA exemption limits and Section 80C.</span>
+                <span className="text-[11px] text-slate-505">Manual computations for HRA exemption limits and Section 80C.</span>
               </div>
               <div className="space-y-1">
                 <span className="text-slate-200 font-semibold block text-xs">Opaque regimes</span>
-                <span className="text-[11px] text-slate-500">Selecting tax regimes blindly without seeing computed differences.</span>
+                <span className="text-[11px] text-slate-505">Selecting tax regimes blindly without seeing computed differences.</span>
               </div>
             </div>
           </PremiumCard>
 
-          {/* Column 2: TaxSense */}
           <PremiumCard 
             className="p-8 bg-[#0E131B] border border-[#16E27A]/15 space-y-6 text-left shadow-lg shadow-[#16E27A]/3 relative overflow-hidden"
             style={{
@@ -803,7 +925,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* SECTION 6: AI COPILOT SHOWCASE */}
-      <section className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
+      <section id="copilot" className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-4xl mx-auto space-y-20">
           <motion.div 
             initial={{ opacity: 0, scale: 0.97 }}
@@ -854,7 +976,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* SECTION 7: SECURITY */}
-      <section className="py-44 px-6 max-w-5xl mx-auto space-y-20">
+      <section id="security" className="py-44 px-6 max-w-5xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -930,7 +1052,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* SECTION 8: TESTIMONIALS */}
-      <section className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
+      <section id="testimonials" className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-5xl mx-auto space-y-20">
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
@@ -999,7 +1121,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* SECTION 9: FAQ */}
-      <section className="py-44 px-6 max-w-3xl mx-auto space-y-20">
+      <section id="faq" className="py-44 px-6 max-w-3xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -1051,7 +1173,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* SECTION 10: FINAL CTA */}
-      <section className="relative py-52 px-6 border-t border-white/[0.04] text-center overflow-hidden">
+      <section id="get-started" className="relative py-52 px-6 border-t border-white/[0.04] text-center overflow-hidden">
         <motion.div 
           initial={{ opacity: 0.3, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1.15 }}
