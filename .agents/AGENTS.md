@@ -24,3 +24,19 @@ Key Rules:
 - Blurs: Frosted glass elements require 16px backdrop blurs.
 - Tables: Flat borders, zero solid backgrounds, subtle vertical dividing exclusions.
 - Motion: Use spring morphs (`stiffness: 350`, `damping: 30`) and hardware-accelerated transforms (transforms and opacity) only.
+
+
+## Mandatory Skills
+
+For every code change, always apply:
+
+- react-architecture
+- react-performance
+- react-hooks
+- composition-patterns
+- typescript-best-practices
+- frontend-design
+- ui-ux-pro-max
+- accessibility
+
+Before implementing changes, evaluate the problem using these skills and follow their recommendations unless there is a strong reason not to.

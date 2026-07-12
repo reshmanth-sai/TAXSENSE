@@ -9,6 +9,7 @@ const ExtractionConfirm = lazy(() => import('./components/ExtractionConfirm'));
 const ExportControl = lazy(() => import('./components/ExportControl'));
 const FilingGuide = lazy(() => import('./components/FilingGuide'));
 const DocumentVault = lazy(() => import('./components/DocumentVault'));
+const AICopilot = lazy(() => import('./components/copilot/AICopilot').then(m => ({ default: m.AICopilot })));
 import { useTaxStore, useTaxStoreHydrated } from './store/useTaxStore';
 import LandingPage from './components/LandingPage';
 
@@ -86,18 +87,10 @@ export default function App() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isFloatingAIChatOpen, setIsFloatingAIChatOpen] = useState(false);
   const [guidedFilingStep, setGuidedFilingStep] = useState(1);
   const [showCelebration, setShowCelebration] = useState(false);
   const [historySearch, setHistorySearch] = useState('');
   const [historyFilter, setHistoryFilter] = useState('ALL');
-
-  // Floating copilot chat variables
-  const [floatingChatQuery, setFloatingChatQuery] = useState('');
-  const [floatingChatHistory, setFloatingChatHistory] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
-    { sender: 'bot', text: 'Hi! I am your TaxSense Companion. Ask me anything about your current page, deductions, or ITR rules.' }
-  ]);
-  const [isFloatingChatTyping, setIsFloatingChatTyping] = useState(false);
 
   // Form 16 extraction UI state
   const [extractedData, setExtractedData] = useState<Partial<TaxData> | null>(null);
@@ -135,6 +128,8 @@ export default function App() {
   const theme = useTaxStore((state) => state.theme) || 'light';
   const setTheme = useTaxStore((state) => state.setTheme);
   const uploadedFiles = useTaxStore((state) => state.uploadedFiles) || [];
+  const isFloatingAIChatOpen = useTaxStore((state) => state.isFloatingAIChatOpen);
+  const setIsFloatingAIChatOpen = useTaxStore((state) => state.setIsFloatingAIChatOpen);
 
   // Generate 40 twinkling particles for unified background canvas
   const particles = useMemo(() => {
@@ -315,32 +310,6 @@ export default function App() {
     });
     
     setShowCelebration(true);
-  };
-
-  const handleFloatingChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!floatingChatQuery.trim()) return;
-
-    const userMsg = floatingChatQuery;
-    setFloatingChatHistory(prev => [...prev, { sender: 'user', text: userMsg }]);
-    setFloatingChatQuery('');
-    setIsFloatingChatTyping(true);
-
-    // Simulate smart context aware companion response
-    setTimeout(() => {
-      let botResponse = `I see you are viewing the ${activeStep === 11 ? 'Dashboard Overview' : activeStep === 3 ? 'Documents Vault' : 'Tax Return details'}. `;
-      if (userMsg.toLowerCase().includes('regime') || userMsg.toLowerCase().includes('saving')) {
-        const saved = taxCalculationResult.savings;
-        botResponse += `Based on your Gross Income of ${formatINR(taxData.grossSalary)}, switching to the New Regime yields a saving of ${formatINR(saved)} under Section 115BAC.`;
-      } else if (userMsg.toLowerCase().includes('document') || userMsg.toLowerCase().includes('pdf')) {
-        botResponse += `You can upload files in Stage 2 (Document Vault) via PDF or text structures, which parses salary breakdowns automatically.`;
-      } else {
-        botResponse += `Your current Gross Income is ${formatINR(taxData.grossSalary)} with ${formatINR(taxData.deduction80C)} in Section 80C. Let me know if you would like me to optimize other tax items.`;
-      }
-
-      setFloatingChatHistory(prev => [...prev, { sender: 'bot', text: botResponse }]);
-      setIsFloatingChatTyping(false);
-    }, 1200);
   };
 
   // Get dynamic greeting greeting message based on time of day
@@ -988,16 +957,28 @@ export default function App() {
                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                         className="space-y-6 font-sans max-w-2xl mx-auto"
                       >
-                        {/* Title Card */}
-                        <div className="bg-slate-900/40 border border-white/[0.04] rounded-[24px] p-6 backdrop-blur-md">
-                          <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-emerald-450 animate-pulse" />
-                            TaxSense AI Audit Engine
-                          </h2>
-                          <p className="text-xs text-slate-400">
-                            Real-time compliance validation checking parameters against official AY 2026-27 Income Tax slabs and rules.
-                          </p>
-                        </div>
+                        {uploadedFiles.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-slate-900/40 border-2 border-dashed border-slate-800/50 rounded-3xl backdrop-blur-md">
+                            <div className="w-16 h-16 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center mb-4">
+                              <Sparkles className="w-8 h-8 text-slate-600" />
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-400 tracking-tight">AI Audit Standby</h3>
+                            <p className="text-xs text-slate-500 font-medium mt-2 max-w-sm mx-auto">
+                              The TaxSense AI engine requires a Form 16 document to perform compliance validations. Upload a file in the Document Vault to begin the audit.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-6">
+                            {/* Title Card */}
+                            <div className="bg-slate-900/40 border border-white/[0.04] rounded-[24px] p-6 backdrop-blur-md">
+                              <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-emerald-450 animate-pulse" />
+                                TaxSense AI Audit Engine
+                              </h2>
+                              <p className="text-xs text-slate-400">
+                                Real-time compliance validation checking parameters against official AY 2026-27 Income Tax slabs and rules.
+                              </p>
+                            </div>
 
                         {/* Audit Log Card */}
                         <div className="bg-slate-900/40 border border-white/[0.04] rounded-[24px] p-6 space-y-6 relative overflow-hidden backdrop-blur-md shadow-2xl">
@@ -1107,16 +1088,25 @@ export default function App() {
                                 <span className="text-slate-400">Audit Compliance Score</span>
                                 <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 rounded uppercase">98% Verified</span>
                               </div>
-                              <button
-                                onClick={() => setActiveStep(5)}
-                                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-blue-500/10 select-none active:scale-95 flex items-center justify-center gap-1.5"
-                              >
-                                <span>Proceed to Recommendations</span>
-                                <ArrowRight className="w-4 h-4 text-white" />
-                              </button>
+                              <div className="text-right pt-2">
+                                <button 
+                                  onClick={() => setActiveStep(5)}
+                                  disabled={analysisProgress < 4}
+                                  className={`w-full py-3 rounded-xl font-extrabold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5 transition-all select-none ${
+                                    analysisProgress >= 4 
+                                      ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer active:scale-95 shadow-blue-500/10' 
+                                      : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'
+                                  }`}
+                                >
+                                  <span>Proceed to Recommendations</span>
+                                  <ArrowRight className="w-4 h-4" />
+                                </button>
+                              </div>
                             </motion.div>
                           )}
                         </div>
+                      </div>
+                    )}
                       </motion.div>
                     )}
 
@@ -1130,18 +1120,30 @@ export default function App() {
                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                         className="space-y-6 font-sans"
                       >
-                        {/* Savings Hero Banner */}
-                        <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-3xl p-8 text-center space-y-4 relative overflow-hidden backdrop-blur-md">
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-emerald-500/5 blur-[90px] rounded-full pointer-events-none" />
-                          
-                          <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded font-black tracking-wider uppercase inline-block z-10 relative">Optimization Report</span>
-                          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white z-10 relative">
-                            Here's how you can save <span className="text-emerald-450">{formatINR(taxCalculationResult.savings)}</span>
-                          </h1>
-                          <p className="text-xs text-slate-400 max-w-xl mx-auto z-10 relative font-medium leading-relaxed">
-                            Comparing exemption rates. Our diagnostic models suggest electing the <strong>New Tax Regime (Sec 115BAC)</strong> for maximum optimization.
-                          </p>
-                        </div>
+                        {taxData.grossSalary === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-slate-900/40 border-2 border-dashed border-slate-800/50 rounded-3xl backdrop-blur-md">
+                            <div className="w-16 h-16 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center mb-4">
+                              <Cpu className="w-8 h-8 text-slate-600" />
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-400 tracking-tight">Diagnostic Standby</h3>
+                            <p className="text-xs text-slate-500 font-medium mt-2 max-w-sm mx-auto">
+                              Tax calculation diagnostics are waiting for income data. Upload a Form 16 or enter manual values to generate a regime comparison.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-6">
+                            {/* Savings Hero Banner */}
+                            <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-3xl p-8 text-center space-y-4 relative overflow-hidden backdrop-blur-md">
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-emerald-500/5 blur-[90px] rounded-full pointer-events-none" />
+                              
+                              <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded font-black tracking-wider uppercase inline-block z-10 relative">Optimization Report</span>
+                              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white z-10 relative">
+                                Here's how you can save <span className="text-emerald-450">{formatINR(taxCalculationResult.savings)}</span>
+                              </h1>
+                              <p className="text-xs text-slate-400 max-w-xl mx-auto z-10 relative font-medium leading-relaxed">
+                                Comparing exemption rates. Our diagnostic models suggest electing the <strong>New Tax Regime (Sec 115BAC)</strong> for maximum optimization.
+                              </p>
+                            </div>
 
                         {/* Regime Comparison Detail Columns */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -1197,8 +1199,9 @@ export default function App() {
                             </button>
 
                           </div>
-
                         </div>
+                      </div>
+                    )}
                       </motion.div>
                     )}
 
@@ -1523,84 +1526,7 @@ export default function App() {
 
             </div>
 
-            {/* Sidebar Floating AI Assistant Companion Drawer (450px) */}
-            <aside className={`border-l border-white/[0.04] dark:border-slate-800/40 bg-[#040608]/40 dark:bg-slate-900/35 backdrop-blur-md flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out z-40 relative h-screen ${
-              isFloatingAIChatOpen ? 'w-[450px]' : 'w-0 overflow-hidden border-l-0'
-            }`}>
-              <div className="flex flex-col h-full justify-between">
-                
-                {/* Header context badge */}
-                <div className="px-4 py-4 border-b border-white/[0.04] dark:border-slate-900/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-emerald-450 animate-pulse" />
-                    <span className="font-bold text-xs uppercase tracking-wider text-slate-100">TaxSense Copilot</span>
-                    <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-black uppercase shrink-0">
-                      {activeStep === 11 && 'Dashboard'}
-                      {activeStep === 3 && 'Document Vault'}
-                      {activeStep === 4 && 'AI Scan'}
-                      {activeStep === 5 && 'Optimize'}
-                      {activeStep === 6 && 'Filing'}
-                      {activeStep === 10 && 'timeline'}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => setIsFloatingAIChatOpen(false)}
-                    className="p-1 hover:bg-white/[0.06] rounded text-slate-400 hover:text-white cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Chat Message History */}
-                <div className="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
-                  {floatingChatHistory.map((msg, i) => (
-                    <div key={i} className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold ${
-                        msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-900 border border-slate-800 text-emerald-400'
-                      }`}>
-                        {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
-                      </div>
-                      <div className={`p-3 rounded-2xl text-xs leading-relaxed font-medium ${
-                        msg.sender === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-950/40 border border-slate-850 rounded-tl-none text-slate-300'
-                      }`}>
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {isFloatingChatTyping && (
-                    <div className="flex gap-3 max-w-[85%] animate-pulse">
-                      <div className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-405">
-                        <Bot className="w-3.5 h-3.5 animate-spin" />
-                      </div>
-                      <div className="p-3 bg-slate-950/40 border border-slate-850 rounded-2xl rounded-tl-none flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                        <div className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                        <div className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Input prompt field */}
-                <form onSubmit={handleFloatingChatSubmit} className="p-3 border-t border-white/[0.04] dark:border-slate-900/50 bg-[#040608]/40 flex gap-2">
-                  <input
-                    type="text"
-                    value={floatingChatQuery}
-                    onChange={(e) => setFloatingChatQuery(e.target.value)}
-                    placeholder="Ask about compliance or savings..."
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 focus:bg-slate-900"
-                  />
-                  <button
-                    type="submit"
-                    className="p-2 bg-emerald-500 hover:bg-emerald-400 text-slate-955 rounded-xl cursor-pointer transition-all active:scale-95"
-                  >
-                    <Send className="w-4 h-4 text-slate-955" />
-                  </button>
-                </form>
-
-              </div>
-            </aside>
+            <AICopilot isOpen={isFloatingAIChatOpen} onClose={() => setIsFloatingAIChatOpen(false)} />
 
             {/* Toggle trigger for Right side copilot drawer */}
             {!isFloatingAIChatOpen && (

@@ -30,7 +30,7 @@ export const ParamInfo: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-export default function DeductionCard() {
+const DeductionCard = React.memo(() => {
   const [activeTab, setActiveTab] = React.useState<ActiveTabType>('80C');
   const [regimeOptimizer, setRegimeOptimizer] = React.useState<'OLD' | 'NEW'>('OLD');
 
@@ -80,20 +80,20 @@ export default function DeductionCard() {
   const LIMIT_80TTB = 50000;
   const LIMIT_80G = 200000; // soft cap for display
 
-  const handleSliderChange = (key: any, maxLimit: number, valStr: string) => {
+  const handleSliderChange = React.useCallback((key: any, maxLimit: number, valStr: string) => {
     const val = Math.min(maxLimit, Math.max(0, parseInt(valStr.replace(/,/g, '')) || 0));
     updateDeduction(key, val);
-  };
+  }, [updateDeduction]);
 
-  const handleTextInputChange = (key: any, maxLimit: number, valStr: string) => {
+  const handleTextInputChange = React.useCallback((key: any, maxLimit: number, valStr: string) => {
     const cleaned = valStr.replace(/[^0-9]/g, '');
     const val = Math.min(maxLimit, Math.max(0, parseInt(cleaned) || 0));
     updateDeduction(key, val);
-  };
+  }, [updateDeduction]);
 
-  const setDeductionPreset = (key: any, value: number) => {
+  const setDeductionPreset = React.useCallback((key: any, value: number) => {
     updateDeduction(key, value);
-  };
+  }, [updateDeduction]);
 
   // Percentage calculations for bars
   const pct80C = Math.min(100, (val80C / LIMIT_80C) * 100);
@@ -147,7 +147,7 @@ export default function DeductionCard() {
   const standardShedPct = Math.round((currentStandardShed / standardShedLimit) * 100);
 
   // Pre-configured optimization presets
-  const applyPreset = (presetType: 'standard' | 'aggressive' | 'maximize' | 'reset') => {
+  const applyPreset = React.useCallback((presetType: 'standard' | 'aggressive' | 'maximize' | 'reset') => {
     if (presetType === 'standard') {
       updateDeduction('80C', 150000);
       updateDeduction('80D', 25000);
@@ -175,7 +175,7 @@ export default function DeductionCard() {
       updateDeduction('80TTA', 0);
       updateDeduction('80TTB', 0);
     }
-  };
+  }, [updateDeduction, grossSalary, LIMIT_80C, LIMIT_80D, LIMIT_HRA, LIMIT_NPS]);
 
   // Dynamic New Regime restructuring calculations:
   const newSlabTaxable = Math.max(0, grossSalary + otherIncome - 75000 - val80CCD2 - val80CCH - valSection24bLetOut);
@@ -472,8 +472,7 @@ export default function DeductionCard() {
                           {/* Live Text Field + Numeric formatting */}
                           <div className="relative shrink-0 w-32">
                             <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
-                            <input
-                              type="text"
+                            <input aria-label="Enter deduction amount" type="text"
                               inputMode="numeric"
                               value={val80C || ''}
                               onChange={(e) => handleTextInputChange('80C', LIMIT_80C, e.target.value)}
@@ -593,8 +592,7 @@ export default function DeductionCard() {
                         {/* Live Text Field */}
                         <div className="relative shrink-0 w-32">
                           <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
-                          <input
-                            type="text"
+                          <input aria-label="Enter deduction amount" type="text"
                             inputMode="numeric"
                             value={val80D || ''}
                             onChange={(e) => handleTextInputChange('80D', LIMIT_80D, e.target.value)}
@@ -709,8 +707,7 @@ export default function DeductionCard() {
                         {/* Live Text Field */}
                         <div className="relative shrink-0 w-32">
                           <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
-                          <input
-                            type="text"
+                          <input aria-label="Enter deduction amount" type="text"
                             inputMode="numeric"
                             value={valHRA || ''}
                             onChange={(e) => handleTextInputChange('HRA exemption', LIMIT_HRA, e.target.value)}
@@ -825,8 +822,7 @@ export default function DeductionCard() {
                         {/* Live Text Field */}
                         <div className="relative shrink-0 w-32">
                           <span className="absolute left-2 top-1.5 text-slate-400 text-xs font-semibold">₹</span>
-                          <input
-                            type="text"
+                          <input aria-label="Enter deduction amount" type="text"
                             inputMode="numeric"
                             value={valNPS || ''}
                             onChange={(e) => handleTextInputChange('80CCD(1B)', LIMIT_NPS, e.target.value)}
@@ -943,8 +939,7 @@ export default function DeductionCard() {
                           </span>
                           <div className="relative w-28 shrink-0">
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                            <input 
-                              type="text"
+                            <input aria-label="Enter deduction amount" type="text"
                               inputMode="numeric"
                               value={val80CCD2 || ''}
                               onChange={(e) => handleTextInputChange('80CCD(2)', LIMIT_80CCD2 || 150000, e.target.value)}
@@ -953,8 +948,7 @@ export default function DeductionCard() {
                             />
                           </div>
                         </div>
-                        <input
-                          type="range"
+                        <input aria-label="Adjust deduction slider" type="range"
                           min="0"
                           max={LIMIT_80CCD2 || 50000}
                           step="5000"
@@ -978,8 +972,7 @@ export default function DeductionCard() {
                           </span>
                           <div className="relative w-28 shrink-0">
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                            <input 
-                              type="text"
+                            <input aria-label="Enter deduction amount" type="text"
                               inputMode="numeric"
                               value={val80GG || ''}
                               onChange={(e) => handleTextInputChange('80GG', LIMIT_80GG, e.target.value)}
@@ -988,8 +981,7 @@ export default function DeductionCard() {
                             />
                           </div>
                         </div>
-                        <input
-                          type="range"
+                        <input aria-label="Adjust deduction slider" type="range"
                           min="0"
                           max={LIMIT_80GG}
                           step="2000"
@@ -1009,8 +1001,7 @@ export default function DeductionCard() {
                           </span>
                           <div className="relative w-28 shrink-0">
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                            <input 
-                              type="text"
+                            <input aria-label="Enter deduction amount" type="text"
                               inputMode="numeric"
                               value={val80E || ''}
                               onChange={(e) => handleTextInputChange('80E', LIMIT_80E, e.target.value)}
@@ -1019,8 +1010,7 @@ export default function DeductionCard() {
                             />
                           </div>
                         </div>
-                        <input
-                          type="range"
+                        <input aria-label="Adjust deduction slider" type="range"
                           min="0"
                           max={LIMIT_80E}
                           step="5000"
@@ -1040,8 +1030,7 @@ export default function DeductionCard() {
                           </span>
                           <div className="relative w-28 shrink-0">
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                            <input 
-                              type="text"
+                            <input aria-label="Enter deduction amount" type="text"
                               inputMode="numeric"
                               value={val80EEA || ''}
                               onChange={(e) => handleTextInputChange('80EEA', LIMIT_80EEA, e.target.value)}
@@ -1050,8 +1039,7 @@ export default function DeductionCard() {
                             />
                           </div>
                         </div>
-                        <input
-                          type="range"
+                        <input aria-label="Adjust deduction slider" type="range"
                           min="0"
                           max={LIMIT_80EEA}
                           step="5000"
@@ -1071,8 +1059,7 @@ export default function DeductionCard() {
                           </span>
                           <div className="relative w-28 shrink-0">
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                            <input 
-                              type="text"
+                            <input aria-label="Enter deduction amount" type="text"
                               inputMode="numeric"
                               value={val80TTA || ''}
                               onChange={(e) => handleTextInputChange('80TTA', LIMIT_80TTA, e.target.value)}
@@ -1081,8 +1068,7 @@ export default function DeductionCard() {
                             />
                           </div>
                         </div>
-                        <input
-                          type="range"
+                        <input aria-label="Adjust deduction slider" type="range"
                           min="0"
                           max={LIMIT_80TTA}
                           step="1000"
@@ -1101,8 +1087,7 @@ export default function DeductionCard() {
                           </span>
                           <div className="relative w-28 shrink-0">
                             <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                            <input 
-                              type="text"
+                            <input aria-label="Enter deduction amount" type="text"
                               inputMode="numeric"
                               value={val80TTB || ''}
                               onChange={(e) => handleTextInputChange('80TTB', LIMIT_80TTB, e.target.value)}
@@ -1111,8 +1096,7 @@ export default function DeductionCard() {
                             />
                           </div>
                         </div>
-                        <input
-                          type="range"
+                        <input aria-label="Adjust deduction slider" type="range"
                           min="0"
                           max={LIMIT_80TTB}
                           step="2500"
@@ -1282,8 +1266,7 @@ export default function DeductionCard() {
                       </div>
                       <div className="relative w-full mt-1.5">
                         <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                        <input
-                          type="text"
+                        <input aria-label="Enter deduction amount" type="text"
                           inputMode="numeric"
                           value={val80CCD2 || ''}
                           onChange={(e) => handleTextInputChange('80CCD(2)', maxPotentialNPS || 150000, e.target.value)}
@@ -1294,8 +1277,7 @@ export default function DeductionCard() {
                     </div>
 
                     <div className="space-y-1.5 bg-white p-2 rounded-lg border border-slate-200/50">
-                      <input
-                        type="range"
+                      <input aria-label="Adjust deduction slider" type="range"
                         min="0"
                         max={maxPotentialNPS || 50000}
                         step="5000"
@@ -1341,8 +1323,7 @@ export default function DeductionCard() {
                       </div>
                       <div className="relative w-full mt-1.5">
                         <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                        <input
-                          type="text"
+                        <input aria-label="Enter deduction amount" type="text"
                           inputMode="numeric"
                           value={val80CCH || ''}
                           onChange={(e) => handleTextInputChange('80CCH', LIMIT_80CCH, e.target.value)}
@@ -1353,8 +1334,7 @@ export default function DeductionCard() {
                     </div>
 
                     <div className="space-y-1.5 bg-white p-2 rounded-lg border border-violet-200/50">
-                      <input
-                        type="range"
+                      <input aria-label="Adjust deduction slider" type="range"
                         min="0"
                         max={LIMIT_80CCH}
                         step="5000"
@@ -1400,8 +1380,7 @@ export default function DeductionCard() {
                       </div>
                       <div className="relative w-full mt-1.5">
                         <span className="absolute left-1.5 top-0.5 text-slate-400 text-[10px] font-bold">₹</span>
-                        <input
-                          type="text"
+                        <input aria-label="Enter deduction amount" type="text"
                           inputMode="numeric"
                           value={valSection24bLetOut || ''}
                           onChange={(e) => handleTextInputChange('section24bLetOut', LIMIT_24B_LETOUT, e.target.value)}
@@ -1412,8 +1391,7 @@ export default function DeductionCard() {
                     </div>
 
                     <div className="space-y-1.5 bg-white p-2 rounded-lg border border-emerald-200/50">
-                      <input
-                        type="range"
+                      <input aria-label="Adjust deduction slider" type="range"
                         min="0"
                         max={LIMIT_24B_LETOUT}
                         step="10000"
@@ -1457,4 +1435,6 @@ export default function DeductionCard() {
       </div>
     </div>
   );
-}
+});
+
+export default DeductionCard;

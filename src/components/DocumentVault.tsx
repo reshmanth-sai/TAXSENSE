@@ -107,6 +107,83 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
     setActiveFileSize(null);
   };
 
+  const validateAndStoreTaxData = (data: any, fileName: string, fileSize: string, rawText: string, pages: number = 1) => {
+    // 1. Validate mandatory fields
+    const errors: string[] = [];
+    if (
+      data.grossSalary === undefined || 
+      data.grossSalary === null || 
+      isNaN(Number(data.grossSalary)) || 
+      Number(data.grossSalary) <= 0
+    ) {
+      errors.push("Gross Salary (Section 17(1))");
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Ingestion failed: Missing or invalid value for ${errors.join(', ')}.`);
+    }
+
+    // 2. Normalize and repair numbers in client sandbox
+    const repaired = { ...data };
+    const numericFields = [
+      'grossSalary', 'otherIncome', 'tdsDeducted', 'pfContribution', 
+      'basicSalary', 'deduction80C', 'deduction80D', 'hraExemption', 
+      'deduction80CCD1B', 'section24b'
+    ];
+
+    numericFields.forEach((field) => {
+      if (repaired[field] === undefined || repaired[field] === null || isNaN(Number(repaired[field]))) {
+        repaired[field] = 0; // Repair: default to 0
+      } else {
+        repaired[field] = Math.max(0, Number(repaired[field]));
+      }
+    });
+
+    // Enforce statutory caps in client sandbox (safe bounds check)
+    repaired.deduction80C = Math.min(repaired.deduction80C, 150000);
+    repaired.deduction80D = Math.min(repaired.deduction80D, 75000);
+    repaired.deduction80CCD1B = Math.min(repaired.deduction80CCD1B, 50000);
+    repaired.section24b = Math.min(repaired.section24b, 200000);
+
+    // Default missing string fields
+    if (!repaired.employeeName) repaired.employeeName = 'Taxpayer';
+    if (!repaired.employerName) repaired.employerName = 'Unspecified Employer';
+    if (!repaired.pan) repaired.pan = 'MK*****32F';
+
+    // 3. Update Zustand store (single source of truth)
+    setIncomeProfile({
+      grossSalary: repaired.grossSalary,
+      otherIncome: repaired.otherIncome,
+      tdsDeducted: repaired.tdsDeducted,
+      employerName: repaired.employerName,
+      employeeName: repaired.employeeName,
+      pan: repaired.pan,
+      pfContribution: repaired.pfContribution,
+      basicSalary: repaired.basicSalary,
+    });
+
+    updateDeduction('80C', repaired.deduction80C);
+    updateDeduction('80D', repaired.deduction80D);
+    updateDeduction('HRA exemption', repaired.hraExemption);
+    updateDeduction('80CCD(1B)', repaired.deduction80CCD1B);
+    updateDeduction('section24b', repaired.section24b);
+
+    // 4. Register document in workspace files history
+    addUploadedFile({
+      id: 'file-' + Date.now(),
+      name: fileName,
+      size: fileSize,
+      employer: repaired.employerName,
+      financialYear: 'FY 2025-26',
+      pages,
+      uploadTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      status: 'Verified',
+      confidence: Math.round((repaired.confidence || 0.98) * 100)
+    });
+
+    onFileUpload(rawText);
+  };
+
   const executeExtractionFlow = async (fileName: string, fileSize: string, text: string) => {
     setErrorMessage(null);
     setBackgroundProcessing(true);
@@ -116,17 +193,17 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
 
     if (activeProcessingInterval) clearInterval(activeProcessingInterval);
 
-    // Call the extract API concurrently so it runs while the progress bar animates
+    // Call the extract API concurrently
     const extractPromise = fetch('/api/extract', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
     }).then(async res => {
-      if (!res.ok) throw new Error('API extraction failed.');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Structured extraction failed.');
+      }
       return res.json();
-    }).catch(err => {
-      console.error('Simulated sample extraction error:', err);
-      return null;
     });
 
     let pct = 15;
@@ -140,58 +217,15 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
         
         try {
           const result = await extractPromise;
-          // Gracefully fallback to Riya Sharma's values if offline/key missing
-          const data = result && result.success && result.data ? result.data : {
-            grossSalary: 1875400,
-            otherIncome: 12000,
-            tdsDeducted: 194350,
-            employerName: 'Nova Analytics India Pvt. Ltd.',
-            employeeName: 'Riya Sharma',
-            pan: 'BQTPS4589L',
-            pfContribution: 72000,
-            basicSalary: 640000,
-            deduction80C: 150000,
-            deduction80D: 25000,
-            hraExemption: 58000,
-            deduction80CCD1B: 50000,
-            section24b: 180000
-          };
+          if (!result || !result.success || !result.data) {
+            throw new Error(result?.error || 'Gemini returned invalid or missing structured data.');
+          }
 
           setBackgroundProcessing(false);
           setIngestionState('COMPLETED');
           setBackgroundStatusMessage('Your Form 16 has been successfully processed.');
 
-          // Populate workspace variables dynamically from Gemini response!
-          setIncomeProfile({
-            grossSalary: data.grossSalary || 0,
-            otherIncome: data.otherIncome || 0,
-            tdsDeducted: data.tdsDeducted || 0,
-            employerName: data.employerName || 'Unspecified Employer',
-            employeeName: data.employeeName || 'Riya Sharma',
-            pan: data.pan || 'BQTPS4589L',
-            pfContribution: data.pfContribution || 0,
-            basicSalary: data.basicSalary || 0,
-          });
-          updateDeduction('80C', data.deduction80C || 0);
-          updateDeduction('80D', data.deduction80D || 0);
-          updateDeduction('HRA exemption', data.hraExemption || 0);
-          updateDeduction('80CCD(1B)', data.deduction80CCD1B || 0);
-          updateDeduction('section24b', data.section24b || 0);
-
-          // Add to files state in store
-          addUploadedFile({
-            id: 'file-' + Date.now(),
-            name: fileName,
-            size: fileSize,
-            employer: data.employerName || 'Unspecified Employer',
-            financialYear: 'FY 2025-26',
-            pages: 1,
-            uploadTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-            status: 'Verified',
-            confidence: 96
-          });
-
-          onFileUpload(text);
+          validateAndStoreTaxData(result.data, fileName, fileSize, text, 1);
         } catch (err: any) {
           setBackgroundProcessing(false);
           setIngestionState('IDLE');
@@ -286,33 +320,38 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
             body: JSON.stringify({ text: result.text }),
           });
 
-          if (extractResponse.ok) {
-            const extractResult = await extractResponse.json();
-            if (extractResult.success && extractResult.data) {
-              data = extractResult.data;
-            }
+          if (!extractResponse.ok) {
+            const errData = await extractResponse.json().catch(() => ({}));
+            throw new Error(errData.error || 'Failed to extract structured parameters.');
           }
-        } catch (e) {
-          console.warn('Backend API structured extraction failed, attempting file-name defaults:', e);
-        }
 
-        // Fall back to Riya Sharma's values if offline / testing offline sample PDF
-        if (!data && isMultiEmployerSample) {
-          data = {
-            grossSalary: 1875400,
-            otherIncome: 12000,
-            tdsDeducted: 194350,
-            employerName: 'Nova Analytics India Pvt. Ltd.',
-            employeeName: 'Riya Sharma',
-            pan: 'BQTPS4589L',
-            pfContribution: 72000,
-            basicSalary: 640000,
-            deduction80C: 150000,
-            deduction80D: 25000,
-            hraExemption: 58000,
-            deduction80CCD1B: 50000,
-            section24b: 180000
-          };
+          const extractResult = await extractResponse.json();
+          if (extractResult.success && extractResult.data) {
+            data = extractResult.data;
+          } else {
+            throw new Error(extractResult.error || 'Structured data missing in API response.');
+          }
+        } catch (e: any) {
+          console.warn('Structured extraction failed, checking defaults:', e);
+          if (isMultiEmployerSample) {
+            data = {
+              grossSalary: 1875400,
+              otherIncome: 12000,
+              tdsDeducted: 194350,
+              employerName: 'Nova Analytics India Pvt. Ltd.',
+              employeeName: 'Riya Sharma',
+              pan: 'BQTPS4589L',
+              pfContribution: 72000,
+              basicSalary: 640000,
+              deduction80C: 150000,
+              deduction80D: 25000,
+              hraExemption: 58000,
+              deduction80CCD1B: 50000,
+              section24b: 180000
+            };
+          } else {
+            throw e;
+          }
         }
 
         if (activeProcessingInterval) {
@@ -326,39 +365,9 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
           setIngestionState('COMPLETED');
           setBackgroundStatusMessage('Your Form 16 has been successfully processed.');
 
-          // Populate workspace variables dynamically from Gemini extracted payload!
-          setIncomeProfile({
-            grossSalary: data.grossSalary || 0,
-            otherIncome: data.otherIncome || 0,
-            tdsDeducted: data.tdsDeducted || 0,
-            employerName: data.employerName || 'Unspecified Employer',
-            employeeName: data.employeeName || 'Riya Sharma',
-            pan: data.pan || 'BQTPS4589L',
-            pfContribution: data.pfContribution || 0,
-            basicSalary: data.basicSalary || 0,
-          });
-          updateDeduction('80C', data.deduction80C || 0);
-          updateDeduction('80D', data.deduction80D || 0);
-          updateDeduction('HRA exemption', data.hraExemption || 0);
-          updateDeduction('80CCD(1B)', data.deduction80CCD1B || 0);
-          updateDeduction('section24b', data.section24b || 0);
-
-          // Add to files state in store
-          addUploadedFile({
-            id: 'file-' + Date.now(),
-            name: file.name,
-            size: sizeStr,
-            employer: data.employerName || 'Unspecified Employer',
-            financialYear: 'FY 2025-26',
-            pages: 3,
-            uploadTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-            status: 'Verified',
-            confidence: 98
-          });
-
-          onFileUpload(result.text);
+          validateAndStoreTaxData(data, file.name, sizeStr, result.text, 3);
         } else {
-          throw new Error('Gemini failed to parse structured details. Please copy/paste raw text.');
+          throw new Error('Tax Ingestion Failed: Structured details could not be parsed.');
         }
       } catch (err: any) {
         if (activeProcessingInterval) {
@@ -408,48 +417,30 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
         body: JSON.stringify({ text: manualRawText }),
       });
 
-      if (!response.ok) throw new Error('API parse returned error.');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to extract structured parameters.');
+      }
 
       const result = await response.json();
-      if (result.success && result.data) {
-        setBackgroundProgress(100);
-        setBackgroundProcessing(false);
-        setIngestionState('COMPLETED');
-        setBackgroundStatusMessage('Your raw Form 16 has been processed.');
-        
-        setIncomeProfile({
-          grossSalary: result.data.grossSalary || 0,
-          otherIncome: result.data.otherIncome || 0,
-          tdsDeducted: result.data.tdsDeducted || 0,
-          employerName: result.data.employerName || 'Unspecified Employer',
-          pfContribution: result.data.pfContribution || 0,
-          basicSalary: result.data.basicSalary || 0,
-          employeeName: result.data.employeeName || 'Taxpayer',
-          pan: result.data.pan || 'MK*****32F',
-        });
-
-        updateDeduction('80C', result.data.deduction80C || 0);
-        updateDeduction('80D', result.data.deduction80D || 0);
-        updateDeduction('HRA exemption', result.data.hraExemption || 0);
-        updateDeduction('80CCD(1B)', result.data.deduction80CCD1B || 0);
-        updateDeduction('section24b', result.data.section24b || 0);
-
-        addUploadedFile({
-          id: 'manual-' + Date.now(),
-          name: 'Manual_Extraction_Import.txt',
-          size: `${(manualRawText.length / 1024).toFixed(1)} KB`,
-          employer: result.data.employerName || 'Unspecified Employer',
-          financialYear: 'FY 2025-26',
-          pages: 1,
-          uploadTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-          status: 'Verified',
-          confidence: 96
-        });
-
-        onFileUpload(manualRawText);
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Structured data missing in API response.');
       }
-    } catch (err) {
-      setErrorMessage('Direct text extraction failed. Please review values.');
+
+      setBackgroundProgress(100);
+      setBackgroundProcessing(false);
+      setIngestionState('COMPLETED');
+      setBackgroundStatusMessage('Your raw Form 16 has been processed.');
+      
+      validateAndStoreTaxData(
+        result.data, 
+        'Manual_Extraction_Import.txt', 
+        `${(manualRawText.length / 1024).toFixed(1)} KB`, 
+        manualRawText, 
+        1
+      );
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Direct text extraction failed. Please review values.');
       setBackgroundProcessing(false);
       setIngestionState('IDLE');
       setBackgroundProgress(0);
@@ -690,6 +681,18 @@ export default function DocumentVault({ onFileUpload, setActiveStep, onViewExtra
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {uploadedFiles.length === 0 && (
+              <div className="mt-8 pt-8 border-t border-white/[0.02] flex flex-col items-center justify-center p-8 bg-slate-900/20 border-2 border-dashed border-slate-800/50 rounded-3xl text-center">
+                <div className="w-14 h-14 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center mb-4">
+                  <FileText className="w-6 h-6 text-slate-600" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-400 tracking-tight">No Vault Attachments</h3>
+                <p className="text-xs text-slate-500 font-medium mt-2 max-w-[280px]">
+                  Upload a Form 16 document above. TaxSense will securely parse and store your active attachments here for your session.
+                </p>
               </div>
             )}
           </div>

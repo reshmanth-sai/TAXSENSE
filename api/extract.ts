@@ -1,82 +1,12 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI, Type } from '@google/genai';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-let aiClient: GoogleGenAI | null = null;
-function getAI(): GoogleGenAI {
-  if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY environment variable is required.');
-    }
-    aiClient = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    });
-  }
-  return aiClient;
-}
-
-async function generateContentWithRetryAndFallback(params: {
-  contents: any;
-  config?: any;
-}) {
-  const modelsToTry = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-  let lastError: any = null;
-
-  for (const modelName of modelsToTry) {
-    let attempts = 0;
-    const maxAttempts = 5;
-    let delay = 1000;
-
-    while (attempts < maxAttempts) {
-      try {
-        console.log(`Attempting generateContent using model: ${modelName} (attempt ${attempts + 1}/${maxAttempts})`);
-        const aiInstance = getAI();
-        const response = await aiInstance.models.generateContent({
-          model: modelName,
-          contents: params.contents,
-          config: params.config,
-        });
-        return response;
-      } catch (error: any) {
-        lastError = error;
-        attempts++;
-        const errorObject = error?.error || error;
-        const errorStatus = error?.status || error?.statusCode || errorObject?.code || errorObject?.status;
-        const errorMessage = error?.message || errorObject?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
-        
-        const isUnavailable = 
-          errorStatus === 'UNAVAILABLE' || 
-          errorStatus === 503 || 
-          errorStatus === '503' ||
-          errorMessage.includes('503') ||
-          errorMessage.includes('UNAVAILABLE') ||
-          errorMessage.includes('high demand') ||
-          errorMessage.includes('Resource has been exhausted') ||
-          errorMessage.includes('overloaded');
-
-        if (isUnavailable && attempts < maxAttempts) {
-          console.warn(`Model ${modelName} unavailable. Retrying in ${delay}ms...`);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          delay *= 2;
-        } else {
-          console.warn(`Model ${modelName} failed on attempt ${attempts}/${maxAttempts}:`, errorMessage);
-          break;
-        }
-      }
-    }
-  }
-  throw lastError || new Error('Failed to generate content after trying multiple fallback models.');
-}
+import { Type } from '@google/genai';
+import { generateContentWithRetryAndFallback, mapError } from '../services/ai/googleClient.ts';
+import crypto from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  const correlationId = (req.headers['x-correlation-id'] as string) || requestId;
+
   try {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
@@ -137,14 +67,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           required: ['grossSalary'],
         },
       },
+      requestId,
+      correlationId,
     });
 
     const jsonStr = response.text?.trim() || '{}';
     const parsedData = JSON.parse(jsonStr);
 
-    res.status(200).json({ success: true, data: parsedData });
+    // Sanitize numerical inputs to ensure no negatives or NaN
+    const safeData: any = { ...parsedData };
+    for (const key in safeData) {
+      if (typeof safeData[key] === 'number') {
+        safeData[key] = Math.max(0, safeData[key] || 0);
+      }
+    }
+    
+    // Apply statutory caps on deductions
+    if (safeData.deduction80C != null) safeData.deduction80C = Math.min(safeData.deduction80C, 150000);
+    if (safeData.deduction80D != null) safeData.deduction80D = Math.min(safeData.deduction80D, 75000);
+    if (safeData.deduction80CCD1B != null) safeData.deduction80CCD1B = Math.min(safeData.deduction80CCD1B, 50000);
+    if (safeData.deduction80TTA != null) safeData.deduction80TTA = Math.min(safeData.deduction80TTA, 10000);
+    if (safeData.section24b != null) safeData.section24b = Math.min(safeData.section24b, 200000);
+
+    res.status(200).json({ success: true, data: safeData });
   } catch (error: any) {
-    console.error('Error during extraction:', error);
-    res.status(500).json({ error: error.message || 'Failed to extract Form 16 data.' });
+    const appErr = mapError(error);
+    res.status(appErr.status).json({ error: appErr.message });
   }
 }

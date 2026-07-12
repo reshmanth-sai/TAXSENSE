@@ -1,6 +1,27 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { useState, useEffect } from 'react';
+
+const secureStorage: StateStorage = {
+  getItem: (name) => {
+    if (typeof window === 'undefined') return null;
+    if (sessionStorage.getItem('taxsense_incognito') === 'true') {
+      return null;
+    }
+    return localStorage.getItem(name);
+  },
+  setItem: (name, value) => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('taxsense_incognito') !== 'true') {
+      localStorage.setItem(name, value);
+    }
+  },
+  removeItem: (name) => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(name);
+  },
+};
+
 
 export function useTaxStoreHydrated() {
   const [hydrated, setHydrated] = useState(false);
@@ -113,6 +134,9 @@ export interface TaxStoreState {
   backgroundProgress: number;
   uploadedFiles: UploadedFile[];
   ingestionState: 'IDLE' | 'UPLOADING' | 'OCR' | 'EXTRACTING' | 'VERIFYING' | 'GENERATING_RETURN' | 'COMPLETED';
+  incognito: boolean;
+  isFloatingAIChatOpen: boolean;
+
   
   addUploadedFile: (file: UploadedFile) => void;
   removeUploadedFile: (id: string) => void;
@@ -132,6 +156,9 @@ export interface TaxStoreState {
   addFilingHistory: (item: FilingHistoryItem) => void;
   clearFilingHistory: () => void;
   clearSession: () => void;
+  purgeSession: () => void;
+  setIncognito: (val: boolean) => void;
+  setIsFloatingAIChatOpen: (val: boolean) => void;
   setBackgroundProcessing: (val: boolean) => void;
   setBackgroundStatusMessage: (msg: string) => void;
   setBackgroundProgress: (pct: number) => void;
@@ -224,10 +251,20 @@ export const useTaxStore = create<TaxStoreState>()(
       backgroundProgress: 0,
       uploadedFiles: defaultUploadedFiles,
       ingestionState: 'IDLE',
+      incognito: typeof window !== 'undefined' ? sessionStorage.getItem('taxsense_incognito') === 'true' : false,
+      isFloatingAIChatOpen: false,
 
       setIncomeProfile: (profile) =>
         set((state) => {
-          const updatedProfile = { ...state.incomeProfile, ...profile };
+          // Sanitize numerical inputs to ensure no negatives or NaN
+          const sanitizedProfile = { ...profile };
+          for (const key in sanitizedProfile) {
+            if (typeof sanitizedProfile[key as keyof typeof sanitizedProfile] === 'number') {
+              sanitizedProfile[key as keyof typeof sanitizedProfile] = Math.max(0, Number(sanitizedProfile[key as keyof typeof sanitizedProfile]) || 0) as never;
+            }
+          }
+
+          const updatedProfile = { ...state.incomeProfile, ...sanitizedProfile };
           const hasCapitalGains = (updatedProfile.stcg && updatedProfile.stcg > 0) || (updatedProfile.ltcg && updatedProfile.ltcg > 0);
           const isHighSalary = updatedProfile.grossSalary > 5000000;
           const needsITR2 = hasCapitalGains || isHighSalary || state.multiHouse || state.foreignAssets;
@@ -239,12 +276,22 @@ export const useTaxStore = create<TaxStoreState>()(
 
       updateDeduction: (key, value) =>
         set((state) => {
-          const updatedDeductions = { ...state.confirmedDeductions, [key]: value };
+          // Validation caps
+          let sanitizedValue = Math.max(0, Number(value) || 0);
+          
+          if (key === '80C') sanitizedValue = Math.min(sanitizedValue, 150000);
+          if (key === '80D') sanitizedValue = Math.min(sanitizedValue, 75000);
+          if (key === '80CCD(1B)') sanitizedValue = Math.min(sanitizedValue, 50000);
+          if (key === '80TTA') sanitizedValue = Math.min(sanitizedValue, 10000);
+          if (key === '80TTB') sanitizedValue = Math.min(sanitizedValue, 50000);
+          if (key === 'section24b') sanitizedValue = Math.min(sanitizedValue, 200000);
+          
+          const updatedDeductions = { ...state.confirmedDeductions, [key]: sanitizedValue };
           // Keep HRA exemption fallback in sync if applicable
           if (key === 'HRA exemption') {
-            updatedDeductions.hraExemption = value;
+            updatedDeductions.hraExemption = sanitizedValue;
           } else if (key === 'hraExemption') {
-            updatedDeductions['HRA exemption'] = value;
+            updatedDeductions['HRA exemption'] = sanitizedValue;
           }
           return { confirmedDeductions: updatedDeductions };
         }),
@@ -323,10 +370,54 @@ export const useTaxStore = create<TaxStoreState>()(
 
       clearFilingHistory: () =>
         set({ filingHistory: [] }),
+        
+      setIncognito: (val) => {
+        if (typeof window !== 'undefined') {
+          if (val) {
+            sessionStorage.setItem('taxsense_incognito', 'true');
+            localStorage.removeItem('taxsense_session_cache');
+          } else {
+            sessionStorage.removeItem('taxsense_incognito');
+          }
+        }
+        set({ incognito: val });
+      },
+      
+      setIsFloatingAIChatOpen: (val) => {
+        set({ isFloatingAIChatOpen: val });
+      },
+      
+      purgeSession: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('taxsense_session_cache');
+          sessionStorage.removeItem('taxsense_incognito');
+        }
+        set((state) => ({
+          incomeProfile: defaultIncomeProfile,
+          confirmedDeductions: defaultConfirmedDeductions,
+          chatHistory: defaultChatHistory,
+          currentStep: 'HOME',
+          isExtracting: false,
+          isChatLoading: false,
+          formType: 'ITR-1',
+          multiHouse: false,
+          foreignAssets: false,
+          theme: 'light',
+          uploadedFiles: [],
+          ingestionState: 'IDLE',
+          isBackgroundProcessing: false,
+          backgroundProgress: 0,
+          backgroundStatusMessage: '',
+          incognito: false,
+          isFloatingAIChatOpen: false,
+        }));
+      },
 
       clearSession: () => {
         // Clear from localStorage explicitly
-        localStorage.removeItem('taxsense_session_cache');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('taxsense_session_cache');
+        }
         // Reset state (preserves history)
         set((state) => ({
           incomeProfile: defaultIncomeProfile,
@@ -341,11 +432,13 @@ export const useTaxStore = create<TaxStoreState>()(
           theme: 'light',
           uploadedFiles: [],
           ingestionState: 'IDLE',
+          isFloatingAIChatOpen: false,
         }));
       },
     }),
     {
       name: 'taxsense_session_cache',
+      storage: createJSONStorage(() => secureStorage),
       version: 1,
       migrate: (persistedState: any, version: number) => {
         return persistedState;

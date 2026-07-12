@@ -1,9 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Multer from 'multer';
-import { GoogleGenAI } from '@google/genai';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { getAI, mapError, logStructured } from '../services/ai/googleClient.ts';
+import crypto from 'crypto';
 
 const upload = Multer({
   storage: Multer.memoryStorage(),
@@ -27,26 +25,11 @@ export const config = {
   },
 };
 
-let aiClient: GoogleGenAI | null = null;
-function getAI(): GoogleGenAI {
-  if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY environment variable is required.');
-    }
-    aiClient = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    });
-  }
-  return aiClient;
-}
-
 export default async function handler(req: any, res: any) {
+  const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  const correlationId = (req.headers['x-correlation-id'] as string) || requestId;
+  const startTime = Date.now();
+
   try {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
@@ -60,11 +43,21 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    console.log('PDF received. File size:', req.file.size);
-    const base64Data = req.file.buffer.toString('base64');
+    logStructured('info', `PDF received. File size: ${req.file.size} bytes`, {
+      requestId,
+      correlationId,
+      endpoint: 'extract-pdf',
+    });
 
+    const base64Data = req.file.buffer.toString('base64');
     const ai = getAI();
-    console.log('Sending PDF buffer to Gemini for extraction...');
+
+    logStructured('info', 'Sending PDF buffer to Gemini for extraction...', {
+      requestId,
+      correlationId,
+      endpoint: 'extract-pdf',
+      model: 'gemini-2.5-flash',
+    });
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -79,9 +72,31 @@ export default async function handler(req: any, res: any) {
       ]
     });
 
+    const latencyMs = Date.now() - startTime;
+    logStructured('info', 'Successfully extracted PDF text content using Gemini', {
+      requestId,
+      correlationId,
+      endpoint: 'extract-pdf',
+      model: 'gemini-2.5-flash',
+      latencyMs,
+    });
+
     res.status(200).json({ text: response.text || '' });
   } catch (error: any) {
-    console.error('Error during PDF parsing:', error);
-    res.status(500).json({ error: error.message || 'Failed to process PDF file.' });
+    const latencyMs = Date.now() - startTime;
+    const appErr = mapError(error);
+    
+    logStructured('error', 'Error during PDF parsing / extraction', {
+      requestId,
+      correlationId,
+      endpoint: 'extract-pdf',
+      model: 'gemini-2.5-flash',
+      latencyMs,
+      errorCategory: appErr.category,
+      errorMessage: error.message || String(error),
+      stackTrace: error.stack,
+    });
+
+    res.status(appErr.status).json({ error: appErr.message });
   }
 }
