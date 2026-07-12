@@ -706,7 +706,10 @@ export default function App() {
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[1200px] z-50 flex items-center justify-between px-6 py-3.5 bg-[#0E131B]/40 border border-white/[0.04] rounded-full backdrop-blur-md shadow-lg shadow-black/20"
               >
-                <div className="flex items-center gap-2">
+                <div 
+                  onClick={() => setStep('HOME')}
+                  className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                >
                   <div className="w-6 h-6 rounded bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold text-xs">
                     T
                   </div>
