@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useScroll, useSpring, motion, AnimatePresence } from 'motion/react';
+import { useScroll, useSpring, useTransform, motion, AnimatePresence, HTMLMotionProps } from 'motion/react';
 import { 
   FileText, 
   TrendingUp, 
@@ -25,9 +25,56 @@ interface LandingPageProps {
   onStart: () => void;
 }
 
+// Reusable Railway-style cursor-aware card component
+interface PremiumCardProps extends HTMLMotionProps<'div'> {
+  children: React.ReactNode;
+}
+
+const PremiumCard: React.FC<PremiumCardProps> = ({ children, className = '', ...props }) => {
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCoords({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  return (
+    <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseEnter={(e) => {
+        setIsHovered(true);
+        if (props.onMouseEnter) props.onMouseEnter(e);
+      }}
+      onMouseLeave={(e) => {
+        setIsHovered(false);
+        if (props.onMouseLeave) props.onMouseLeave(e);
+      }}
+      className={`relative overflow-hidden bg-[#0E131B] border border-white/[0.04] rounded-2xl transition-all duration-300 ${className}`}
+      {...props}
+    >
+      {/* Subtle radial cursor follow glow (clipped inside, under 5% opacity) */}
+      <div 
+        style={{
+          background: `radial-gradient(150px circle at ${coords.x}px ${coords.y}px, rgba(22, 226, 122, 0.04), transparent 80%)`,
+        }}
+        className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+      />
+      {children}
+    </motion.div>
+  );
+};
+
 export default function LandingPage({ onStart }: LandingPageProps) {
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [activeShowcase, setActiveShowcase] = useState<'extraction' | 'regime' | 'optimization' | null>(null);
+
+  // Hero section target ref for scroll perspective linkage
+  const heroRef = useRef<HTMLDivElement>(null);
 
   // Dynamic values for Dashboard Mockup animation
   const [mockSavings, setMockSavings] = useState(0);
@@ -38,6 +85,15 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   // Scroll Progress Bar Tracker
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  // Hero scroll-linked target tracking
+  const { scrollYProgress: heroScrollProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+
+  const mockupScale = useTransform(heroScrollProgress, [0, 1], [0.98, 1.02]);
+  const mockupRotateX = useTransform(heroScrollProgress, [0, 1], [4, 0]);
 
   // Web Audio UI click synthesizer
   const playClickSound = () => {
@@ -99,7 +155,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
   const toggleSound = () => {
     setSoundEnabled(!soundEnabled);
-    // Trigger small test click to confirm activation
     if (!soundEnabled) {
       setTimeout(() => {
         try {
@@ -191,12 +246,12 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         />
       </motion.div>
 
-      {/* HEADER NAVBAR (Staged Cinematic Entrance) */}
+      {/* HEADER NAVBAR */}
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="sticky top-0 z-50 px-6 md:px-12 py-4 flex items-center justify-between border-b bg-[#050607]/40 border-white/[0.04] backdrop-blur-md transition-all duration-300"
+        className="sticky top-0 z-50 px-6 md:px-12 py-4 flex items-center justify-between border-b bg-[#050607]/45 border-white/[0.04] backdrop-blur-md transition-all duration-300"
       >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#16E27A] flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-[#16E27A]/15">
@@ -213,7 +268,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Subtle audio feedback switch */}
           <button 
             onClick={toggleSound}
             title={soundEnabled ? "Mute interface sounds" : "Enable interface sounds"}
@@ -231,8 +285,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </motion.header>
 
-      {/* SECTION 1: HERO (Fade + Scale Reveal) */}
-      <section className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-6 pt-20 pb-28 max-w-5xl mx-auto z-10">
+      {/* SECTION 1: HERO */}
+      <section ref={heroRef} className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-36 max-w-5xl mx-auto z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.98, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -249,7 +303,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             <span>AI-Driven Filing for AY 2026-27</span>
           </motion.div>
 
-          {/* Progressive Keynote Headline Slide-Up */}
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight leading-[1.05] text-white">
             <div className="overflow-hidden inline-block py-1">
               <motion.span 
@@ -289,12 +342,10 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             transition={{ delay: 0.7 }}
             className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto"
           >
-            {/* Tactical sweep button */}
             <button
               onClick={handleStartWorkspace}
-              className="relative overflow-hidden w-full sm:w-auto px-7 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 active:scale-97 flex items-center justify-center gap-2 group"
+              className="relative overflow-hidden w-full sm:w-auto px-7 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
             >
-              {/* Subtle hover sweep */}
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               <span>Start Sandbox Workspace</span>
               <ArrowRight className="w-4 h-4 text-[#050607]" />
@@ -315,11 +366,15 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           initial={{ opacity: 0, y: 35, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.0, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            scale: mockupScale,
+            rotateX: mockupRotateX,
+            transformPerspective: 1200
+          }}
           className="mt-20 w-full max-w-4xl border border-white/[0.05] bg-[#0E131B]/80 backdrop-blur-md rounded-3xl p-3 md:p-4 shadow-[0_24px_80px_rgba(0,0,0,0.65)] relative group"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-[#16E27A]/5 to-blue-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           <div className="w-full bg-[#050607] border border-white/[0.05] rounded-2xl overflow-hidden aspect-[16/9] flex flex-col">
-            {/* Window control header */}
             <div className="h-8 border-b border-white/[0.04] bg-[#050607] px-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500/30" />
@@ -330,7 +385,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               <span className="w-10" />
             </div>
             
-            {/* Mock Layout Canvas */}
             <div className="flex-1 p-4 grid grid-cols-3 gap-4 text-left text-xs bg-gradient-to-b from-[#0E131B]/40 to-[#050607]">
               <div className="col-span-2 space-y-4">
                 <div className="p-4 bg-white/[0.02] border border-white/[0.04] rounded-2xl space-y-2">
@@ -364,7 +418,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                   </div>
                 </div>
                 
-                {/* Dynamically Counter Animate value */}
                 <div className="space-y-2">
                   <div className="p-2 border border-white/[0.04] rounded-lg flex items-center justify-between text-[10px]">
                     <span className="text-slate-500">Savings:</span>
@@ -382,7 +435,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </motion.div>
       </section>
 
-      {/* SECTION 2: TRUST STRIP (Subtle fade-in) */}
+      {/* SECTION 2: TRUST STRIP */}
       <motion.section 
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -418,8 +471,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </motion.section>
 
-      {/* SECTION 3: HOW IT WORKS (Slide Up Reveal with Filled Line Timeline) */}
-      <section className="py-36 px-6 max-w-6xl mx-auto space-y-20">
+      {/* SECTION 3: HOW IT WORKS */}
+      <section className="py-44 px-6 max-w-6xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -434,10 +487,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           </p>
         </motion.div>
 
-        {/* Connected Step Timeline */}
         <div className="relative grid grid-cols-1 sm:grid-cols-4 gap-8">
-          
-          {/* Animated Connecting Timeline line */}
           <motion.div 
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
@@ -468,16 +518,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               desc: "Check and audit final figures. Download your customized filing report and submit with single-tap accuracy."
             }
           ].map((item, idx) => (
-            <motion.div
+            <PremiumCard
               key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              className="p-6 space-y-4 text-left relative transition-all duration-350 z-10"
+              style={{
+                opacity: 0,
+                transform: 'translateY(30px)'
+              }}
+              whileInView={{
+                opacity: 1,
+                transform: 'translateY(0px)'
+              }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.8, delay: idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -4, scale: 1.01 }}
-              className="p-6 bg-[#0E131B] border border-white/[0.04] hover:border-[#16E27A]/25 rounded-2xl space-y-4 text-left relative transition-all duration-350 z-10"
+              // Custom Framer Motion manual transition config
+              onClick={playClickSound}
             >
-              {/* Timeline dot decoration */}
               <div className="absolute -top-3.5 left-6 w-3 h-3 rounded-full bg-[#050607] border border-[#16E27A]/50 flex items-center justify-center hidden sm:flex">
                 <motion.div 
                   initial={{ scale: 0 }}
@@ -491,13 +546,13 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               <span className="text-2xl font-black font-mono text-[#16E27A]/20 block">{item.step}</span>
               <h3 className="text-sm font-bold text-white">{item.title}</h3>
               <p className="text-[11px] text-[#8A96A8] leading-relaxed">{item.desc}</p>
-            </motion.div>
+            </PremiumCard>
           ))}
         </div>
       </section>
 
-      {/* SECTION 4: INTERACTIVE PRODUCT SHOWCASE (Slide Left Reveal) */}
-      <section id="interactive-showcase" className="py-36 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
+      {/* SECTION 4: INTERACTIVE PRODUCT SHOWCASE (Slide Left Reveal + Highlights) */}
+      <section id="interactive-showcase" className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-6xl mx-auto space-y-20">
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
@@ -509,124 +564,155 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-widest">Product Interface</span>
             <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">Interactive Showcase</h2>
             <p className="text-xs sm:text-sm text-[#8A96A8] max-w-md mx-auto">
-              Hover over cards below to preview critical components of the TaxSense dashboard interface.
+              Hover over cards on the left to highlight dynamic analysis segments inside the dashboard mockup.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card 1: AI Ingestion */}
-            <motion.div 
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.05 }}
-              whileHover={{ y: -4, scale: 1.01 }}
-              className="p-6 bg-[#0E131B] border border-white/[0.04] hover:border-[#16E27A]/20 transition-all duration-350 rounded-3xl space-y-6 text-left group"
-            >
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block">Component 01</span>
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center">
+            {/* Left side: Interactive Card triggers */}
+            <div className="lg:col-span-2 space-y-4">
+              <PremiumCard
+                onMouseEnter={() => {
+                  playClickSound();
+                  setActiveShowcase('extraction');
+                }}
+                onMouseLeave={() => setActiveShowcase(null)}
+                className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
+                  activeShowcase === 'extraction' 
+                    ? 'border-[#16E27A]/30 bg-[#0E131B] shadow-lg shadow-[#16E27A]/5' 
+                    : 'border-white/[0.04] bg-[#0E131B]/40 hover:border-white/[0.08]'
+                }`}
+              >
+                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">Component 01</span>
                 <h3 className="text-base font-bold text-white">AI Extraction Details</h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                   Real-time parsed metadata displaying primary employer details, ITR-1 suitability metrics, and base salary.
                 </p>
-              </div>
-              <div className="p-4 bg-[#050607] rounded-2xl border border-white/[0.04] space-y-3 font-mono text-[10px]">
-                <div className="flex justify-between border-b border-white/[0.04] pb-1.5">
-                  <span className="text-slate-500">Employer:</span>
-                  <span className="text-slate-300 truncate max-w-[120px]">Google India Pvt Ltd</span>
-                </div>
-                <div className="flex justify-between border-b border-white/[0.04] pb-1.5">
-                  <span className="text-slate-500">PAN:</span>
-                  <span className="text-slate-300">MK*****32F</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">TDS Section 192:</span>
-                  <span className="text-[#16E27A]">₹15,000</span>
-                </div>
-              </div>
-            </motion.div>
+              </PremiumCard>
 
-            {/* Card 2: Regime Comparison */}
-            <motion.div 
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              whileHover={{ y: -4, scale: 1.01 }}
-              className="p-6 bg-[#0E131B] border border-white/[0.04] hover:border-[#16E27A]/20 transition-all duration-350 rounded-3xl space-y-6 text-left group"
-            >
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block">Component 02</span>
+              <PremiumCard
+                onMouseEnter={() => {
+                  playClickSound();
+                  setActiveShowcase('regime');
+                }}
+                onMouseLeave={() => setActiveShowcase(null)}
+                className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
+                  activeShowcase === 'regime' 
+                    ? 'border-[#16E27A]/30 bg-[#0E131B] shadow-lg shadow-[#16E27A]/5' 
+                    : 'border-white/[0.04] bg-[#0E131B]/40 hover:border-white/[0.08]'
+                }`}
+              >
+                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">Component 02</span>
                 <h3 className="text-base font-bold text-white">Regime Comparison</h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                   Dynamically evaluates the optimal path, showing saving projections between New and Old regimes.
                 </p>
-              </div>
-              <div className="p-4 bg-[#050607] rounded-2xl border border-white/[0.04] space-y-3">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Tax Under Old:</span>
-                  <span className="font-mono text-slate-300">₹54,600</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Tax Under New:</span>
-                  <span className="font-mono text-[#16E27A]">₹36,360</span>
-                </div>
-                <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-xs font-bold">
-                  <span className="text-white">Net Savings:</span>
-                  <span className="text-[#16E27A] font-mono">₹18,240</span>
-                </div>
-              </div>
-            </motion.div>
+              </PremiumCard>
 
-            {/* Card 3: Tax Health Score */}
-            <motion.div 
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.35 }}
-              whileHover={{ y: -4, scale: 1.01 }}
-              className="p-6 bg-[#0E131B] border border-white/[0.04] hover:border-[#16E27A]/20 transition-all duration-350 rounded-3xl space-y-6 text-left group"
-            >
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block">Component 03</span>
+              <PremiumCard
+                onMouseEnter={() => {
+                  playClickSound();
+                  setActiveShowcase('optimization');
+                }}
+                onMouseLeave={() => setActiveShowcase(null)}
+                className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
+                  activeShowcase === 'optimization' 
+                    ? 'border-[#16E27A]/30 bg-[#0E131B] shadow-lg shadow-[#16E27A]/5' 
+                    : 'border-white/[0.04] bg-[#0E131B]/40 hover:border-white/[0.08]'
+                }`}
+              >
+                <span className="text-[10px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">Component 03</span>
                 <h3 className="text-base font-bold text-white">Smart Optimization</h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                   Circular optimization percentage mapping standard allowances (80C, 80D, HRA) to underutilized opportunities.
                 </p>
+              </PremiumCard>
+            </div>
+
+            {/* Right side: Responding Dashboard Mockup */}
+            <div className="lg:col-span-3 p-5 bg-[#0E131B]/60 border border-white/[0.04] rounded-3xl relative overflow-hidden aspect-[4/3] flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
+              
+              {/* Window Header */}
+              <div className="h-6 border-b border-white/[0.04] flex items-center justify-between shrink-0 mb-4 px-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500/30" />
+                  <span className="w-2 h-2 rounded-full bg-yellow-500/30" />
+                  <span className="w-2 h-2 rounded-full bg-green-500/30" />
+                </div>
+                <span className="text-[8px] font-mono text-slate-500 tracking-wider">taxsense.in/interactive-showcase</span>
+                <span className="w-8" />
               </div>
-              <div className="flex items-center gap-4 p-4 bg-[#050607] rounded-2xl border border-white/[0.04]">
-                <div className="relative w-12 h-12 flex-shrink-0">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3.5" />
-                    <motion.circle 
-                      cx="18" 
-                      cy="18" 
-                      r="16" 
-                      fill="none" 
-                      stroke="#16E27A" 
-                      strokeWidth="3.5" 
-                      initial={{ strokeDasharray: "0, 100" }}
-                      whileInView={{ strokeDasharray: "72, 100" }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center text-[9px] font-mono font-bold text-white">
-                    72%
+
+              {/* Mock Dashboard Grid */}
+              <div className="flex-1 grid grid-cols-3 gap-4 text-left">
+                {/* 1. Extraction Panel */}
+                <div className={`col-span-2 p-4 bg-[#050607]/80 border rounded-2xl flex flex-col justify-between transition-all duration-300 ${
+                  activeShowcase === 'extraction' 
+                    ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
+                    : activeShowcase === null ? 'border-white/[0.04]' : 'border-white/[0.02] opacity-30'
+                }`}>
+                  <div className="space-y-1">
+                    <span className="text-[8px] font-bold text-[#16E27A] uppercase tracking-widest block">ITR Ingest</span>
+                    <h4 className="text-xs font-bold text-white">Google India Pvt Ltd</h4>
+                    <p className="text-[9px] text-slate-500 leading-relaxed">
+                      Parsed Section 17(1) salary details successfully. Suitability: ITR-1.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5 pt-2 border-t border-white/[0.04] font-mono text-[9px]">
+                    <div className="flex justify-between"><span className="text-slate-500">Gross Salary:</span><span className="text-slate-300">₹8,50,000</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">TDS Claim:</span><span className="text-[#16E27A]">₹15,000</span></div>
                   </div>
                 </div>
-                <div className="text-[10px] text-slate-400 space-y-0.5">
-                  <span className="font-bold text-white block">Claimed Deductions</span>
-                  <span>₹1,50,000 of ₹2,00,000 claimed.</span>
+
+                {/* Right stack col */}
+                <div className="col-span-1 space-y-4 flex flex-col justify-between">
+                  {/* 2. Regime Comparison Panel */}
+                  <div className={`p-4 bg-[#050607]/80 border rounded-2xl transition-all duration-300 flex-1 flex flex-col justify-between ${
+                    activeShowcase === 'regime' 
+                      ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
+                      : activeShowcase === null ? 'border-white/[0.04]' : 'border-white/[0.02] opacity-30'
+                  }`}>
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-blue-400 uppercase tracking-widest block">Regime Savings</span>
+                      <h4 className="text-xs font-bold text-white">New Optimal</h4>
+                    </div>
+                    <div className="space-y-1 text-[9px] font-mono">
+                      <div className="flex justify-between"><span className="text-slate-500">Old:</span><span className="text-slate-400">₹54,600</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">New:</span><span className="text-[#16E27A]">₹36,360</span></div>
+                      <div className="pt-1.5 border-t border-white/[0.04] flex justify-between font-bold"><span className="text-white">Saves:</span><span className="text-[#16E27A]">₹18,240</span></div>
+                    </div>
+                  </div>
+
+                  {/* 3. Optimization Panel */}
+                  <div className={`p-4 bg-[#050607]/80 border rounded-2xl transition-all duration-300 flex-1 flex flex-col justify-between ${
+                    activeShowcase === 'optimization' 
+                      ? 'border-[#16E27A] shadow-md shadow-[#16E27A]/5 scale-[1.01] bg-[#0E131B]/80' 
+                      : activeShowcase === null ? 'border-white/[0.04]' : 'border-white/[0.02] opacity-30'
+                  }`}>
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest block">Smart Claims</span>
+                      <h4 className="text-xs font-bold text-white">Health Score</h4>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-8 h-8 flex-shrink-0">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3.5" />
+                          <circle cx="18" cy="18" r="16" fill="none" stroke="#16E27A" strokeWidth="3.5" strokeDasharray="72, 100" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-[8px] font-mono font-bold text-white">72%</div>
+                      </div>
+                      <span className="text-[9px] text-slate-400 leading-tight">₹1.5L of ₹2L claimed.</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 5: WHY TAXSENSE (Slide Right Reveal) */}
-      <section className="py-36 px-6 max-w-5xl mx-auto space-y-20">
+      {/* SECTION 5: WHY TAXSENSE */}
+      <section className="py-44 px-6 max-w-5xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0, x: 30 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -643,12 +729,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Column 1: Traditional Filing */}
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 0.7, y: 0 }}
+          <PremiumCard 
+            className="p-8 bg-white/[0.01] border border-white/[0.03] space-y-6 text-left opacity-70"
+            style={{
+              opacity: 0,
+              transform: 'translateY(15px)'
+            }}
+            whileInView={{
+              opacity: 0.7,
+              transform: 'translateY(0px)'
+            }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="p-8 rounded-3xl bg-white/[0.01] border border-white/[0.03] space-y-6 text-left"
           >
             <h3 className="text-base font-bold text-red-400 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-500" />
@@ -669,15 +760,20 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <span className="text-[11px] text-slate-500">Selecting tax regimes blindly without seeing computed differences.</span>
               </div>
             </div>
-          </motion.div>
+          </PremiumCard>
 
           {/* Column 2: TaxSense */}
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
+          <PremiumCard 
+            className="p-8 bg-[#0E131B] border border-[#16E27A]/15 space-y-6 text-left shadow-lg shadow-[#16E27A]/3 relative overflow-hidden"
+            style={{
+              opacity: 0,
+              transform: 'translateY(15px)'
+            }}
+            whileInView={{
+              opacity: 1,
+              transform: 'translateY(0px)'
+            }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="p-8 rounded-3xl bg-[#0E131B] border border-[#16E27A]/10 space-y-6 text-left shadow-lg shadow-[#16E27A]/3 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 bg-[#16E27A]/10 text-[#16E27A] px-3 py-1 text-[8px] font-black uppercase tracking-wider rounded-bl-xl border-l border-b border-[#16E27A]/20">
               Modern
@@ -702,12 +798,12 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <span className="text-[11px] text-slate-400">Simulate regime differences dynamically to pay the lowest tax.</span>
               </div>
             </div>
-          </motion.div>
+          </PremiumCard>
         </div>
       </section>
 
-      {/* SECTION 6: AI COPILOT SHOWCASE (Scale + Fade Reveal) */}
-      <section className="py-36 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
+      {/* SECTION 6: AI COPILOT SHOWCASE */}
+      <section className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-4xl mx-auto space-y-20">
           <motion.div 
             initial={{ opacity: 0, scale: 0.97 }}
@@ -723,7 +819,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </p>
           </motion.div>
 
-          <div className="p-6 bg-[#0E131B] border border-white/[0.05] rounded-3xl space-y-6 text-left max-w-xl mx-auto">
+          <PremiumCard className="p-6 bg-[#0E131B] border border-white/[0.05] rounded-3xl space-y-6 text-left max-w-xl mx-auto">
             {/* User Turn */}
             <div className="flex gap-3 items-start flex-row-reverse">
               <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0">
@@ -753,12 +849,12 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 </div>
               </div>
             </div>
-          </div>
+          </PremiumCard>
         </div>
       </section>
 
-      {/* SECTION 7: SECURITY (Opacity Reveal) */}
-      <section className="py-36 px-6 max-w-5xl mx-auto space-y-20">
+      {/* SECTION 7: SECURITY */}
+      <section className="py-44 px-6 max-w-5xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -774,50 +870,67 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+          <PremiumCard 
+            className="p-6 space-y-3 text-left"
+            style={{
+              opacity: 0,
+              transform: 'translateY(15px)'
+            }}
+            whileInView={{
+              opacity: 1,
+              transform: 'translateY(0px)'
+            }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            className="p-6 bg-[#0E131B] border border-white/[0.04] rounded-2xl space-y-3 text-left"
           >
             <Shield className="w-5 h-5 text-[#16E27A]" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Encrypted Documents</h3>
             <p className="text-[11px] text-slate-450 leading-relaxed">
               All uploaded Form 16 documents are encrypted client-side using industry-standard AES-256 local keys.
             </p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+          </PremiumCard>
+          
+          <PremiumCard 
+            className="p-6 space-y-3 text-left"
+            style={{
+              opacity: 0,
+              transform: 'translateY(15px)'
+            }}
+            whileInView={{
+              opacity: 1,
+              transform: 'translateY(0px)'
+            }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="p-6 bg-[#0E131B] border border-white/[0.04] rounded-2xl space-y-3 text-left"
           >
             <Eye className="w-5 h-5 text-[#16E27A]" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Private Local Processing</h3>
             <p className="text-[11px] text-slate-450 leading-relaxed">
               Your session is parsed locally in-memory, making guest workspaces entirely transient and secure.
             </p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+          </PremiumCard>
+          
+          <PremiumCard 
+            className="p-6 space-y-3 text-left"
+            style={{
+              opacity: 0,
+              transform: 'translateY(15px)'
+            }}
+            whileInView={{
+              opacity: 1,
+              transform: 'translateY(0px)'
+            }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="p-6 bg-[#0E131B] border border-white/[0.04] rounded-2xl space-y-3 text-left"
           >
             <Lock className="w-5 h-5 text-[#16E27A]" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sandbox Isolation</h3>
             <p className="text-[11px] text-slate-455 leading-relaxed">
               Calculations run in an isolated client sandbox environment preventing unauthorized network telemetry leaks.
             </p>
-          </motion.div>
+          </PremiumCard>
         </div>
       </section>
 
-      {/* SECTION 8: TESTIMONIALS (Staggered Cards Reveal) */}
-      <section className="py-36 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
+      {/* SECTION 8: TESTIMONIALS */}
+      <section className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-5xl mx-auto space-y-20">
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
@@ -854,15 +967,20 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 role: "UX Researcher, Delhi"
               }
             ].map((test, index) => (
-              <motion.div 
+              <PremiumCard 
                 key={index}
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                className="p-6 space-y-4 text-left flex flex-col justify-between"
+                style={{
+                  opacity: 0,
+                  transform: 'translateY(25px)'
+                }}
+                whileInView={{
+                  opacity: 1,
+                  transform: 'translateY(0px)'
+                }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                className="p-6 bg-[#0E131B] border border-white/[0.04] rounded-2xl space-y-4 text-left flex flex-col justify-between"
               >
-                <p className="text-[11px] text-slate-300 leading-relaxed italic">
+                <p className="text-[11px] text-slate-300 leading-relaxed italic font-medium">
                   {test.text}
                 </p>
                 <div className="flex items-center gap-2.5 pt-2 border-t border-white/[0.04]">
@@ -874,14 +992,14 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                     <span className="text-[8px] text-slate-500">{test.role}</span>
                   </div>
                 </div>
-              </motion.div>
+              </PremiumCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SECTION 9: FAQ (Soft Fade Reveal with disclosure heights) */}
-      <section className="py-36 px-6 max-w-3xl mx-auto space-y-20">
+      {/* SECTION 9: FAQ */}
+      <section className="py-44 px-6 max-w-3xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -932,10 +1050,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* SECTION 10: FINAL CTA (Inc. Ambient light focus rise) */}
-      <section className="relative py-44 px-6 border-t border-white/[0.04] text-center overflow-hidden">
-        
-        {/* Ambient lighting focused rise when in view */}
+      {/* SECTION 10: FINAL CTA */}
+      <section className="relative py-52 px-6 border-t border-white/[0.04] text-center overflow-hidden">
         <motion.div 
           initial={{ opacity: 0.3, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1.15 }}
@@ -958,7 +1074,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
             <button
               onClick={handleStartWorkspace}
-              className="relative overflow-hidden w-full sm:w-auto px-8 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 active:scale-97 flex items-center justify-center gap-2 group"
+              className="relative overflow-hidden w-full sm:w-auto px-8 py-3.5 bg-[#16E27A] hover:bg-[#5BEAA5] text-[#050607] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16E27A]/15 active:scale-97 flex items-center justify-center gap-2 group border border-transparent"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               <span>Get started instantly</span>
@@ -975,7 +1091,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
         <div className="flex gap-4">
           <span className="flex items-center gap-2 text-slate-500">
-            {/* Pulsing secure lock indicator */}
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16E27A]"></span>
