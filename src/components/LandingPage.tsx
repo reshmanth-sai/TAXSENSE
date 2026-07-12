@@ -53,13 +53,13 @@ const PremiumCard: React.FC<PremiumCardProps> = ({ children, className = '', ...
         setIsHovered(false);
         if (props.onMouseLeave) props.onMouseLeave(e);
       }}
-      className={`relative overflow-hidden bg-[#0E131B] border border-white/[0.04] rounded-2xl transition-all duration-300 ${className}`}
+      className={`relative overflow-hidden bg-gradient-to-br from-white/[0.015] to-white/[0.002] border border-white/[0.04] border-t-white/[0.08] rounded-2xl transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.65)] ${className}`}
       {...props}
     >
-      {/* Subtle radial cursor follow glow (clipped inside, under 5% opacity) */}
+      {/* Subtle radial cursor follow glow (clipped inside, under 4% opacity) */}
       <div 
         style={{
-          background: `radial-gradient(150px circle at ${coords.x}px ${coords.y}px, rgba(22, 226, 122, 0.04), transparent 80%)`,
+          background: `radial-gradient(150px circle at ${coords.x}px ${coords.y}px, rgba(22, 226, 122, 0.035), transparent 80%)`,
         }}
         className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
       />
@@ -91,8 +91,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
     { id: 'get-started', label: 'Get Started' }
   ];
 
-  // Hero section target ref for scroll perspective linkage
+  // Hero section target refs for scroll and cursor perspective
   const heroRef = useRef<HTMLDivElement>(null);
+  const [heroCoords, setHeroCoords] = useState({ x: 0, y: 0 });
+
+  const handleHeroMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!heroRef.current) return;
+    const rect = heroRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 8; // Capped displacement (max 4% translation)
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 8;
+    setHeroCoords({ x, y });
+  };
 
   // Dynamic values for Dashboard Mockup animation
   const [mockSavings, setMockSavings] = useState(0);
@@ -100,9 +109,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   const [mockProgress, setMockProgress] = useState(45);
   const [mockBadge, setMockBadge] = useState('Sandbox Active');
 
-  // Scroll Progress Bar Tracker
+  // Scroll Progress Tracker
   const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   // Hero scroll-linked target tracking
@@ -161,7 +169,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Track scroll activities to hide top progress indicator on mobile when idle
+  // Track scroll activities
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolling(true);
@@ -208,28 +216,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
   const handleStartWorkspace = () => {
     playClickSound();
     onStart();
-  };
-
-  const toggleSound = () => {
-    setSoundEnabled(!soundEnabled);
-    if (!soundEnabled) {
-      setTimeout(() => {
-        try {
-          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-          if (AudioCtx) {
-            const ctx = new AudioCtx();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.frequency.setValueAtTime(400, ctx.currentTime);
-            gain.gain.setValueAtTime(0.02, ctx.currentTime);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.05);
-          }
-        } catch (e) {}
-      }, 50);
-    }
   };
 
   const handleScrollTo = (id: string) => {
@@ -409,12 +395,27 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </motion.header>
 
       {/* SECTION 1: HERO */}
-      <section ref={heroRef} id="hero" className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-36 max-w-5xl mx-auto z-10">
+      <section 
+        ref={heroRef} 
+        id="hero" 
+        onMouseMove={handleHeroMouseMove}
+        className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-36 max-w-5xl mx-auto z-10"
+      >
+        {/* Soft dynamic cursor-following background spotlight behind the mockup container */}
+        <motion.div 
+          style={{
+            x: heroCoords.x,
+            y: heroCoords.y,
+            transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(22,226,122,0.045)_0%,transparent_60%)] pointer-events-none z-0"
+        />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.98, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-6"
+          className="space-y-6 z-10"
         >
           <motion.div 
             initial={{ opacity: 0 }}
@@ -484,17 +485,24 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           </motion.div>
         </motion.div>
 
-        {/* HERO MOCKUP (Scroll-linked 3D perspective and scale) */}
+        {/* HERO MOCKUP (Scroll-linked 3D perspective and scale, combined with subtle floating animation) */}
         <motion.div
           initial={{ opacity: 0, y: 35, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1.0, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          animate={{ 
+            opacity: 1, 
+            y: [0, -2, 0],
+            scale: 1 
+          }}
           style={{
             scale: mockupScale,
             rotateX: mockupRotateX,
             transformPerspective: 1200
           }}
-          className="mt-20 w-full max-w-4xl border border-white/[0.05] bg-[#0E131B]/80 backdrop-blur-md rounded-3xl p-3 md:p-4 shadow-[0_24px_80px_rgba(0,0,0,0.65)] relative group"
+          transition={{ 
+            opacity: { duration: 1.0, delay: 0.8, ease: [0.16, 1, 0.3, 1] },
+            y: { duration: 10, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="mt-20 w-full max-w-4xl border border-white/[0.05] bg-[#0E131B]/80 backdrop-blur-md rounded-3xl p-3 md:p-4 shadow-[0_24px_80px_rgba(0,0,0,0.65)] relative group z-10"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-[#16E27A]/5 to-blue-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           <div className="w-full bg-[#050607] border border-white/[0.05] rounded-2xl overflow-hidden aspect-[16/9] flex flex-col">
@@ -525,7 +533,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl text-center">
                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Old Regime Tax</span>
-                    <span className="font-mono text-slate-355 font-bold">₹54,600</span>
+                    <span className="font-mono text-slate-350 font-bold">₹54,600</span>
                   </div>
                   <div className="p-3 bg-white/[0.01] border border-[#16E27A]/15 rounded-xl text-center relative overflow-hidden">
                     <span className="text-[9px] text-[#16E27A] font-bold uppercase tracking-wider block mb-1">New Regime Tax</span>
@@ -643,7 +651,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           ].map((item, idx) => (
             <PremiumCard
               key={idx}
-              className="p-6 space-y-4 text-left relative transition-all duration-350 z-10"
+              className="p-6 space-y-4 text-left relative transition-all duration-355 z-10"
               style={{
                 opacity: 0,
                 transform: 'translateY(30px)'
@@ -653,7 +661,6 @@ export default function LandingPage({ onStart }: LandingPageProps) {
                 transform: 'translateY(0px)'
               }}
               viewport={{ once: true, margin: "-80px" }}
-              onClick={playClickSound}
             >
               <div className="absolute -top-3.5 left-6 w-3 h-3 rounded-full bg-[#050607] border border-[#16E27A]/50 flex items-center justify-center hidden sm:flex">
                 <motion.div 
@@ -693,10 +700,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center">
             <div className="lg:col-span-2 space-y-4">
               <PremiumCard
-                onMouseEnter={() => {
-                  playClickSound();
-                  setActiveShowcase('extraction');
-                }}
+                onMouseEnter={() => setActiveShowcase('extraction')}
                 onMouseLeave={() => setActiveShowcase(null)}
                 className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
                   activeShowcase === 'extraction' 
@@ -712,10 +716,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               </PremiumCard>
 
               <PremiumCard
-                onMouseEnter={() => {
-                  playClickSound();
-                  setActiveShowcase('regime');
-                }}
+                onMouseEnter={() => setActiveShowcase('regime')}
                 onMouseLeave={() => setActiveShowcase(null)}
                 className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
                   activeShowcase === 'regime' 
@@ -731,10 +732,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               </PremiumCard>
 
               <PremiumCard
-                onMouseEnter={() => {
-                  playClickSound();
-                  setActiveShowcase('optimization');
-                }}
+                onMouseEnter={() => setActiveShowcase('optimization')}
                 onMouseLeave={() => setActiveShowcase(null)}
                 className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
                   activeShowcase === 'optimization' 
@@ -841,6 +839,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Column 1: Traditional Filing */}
           <PremiumCard 
             className="p-8 bg-white/[0.01] border border-white/[0.03] space-y-6 text-left opacity-70"
             style={{
@@ -874,6 +873,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </div>
           </PremiumCard>
 
+          {/* Column 2: TaxSense */}
           <PremiumCard 
             className="p-8 bg-[#0E131B] border border-[#16E27A]/15 space-y-6 text-left shadow-lg shadow-[#16E27A]/3 relative overflow-hidden"
             style={{
@@ -1040,7 +1040,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* SECTION 8: TESTIMONIALS */}
+      {/* SECTION 8: TESTIMONIALS (Staggered offsets layout for organic visual flow) */}
       <section id="testimonials" className="py-44 border-y border-white/[0.04] bg-[#0E131B]/10 px-6">
         <div className="max-w-5xl mx-auto space-y-20">
           <motion.div 
@@ -1057,30 +1057,33 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-4">
             {[
               {
                 text: "\"Uploading my Form 16 took less than 10 seconds. The AI parsed everything perfectly and recommended the New Regime, saving me ₹18,240.\"",
                 initials: "MK",
                 name: "Mohit Kumar",
-                role: "Software Engineer, Bangalore"
+                role: "Software Engineer, Bangalore",
+                offsetY: "sm:translate-y-0"
               },
               {
                 text: "\"TaxSense sandbox mode let me compare regimes and claims safely without registering first. Frictionless, fast, and secure.\"",
                 initials: "AS",
                 name: "Anjali Sharma",
-                role: "Product Manager, Mumbai"
+                role: "Product Manager, Mumbai",
+                offsetY: "sm:translate-y-4" // Organic stagger offset
               },
               {
                 text: "\"The AI Copilot answered my specific questions about Section 80D with confidence and backed the calculations with actual math. Unbelievably good.\"",
                 initials: "RV",
                 name: "Rohan Verma",
-                role: "UX Researcher, Delhi"
+                role: "UX Researcher, Delhi",
+                offsetY: "sm:-translate-y-2" // Organic stagger offset
               }
             ].map((test, index) => (
               <PremiumCard 
                 key={index}
-                className="p-6 space-y-4 text-left flex flex-col justify-between"
+                className={`p-6 space-y-4 text-left flex flex-col justify-between ${test.offsetY}`}
                 style={{
                   opacity: 0,
                   transform: 'translateY(25px)'
@@ -1109,7 +1112,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* SECTION 9: FAQ */}
+      {/* SECTION 9: FAQ (Expandable Premium Cards similar to Linear docs) */}
       <section id="faq" className="py-44 px-6 max-w-3xl mx-auto space-y-20">
         <motion.div 
           initial={{ opacity: 0 }}
@@ -1123,41 +1126,37 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </motion.div>
 
         <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <motion.div 
-              key={index}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.06 }}
-              className="border-b border-white/[0.04] pb-4 text-left"
-            >
-              <button
-                onClick={() => {
-                  playClickSound();
-                  setFaqOpen(faqOpen === index ? null : index);
-                }}
-                className="w-full flex items-center justify-between text-slate-100 hover:text-white font-bold text-xs uppercase tracking-wider py-2 cursor-pointer transition-colors"
+          {faqs.map((faq, index) => {
+            const isOpen = faqOpen === index;
+            return (
+              <PremiumCard
+                key={index}
+                onClick={() => setFaqOpen(isOpen ? null : index)}
+                className={`p-6 border transition-all duration-300 text-left cursor-pointer ${
+                  isOpen ? 'border-[#16E27A]/30 bg-[#0E131B]' : 'border-white/[0.04] bg-[#0E131B]/40 hover:border-white/[0.08]'
+                }`}
               >
-                <span>{faq.q}</span>
-                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${faqOpen === index ? 'rotate-180 text-[#16E27A]' : ''}`} />
-              </button>
-              
-              <AnimatePresence>
-                {faqOpen === index && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, filter: "blur(4px)" }}
-                    animate={{ opacity: 1, height: 'auto', filter: "blur(0px)" }}
-                    exit={{ opacity: 0, height: 0, filter: "blur(4px)" }}
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden mt-1 text-[11px] text-[#8A96A8] leading-relaxed"
-                  >
-                    {faq.a}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
+                <div className="flex items-center justify-between text-slate-100 hover:text-white font-bold text-xs uppercase tracking-wider">
+                  <span>{faq.q}</span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#16E27A]' : ''}`} />
+                </div>
+                
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, filter: "blur(4px)" }}
+                      animate={{ opacity: 1, height: 'auto', filter: "blur(0px)" }}
+                      exit={{ opacity: 0, height: 0, filter: "blur(4px)" }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden mt-3 text-[11px] text-[#8A96A8] leading-relaxed border-t border-white/[0.04] pt-3"
+                    >
+                      {faq.a}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </PremiumCard>
+            );
+          })}
         </div>
       </section>
 
@@ -1195,20 +1194,60 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* FOOTER ROW */}
-      <footer className="border-t border-white/[0.04] bg-[#050607] py-8 px-6 md:px-12 text-center text-[10px] text-slate-550 font-bold uppercase tracking-wider flex flex-col sm:flex-row sm:justify-between items-center gap-4 transition-all duration-300">
-        <div>
-          TaxSense <span className="text-slate-850 font-normal">•</span> Built for Indian taxpayers <span className="text-slate-850 font-normal">•</span> FY 2025-26
+      {/* FOOTER ROW (Upgraded Vercel-style minimal columns) */}
+      <footer className="border-t border-white/[0.04] bg-[#050607] pt-16 pb-12 px-6 md:px-12 text-left text-xs text-slate-500 transition-all duration-300">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 pb-12 border-b border-white/[0.04]">
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Product</h4>
+            <ul className="space-y-2 text-[11px] text-slate-500 font-semibold">
+              <li><a href="#hero" className="hover:text-white transition-colors">Sandbox Workspace</a></li>
+              <li><a href="#interactive-showcase" className="hover:text-white transition-colors">OCR Form 16 Parser</a></li>
+              <li><a href="#copilot" className="hover:text-white transition-colors">AI Copilot Chat</a></li>
+              <li><a href="#comparison" className="hover:text-white transition-colors">Regime Optimizations</a></li>
+            </ul>
+          </div>
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Security</h4>
+            <ul className="space-y-2 text-[11px] text-slate-500 font-semibold">
+              <li><span className="text-slate-600">AES-256 Vault Encryption</span></li>
+              <li><span className="text-slate-600">Local-First Processing</span></li>
+              <li><span className="text-slate-600">Private API Isolation</span></li>
+              <li><span className="text-slate-600">OWASP Compliance Standards</span></li>
+            </ul>
+          </div>
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Developers</h4>
+            <ul className="space-y-2 text-[11px] text-slate-500 font-semibold">
+              <li><span className="text-slate-600">API Documentation</span></li>
+              <li><span className="text-slate-600">GitHub Open Ingest</span></li>
+              <li><span className="text-slate-600">Vercel Serverless Status</span></li>
+            </ul>
+          </div>
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Company</h4>
+            <ul className="space-y-2 text-[11px] text-slate-500 font-semibold">
+              <li><span className="text-slate-600">About TaxSense</span></li>
+              <li><span className="text-slate-600">Privacy & Data Policy</span></li>
+              <li><span className="text-slate-600">Terms of Service</span></li>
+              <li><span className="text-[#16E27A] bg-[#16E27A]/10 px-1.5 py-0.5 rounded text-[9px] font-bold">Public Beta</span></li>
+            </ul>
+          </div>
         </div>
-        <div className="flex gap-4">
-          <span className="flex items-center gap-2 text-slate-500">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16E27A]"></span>
+
+        <div className="max-w-6xl mx-auto pt-8 flex flex-col sm:flex-row sm:justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
+          <div>
+            TaxSense <span className="text-slate-800 font-normal">•</span> Built for Indian taxpayers <span className="text-slate-850 font-normal">•</span> FY 2025-26
+          </div>
+          <div className="flex gap-4">
+            <span className="flex items-center gap-2 text-slate-500">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16E27A] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16E27A]"></span>
+              </span>
+              <ShieldCheck className="w-4 h-4 text-[#16E27A]" />
+              100% Secure & Private
             </span>
-            <ShieldCheck className="w-4 h-4 text-[#16E27A]" />
-            100% Secure & Private
-          </span>
+          </div>
         </div>
       </footer>
     </div>
