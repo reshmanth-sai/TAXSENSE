@@ -232,8 +232,14 @@ export default function App() {
         try {
           const google = (window as any).google;
           if (google) {
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+            if (!clientId) {
+              console.error("Google Client ID missing");
+              return;
+            }
+
             google.accounts.id.initialize({
-              client_id: '12345678-mock.apps.googleusercontent.com',
+              client_id: clientId,
               callback: (response: any) => {
                 const payload = AuthService.decodeJwt(response.credential);
                 if (payload) {
