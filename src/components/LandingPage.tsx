@@ -102,8 +102,8 @@ const PremiumCard: React.FC<PremiumCardProps> = ({ children, className = '', ...
         className={`absolute inset-[-200%] bg-[conic-gradient(from_0deg,transparent,rgba(22,226,122,0.15),transparent_50%)] animate-border-beam pointer-events-none transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} 
       />
 
-      {/* Surface wrapper */}
-      <div className={`relative w-full h-full bg-gradient-to-br from-white/[0.025] to-white/[0.005] border border-white/[0.05] border-t-white/[0.12] rounded-2xl backdrop-blur-[12px] ${paddingClass}`}>
+      {/* Surface wrapper with solid dark background mask to prevent background bleed */}
+      <div className={`relative w-full h-full bg-[#0B0F19] bg-gradient-to-br from-white/[0.025] to-white/[0.005] border border-white/[0.05] border-t-white/[0.12] rounded-2xl backdrop-blur-[12px] ${paddingClass}`}>
         
         {/* Subtle diagonal gloss reflection sheet */}
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.005] to-white/[0.015] pointer-events-none" />
