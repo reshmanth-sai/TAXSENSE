@@ -13,7 +13,7 @@ const AICopilot = lazy(() => import('./components/copilot/AICopilot').then(m => 
 import { useTaxStore, useTaxStoreHydrated, UserProfile } from './store/useTaxStore';
 import LandingPage from './components/LandingPage';
 import { ExportService } from './services/ExportService';
-import { AuthService } from './services/AuthService';
+import { GoogleAuthService } from './services/GoogleAuthService';
 
 import { 
   Lock, 
@@ -233,93 +233,59 @@ export default function App() {
 
   // Google GSI script loader and initialization with skeleton/fallback checks
   useEffect(() => {
+    let active = true;
+
     if (activeStep === 2) {
       if (googleGsiState === 'loaded') {
         return;
       }
       setGoogleGsiState('loading');
       
-      const timer = setTimeout(() => {
-        setGoogleGsiState(prev => prev === 'loading' ? 'failed' : prev);
-      }, 2000); // 2.0 seconds graceful timeout
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        console.error("[GIS] Google Client ID missing");
+        setGoogleGsiState('failed');
+        return;
+      }
 
-      AuthService.loadGoogleGIS().then(() => {
-        try {
-          const google = (window as any).google;
-          if (google && google.accounts?.id) {
-            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-            if (!clientId) {
-              console.error("Google Client ID missing");
-              clearTimeout(timer);
-              setGoogleGsiState('failed');
-              return;
-            }
-
-            google.accounts.id.initialize({
-              client_id: clientId,
-              callback: (response: any) => {
-                const payload = AuthService.decodeJwt(response.credential);
-                if (payload) {
-                  const profile: UserProfile = {
-                    uid: payload.sub,
-                    name: payload.name,
-                    email: payload.email,
-                    photoURL: payload.picture,
-                    providerId: 'google.com',
-                    createdAt: new Date().toISOString()
-                  };
-                  handleGoogleLoginSuccess(profile);
-                }
-              }
-            });
-            
-            // Wait for DOM to render the container target
-            setTimeout(() => {
-              const container = document.getElementById('google-signin-btn-container');
-              if (container) {
-                try {
-                  google.accounts.id.renderButton(
-                    container,
-                    { theme: 'outline', size: 'large', text: 'signin_with', width: 240, shape: 'pill' }
-                  );
-                  
-                  // Wait 500ms to verify if the button has been successfully rendered in DOM
-                  setTimeout(() => {
-                    const containerCheck = document.getElementById('google-signin-btn-container');
-                    if (containerCheck && (containerCheck.children.length > 0 || containerCheck.innerHTML.trim() !== '')) {
-                      clearTimeout(timer);
-                      setGoogleGsiState('loaded');
-                    } else {
-                      console.warn("Google button container is empty (possibly blocked origin or invalid client ID). Falling back to simulation.");
-                      clearTimeout(timer);
-                      setGoogleGsiState('failed');
-                    }
-                  }, 500);
-                } catch (e) {
-                  console.error("Error calling renderButton:", e);
-                  clearTimeout(timer);
-                  setGoogleGsiState('failed');
-                }
-              } else {
-                clearTimeout(timer);
-                setGoogleGsiState('failed');
-              }
-            }, 50);
-          } else {
-            clearTimeout(timer);
-            setGoogleGsiState('failed');
-          }
-        } catch (e) {
-          console.error("Error initializing Google GIS:", e);
-          clearTimeout(timer);
-          setGoogleGsiState('failed');
+      GoogleAuthService.initialize(clientId, (response: any) => {
+        if (!active) return;
+        console.log('[GIS] Google Login Success');
+        const payload = GoogleAuthService.decodeJwt(response.credential);
+        if (payload) {
+          const profile: UserProfile = {
+            uid: payload.sub,
+            name: payload.name,
+            email: payload.email,
+            photoURL: payload.picture,
+            providerId: 'google.com',
+            createdAt: new Date().toISOString()
+          };
+          handleGoogleLoginSuccess(profile);
         }
-      }).catch((err) => {
-        clearTimeout(timer);
-        console.error("Failed to load GIS script:", err);
+      })
+      .then(() => {
+        if (!active) return;
+        return GoogleAuthService.renderButton('google-signin-btn-container', {
+          theme: 'outline',
+          size: 'large',
+          width: 240
+        });
+      })
+      .then(() => {
+        if (!active) return;
+        setGoogleGsiState('loaded');
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error('[GIS] Failed to initialize or render button:', err);
         setGoogleGsiState('failed');
       });
     }
+
+    return () => {
+      active = false;
+    };
   }, [activeStep]);
 
   // Auto-forward logged-in users past the login screen
@@ -1194,7 +1160,7 @@ export default function App() {
                   {!isSidebarCollapsed && (
                     <button
                       onClick={() => {
-                        AuthService.revokeGoogleSession();
+                        GoogleAuthService.revokeSession();
                         clearSession();
                         setActiveStep(2);
                       }}
